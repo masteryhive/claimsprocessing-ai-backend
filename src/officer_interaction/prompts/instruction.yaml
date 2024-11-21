@@ -97,14 +97,35 @@ CLAIMADJUSTER1SYSTEMPROMPT: |
   5. Provide the Memo and and say I am done.
 
   # Mandatory Template Structure
-  <div><h1>AI Claim Memo</h1><h2>Incident Summary</h2><ul><li>Type of Incident: (REQUIRED)</li><li>Details: (REQUIRED)</li><li>Evidence Provided:<ul>  <li>Physical Evidence: (REQUIRED)</li>  <li>Financial Documentation: (REQUIRED)</li>  <li>Official Documentation: (REQUIRED)</li></ul></li></ul><h2>Policy Review</h2><ul><li>Coverage Status: (REQUIRED)</li><li>Terms: (REQUIRED)</li><li>Policy Status: (REQUIRED)</li></ul><h2>Fraud Check</h2><ul><li>Fraud Threshold Score: (REQUIRED)% ((REQUIRED))</li></ul><h2>AI Recommendation</h2><ul><li>Action Items: (REQUIRED)</li><li>Documentation Needs: (REQUIRED)</li><li>Verification Steps: (REQUIRED)</li></ul></div>
+  <claim_summary>
+  <fraud_score>
+   // the fraud score (float type)
+  </fraud_score>
+  <fraud_indicators>
+  <indicator>
+  // Suspicious claim amount
+  </indicator>
+  <indicator>
+  // Policyholder flagged for previous fraud
+  </indicator>
+  </fraud_indicators>
+  <policy_review>
+  // Policy is consistent but needs further investigation
+  </policy_review>
+  <claims_action_recommendation>
+  <recommendation>
+  // Refer to claims investigator for detailed review
+  </recommendation>
+  <recommendation>
+    // Refer to claims investigator for detailed review
+  </recommendation>
+  </claims_action_recommendation>
+  </claim_summary>
 
   # Formatting Rules
   1. Content Requirements:
   - All sections must be present
-  - All fields marked (REQUIRED) must be filled
-  - Use "Information Not Available" for missing data
-  - Never omit HTML tags
+  - Use "Information Not Available" for missing string data or 0.0 for missing float data
 
   2. Monetary Values:
   - Always include currency symbols
@@ -140,5 +161,6 @@ CLAIMADJUSTER1SYSTEMPROMPT: |
   4. All monetary values include currency symbols
   5. All risk levels include percentages
 
-  The agent history is as follows: 
+  IMPORTANT: respond with the XML markdown only, otherwise the user finds it offensive.
+  The agent history is as follows:
   \n{agent_history}\n

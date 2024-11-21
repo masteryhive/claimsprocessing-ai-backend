@@ -41,5 +41,7 @@ COPY --from=builder /usr/local/bin /usr/local/bin
 # Copy the application code into the container
 COPY . /app
 
+EXPOSE 8080
+
 # Use uvicorn to serve FastAPI without auto-reload for production
 CMD ["python", "src/entry.py"]

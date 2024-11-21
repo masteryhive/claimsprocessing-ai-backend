@@ -3,7 +3,7 @@ from colorama import init, Fore, Style, Back
 import textwrap
 from datamodels.co_ai import AIClaimsReport
 from database.pd_db import create_claim_report
-from officer_interaction.utilities.parser import extract_claim_data
+from officer_interaction.utilities.parser import extract_claim_data, extract_claim_summary
 from config.db_setup import SessionLocal
 
 # Initialize colorama for cross-platform color support
@@ -50,9 +50,11 @@ def fancy_print(s: Dict[str, Any], data: Dict[str, Any]) -> None:
             messages = data[agent]['messages']
             for message in messages:
                 print_header(f"{agent} Response")
-                result = extract_claim_data(message.content)
-                create_claim_report(db,result.fraud_score,result.fraud_indicators,
-                                    result.ai_recommendation,result.policy_review)
+                # result = extract_claim_data(message.content)
+                result = extract_claim_summary(message.content)
+                print(result)
+                create_claim_report(db,result['fraud_score'],result['fraud_indicators'],
+                                    result['ai_recommendation'],result['policy_review'])
                 print_section(message.content,"")
                 return
         # Handle supervisor case
