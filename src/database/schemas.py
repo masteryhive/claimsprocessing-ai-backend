@@ -7,20 +7,6 @@ from sqlalchemy import  JSON, Column, Float, String, DateTime, Integer, Enum as 
 Base = declarative_base()
 
 
-# Define the model
-class ConversationHistory(Base):
-    __tablename__ = 'conversation_history'
-
-    id = Column(Integer, primary_key=True)
-    room_id = Column(String, index=True)
-    resource_urls = Column(JSON)  # Store as JSONB in PostgreSQL
-    ai_message = Column(Text)
-    user_message = Column(Text)
-    system_message = Column(Text)
-    created_at = Column(DateTime, default=datetime.utcnow)
-
-
-
 class TaskStatus(str, enum.Enum):
     PENDING = "pending"
     RUNNING = "running"

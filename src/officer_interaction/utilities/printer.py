@@ -2,6 +2,8 @@ from typing import Dict, Any
 from colorama import init, Fore, Style, Back
 import textwrap
 
+from database.pd_db import create_claim_report
+
 # Initialize colorama for cross-platform color support
 init()
 
@@ -45,6 +47,7 @@ def fancy_print(s: Dict[str, Any], data: Dict[str, Any]) -> None:
             messages = data[agent]['messages']
             for message in messages:
                 print_header(f"{agent} Response")
+                create_claim_report()
                 print_section(message.content,"")
                 return
         # Handle supervisor case

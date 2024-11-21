@@ -9,13 +9,20 @@ ENV PIP_DISABLE_PIP_VERSION_CHECK=on \
     PIP_NO_CACHE_DIR=off \
     PYTHONUNBUFFERED=1
 
+RUN pip install "poetry"
+
 # Copy requirements to install dependencies in the builder stage
 # COPY requirements.txt .
-COPY pyproject.toml poetry.lock /app/
+COPY pyproject.toml poetry.lock* /app/
+
+# Configure Poetry:
+# - No virtualenvs inside the docker container
+# - Do not ask any interactive questions
+RUN poetry config virtualenvs.create false \
+    && poetry install --only main --no-interaction --no-ansi
 
 # Install dependencies
 # RUN pip install --no-cache-dir -r requirements.txt
-RUN poetry install
 
 # Use the official Python image as a parent image for the runtime stage
 FROM python:3.12-slim
@@ -34,7 +41,5 @@ COPY --from=builder /usr/local/bin /usr/local/bin
 # Copy the application code into the container
 COPY . /app
 
-EXPOSE 8080
-
 # Use uvicorn to serve FastAPI without auto-reload for production
-CMD ["uvicorn", "src.main:app", "--host", "0.0.0.0", "--port", "8080"]
+CMD ["python src/entry.py"]
