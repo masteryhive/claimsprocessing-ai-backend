@@ -63,7 +63,7 @@ def create_claim_report(db: Session,
                 fraud_score: float,
                 fraud_indicators: list,
                 ai_recommendation: list,
-                policy_review: str) -> ClaimsReport:
+                policy_review: str):
     """
     Create a new claim record
     """
@@ -76,4 +76,4 @@ def create_claim_report(db: Session,
     db.add(claim_report)
     db.commit()
     db.refresh(claim_report)
-    return claim_report
+    db.close()

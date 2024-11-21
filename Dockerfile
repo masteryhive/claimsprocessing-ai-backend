@@ -42,4 +42,4 @@ COPY --from=builder /usr/local/bin /usr/local/bin
 COPY . /app
 
 # Use uvicorn to serve FastAPI without auto-reload for production
-CMD ["python src/entry.py"]
+CMD ["python", "src/entry.py"]

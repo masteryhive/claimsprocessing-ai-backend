@@ -2,7 +2,7 @@
 
 services:
   app:
-    image: claimprocessing-ai
+    image: claimprocessing-ai-backend
     build:
       context: .
     ports:
