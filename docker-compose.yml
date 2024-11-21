@@ -1,0 +1,22 @@
+# version: '3.8'
+
+services:
+  app:
+    image: claimprocessing-ai
+    build:
+      context: .
+    ports:
+      - "8080:8080"
+    environment:
+      - PYTHON_ENV=${PYTHON_ENV}
+      - AUTH_USERNAME=${AUTH_USERNAME}
+      - AUTH_PASSWORD=${AUTH_PASSWORD}
+      - PROJECT_ID=${PROJECT_ID}
+      - REGION=${REGION}
+      - STAGING_BUCKET=${STAGING_BUCKET}
+      - APP_BACKEND_API=${APP_BACKEND_API}
+      - DB_HOST=${DB_HOST}
+      - DB_DATABASE=${DB_DATABASE}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - DB_USER=${DB_USER}
+      - DB_PORT=${DB_PORT}
