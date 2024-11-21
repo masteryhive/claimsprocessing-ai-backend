@@ -1,8 +1,10 @@
 from typing import Dict, Any
 from colorama import init, Fore, Style, Back
 import textwrap
-
+from datamodels.co_ai import AIClaimsReport
 from database.pd_db import create_claim_report
+from officer_interaction.utilities.parser import extract_claim_data
+from config.db_setup import SessionLocal
 
 # Initialize colorama for cross-platform color support
 init()
@@ -36,6 +38,7 @@ def print_tool_info(tool: str, tool_input: str, log: str) -> None:
 
 def fancy_print(s: Dict[str, Any], data: Dict[str, Any]) -> None:
     """Main function to handle fancy printing of the workflow."""
+    db = SessionLocal()
     if "__end__" not in s:
         print_header("CO AI Workflow Status")
         
@@ -47,7 +50,9 @@ def fancy_print(s: Dict[str, Any], data: Dict[str, Any]) -> None:
             messages = data[agent]['messages']
             for message in messages:
                 print_header(f"{agent} Response")
-                create_claim_report()
+                result = extract_claim_data(message.content)
+                create_claim_report(db,result.fraud_score,result.fraud_indicators,
+                                    result.ai_recommendation,result.policy_review)
                 print_section(message.content,"")
                 return
         # Handle supervisor case

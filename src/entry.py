@@ -10,6 +10,8 @@ from datamodels.co_ai import ProcessClaimTask
 from config.db_setup import SessionLocal
 from sqlalchemy.orm import Session
 
+from resources.db_ops import get_claim_from_database
+
 def process_message(body):
     """Function to process a single message."""
     body_str = body.decode('utf-8')
@@ -26,7 +28,8 @@ def process_message(body):
     db.commit()
     db.refresh(task)
     db.close()
-    for s in graph.stream({"messages": [HumanMessage(content=f"begin this claim processing:\n{claim_request.model_dump()}")]}):
+    claim_data = get_claim_from_database(claim_request.model_dump())
+    for s in graph.stream({"messages": [HumanMessage(content=f"begin this claim processing:\n{claim_data}")]}):
         if "__end__" not in s:
             #print(s)
             fancy_print(s,s)
