@@ -1,6 +1,19 @@
 from bs4 import BeautifulSoup
-
+import re
 from datamodels.co_ai import AIClaimsReport
+
+def extract_claim_summary(data) -> AIClaimsReport:
+    fraud_score = re.search(r"<fraud_score>\s*(?:\/\/)?(.*?)\s*</fraud_score>", data, re.DOTALL)
+    fraud_indicators = re.findall(r"<indicator>\s*(?:\/\/)?(.*?)\s*</indicator>", data, re.DOTALL)
+    policy_review = re.search(r"<policy_review>\s*(?:\/\/)?(.*?)\s*</policy_review>", data, re.DOTALL)
+    ai_recommendation = re.findall(r"<recommendation>\s*(?:\/\/)?(.*?)\s*</recommendation>", data, re.DOTALL)
+
+    return {
+        "fraud_score": float(fraud_score.group(1).strip()) if fraud_score else 0.0,
+        "fraud_indicators": [indicator.strip() for indicator in fraud_indicators],
+        "policy_review": policy_review.group(1).strip() if policy_review else None,
+        "ai_recommendation": [recommendation.strip() for recommendation  in ai_recommendation],
+    }
 
 def extract_claim_data(html_content) -> AIClaimsReport:
     """
