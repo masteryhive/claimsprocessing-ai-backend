@@ -47,7 +47,7 @@ def main():
     rabbitmq = RabbitMQ()
     while True:  # Ensure the consumer is always running
         try:
-            rabbitmq.consume("test", callback)
+            rabbitmq.consume(callback)
         except Exception as e:
             print(f"Error occurred: {e}")
             # Optionally, you can add logic here to restart the connection or handle specific errors

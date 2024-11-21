@@ -20,3 +20,4 @@ services:
       - DB_PASSWORD=${DB_PASSWORD}
       - DB_USER=${DB_USER}
       - DB_PORT=${DB_PORT}
+      - AMQP=${AMQP}

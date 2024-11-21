@@ -19,7 +19,10 @@ class EnvConfig:
         self.database = os.getenv("DB_DATABASE")
         self.user = os.getenv("DB_USER")
         self.password = os.getenv("DB_PASSWORD")
+        self.amqp = os.getenv("AMQP")
+        self.amqp_queue = os.getenv("AMQP_QUEUE")
 
+        
     def __repr__(self):
         return (
             f"EnvConfig(env={self.env}, app_port={self.app_port}, "
