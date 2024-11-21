@@ -1,9 +1,9 @@
 import json
 from sqlalchemy.orm import Session
-from src.services.ai.resources.db_ops import get_claim_from_database
-from src.config.db_setup import SessionLocal
-from src.database.schemas import Task, TaskStatus
-from src.datamodels.co_ai import ProcessClaimTask
+from services.ai.resources.db_ops import get_claim_from_database
+from config.db_setup import SessionLocal
+from database.schemas import Task, TaskStatus
+from datamodels.co_ai import ProcessClaimTask
 from datetime import datetime, timezone
 from langchain_core.messages import HumanMessage,AIMessage
 import logging

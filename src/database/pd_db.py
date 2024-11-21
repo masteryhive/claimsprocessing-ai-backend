@@ -6,9 +6,9 @@ from fastapi import HTTPException
 from typing import Generator, List
 from psycopg2._psycopg import cursor
 from sqlalchemy import desc
-from src.database.schemas import ClaimsReport, ConversationHistory
+from database.schemas import ClaimsReport
 from sqlalchemy.orm import Session
-from src.config.appconfig import env_config
+from config.appconfig import env_config
 
 import logging
 

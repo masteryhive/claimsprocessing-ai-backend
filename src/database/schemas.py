@@ -1,7 +1,7 @@
 
 from datetime import datetime
 import enum
-from src.config.db_setup import engine
+from config.db_setup import engine
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy import  JSON, Column, Float, String, DateTime, Integer, Enum as SQLEnum, Text
 Base = declarative_base()

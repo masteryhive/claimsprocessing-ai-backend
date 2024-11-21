@@ -1,4 +1,4 @@
-import datetime
+from datetime import datetime,timezone
 import json
 import multiprocessing
 from distsys.rabbitmq import RabbitMQ
@@ -7,14 +7,13 @@ from langchain_core.messages import HumanMessage
 from database.schemas import Task,TaskStatus
 from officer_interaction.utilities.printer import fancy_print
 from datamodels.co_ai import ProcessClaimTask
-from src.config.db_setup import SessionLocal
+from config.db_setup import SessionLocal
 from sqlalchemy.orm import Session
 
 def process_message(body):
     """Function to process a single message."""
-    print(f"Processing {body}")
     body_str = body.decode('utf-8')
-    claim_request = ProcessClaimTask(policy_number=body_str,task_id=f"task_{int(datetime.utcnow().timestamp())}")
+    claim_request = ProcessClaimTask(policy_number=body_str,task_id=f"task_{int(datetime.now(timezone.utc).timestamp())}")
     print(claim_request.model_dump())
     db = SessionLocal()
     # Create new task record
@@ -34,7 +33,6 @@ def process_message(body):
 
 def callback(ch, method, properties, body):
     """Callback function invoked for each received message."""
-    print(f"Received {body}")
     # Start a new process for each message
     process = multiprocessing.Process(target=process_message, args=(body,))
     process.start()
@@ -53,4 +51,5 @@ def main():
             continue
 
 if __name__ == "__main__":
+    print("Application is now active and running.")
     main()

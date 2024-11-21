@@ -1,6 +1,6 @@
 # encoding: utf-8
 from pydantic_settings import BaseSettings
-from src.config.appconfig import env_config
+from config.appconfig import env_config
 
 
 
