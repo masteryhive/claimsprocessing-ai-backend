@@ -1,4 +1,4 @@
-from config.appconfig import env_config
+from src.config.appconfig import env_config
 
 async def save_claim_database(data_to_send: dict) -> bool:
         """

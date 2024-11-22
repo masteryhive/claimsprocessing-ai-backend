@@ -6,20 +6,21 @@ from fastapi import HTTPException
 from typing import Generator, List
 from psycopg2._psycopg import cursor
 from sqlalchemy import desc
-from database.schemas import ClaimsReport
+from src.database.schemas import ClaimsReport
 from sqlalchemy.orm import Session
-from config.appconfig import env_config
+from src.config.appconfig import env_config
 
 import logging
 
 logger = logging.getLogger(__name__)
+
 
 @contextmanager
 def get_db() -> Generator[cursor, None, None]:
     """
     Database connection context manager.
     Yields a database cursor and handles proper connection cleanup.
-    
+
     Raises:
         HTTPException: If database connection fails
     """
@@ -31,7 +32,7 @@ def get_db() -> Generator[cursor, None, None]:
             host=env_config.host,
             database=env_config.database,
             user=env_config.user,
-            password=env_config.password
+            password=env_config.password,
         )
         # Create a cursor
         cur = conn.cursor()
@@ -41,17 +42,13 @@ def get_db() -> Generator[cursor, None, None]:
         if conn:
             conn.rollback()
         logger.error(f"Database error: {str(e)}")
-        raise HTTPException(
-            status_code=500,
-            detail="Database connection error"
-        ) from e
+        raise HTTPException(status_code=500, detail="Database connection error") from e
     except Exception as e:
         if conn:
             conn.rollback()
         logger.error(f"Unexpected error: {str(e)}")
         raise HTTPException(
-            status_code=500,
-            detail="An unexpected error occurred"
+            status_code=500, detail="An unexpected error occurred"
         ) from e
     finally:
         if cur:
@@ -59,11 +56,18 @@ def get_db() -> Generator[cursor, None, None]:
         if conn:
             conn.close()
 
-def create_claim_report(db: Session, 
-                fraud_score: float,
-                fraud_indicators: list,
-                ai_recommendation: list,
-                policy_review: str):
+
+def create_claim_report(
+    db: Session,
+    fraud_score: float,
+    fraud_indicators: list,
+    ai_recommendation: list,
+    policy_review: str,
+    evidence_provided: list,
+    coverage_status: str,
+    type_of_incident: str,
+    details: str,
+):
     """
     Create a new claim record
     """
@@ -71,7 +75,11 @@ def create_claim_report(db: Session,
         fraud_score=fraud_score,
         fraud_indicators=fraud_indicators,
         ai_recommendation=ai_recommendation,
-        policy_review=policy_review
+        policy_review=policy_review,
+        evidence_provided=evidence_provided,
+        coverage_status=coverage_status,
+        details=details,
+        type_of_incident=type_of_incident,
     )
     db.add(claim_report)
     db.commit()

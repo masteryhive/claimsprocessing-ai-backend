@@ -44,4 +44,4 @@ COPY . /app
 EXPOSE 8080
 
 # Use uvicorn to serve FastAPI without auto-reload for production
-CMD ["python", "src/entry.py"]
+CMD ["uvicorn", "src.main:app", "--host", "0.0.0.0", "--port", "8080"]

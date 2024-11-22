@@ -112,6 +112,20 @@ CLAIMADJUSTER1SYSTEMPROMPT: |
   <policy_review>
   // Policy is consistent but needs further investigation
   </policy_review>
+  <type_of_incident>
+  // the type of incident this claim was filed for
+  </type_of_incident>
+  <coverage_status>
+  // the type of incident this claim was filed for
+  </coverage_status>
+  <details>
+  // the details of the claim
+  </details>
+  <evidence_provided>
+  <evidence>
+  // evidence submitted e.g. photo evidence, witness statement, police report
+  </evidence>
+  </evidence_provided>
   <claims_action_recommendation>
   <recommendation>
   // Refer to claims investigator for detailed review

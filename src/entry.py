@@ -53,6 +53,6 @@ def main():
             # Optionally, you can add logic here to restart the connection or handle specific errors
             continue
 
-if __name__ == "__main__":
-    print("Application is now active and running.")
-    main()
+# if __name__ == "__main__":
+#     print("Application is now active and running.")
+#     main()
