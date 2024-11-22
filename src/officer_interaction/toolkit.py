@@ -1,6 +1,7 @@
 import json
 from typing import Annotated
 from langchain_core.tools import tool
+from src.resources.cost_benchmarking import CostBenchmarking
 from src.resources.retrieve_vehicle_policy import InsuranceDataExtractor
 from src.resources.image_understanding import claims_image_evidence_recognizer
 from src.config.appconfig import env_config
@@ -87,26 +88,29 @@ def item_insurance_check(
 
 @tool
 def item_pricing_check(
-    damaged_part: Annotated[
-        str, "from the picture evidence which parts are damaged."
-    ]
+    damaged_part: Annotated[str, "Identify the damaged parts from the supporting evidence picture. e.g Honda civic side mirror"],
+    quoted_cost: Annotated[str, "the quoted cost from supporting evidence like invoice, required to fix the damage."]
 ):
     """
-    calls the local market place to verify the quoted cost on the invoice.
+    calls the local market place to verify the quoted cost on the invoice for the vehicle repair claims.
     """
-    #     "implement jiji search and cost extraction for docuement inflation"
-    import requests
-    from requests.auth import HTTPBasicAuth
+    costBenchmarking = CostBenchmarking()
+    result = costBenchmarking.run(damaged_part, quoted_cost)
+    print(result)
+    return result
 
-    url = f"http://127.0.0.1:8000/api/v1/get-vehicle-policy?registration_number{vehicle_registration_number}"
-    try:
-        username = "sam@masteryhive.com"
-        password = "JLg8m4aQ8n46nhC"
-        response = requests.get(url, auth=HTTPBasicAuth(username, password))
-        response.raise_for_status()
-        return json.dumps(response.json())
-    except requests.exceptions.RequestException as e:
-        return f"An error occurred: {str(e)}"
+
+@tool
+def item_pricing_check(
+    damaged_part: Annotated[str, "from the picture evidence which parts are damaged. e.g toyota corolla bumper"],
+):
+    """
+    checks the local market place for how much the damaged part is worth.
+    """
+    costBenchmarking = CostBenchmarking()
+    result = costBenchmarking.run_with_expected_range(damaged_part)
+    print(result)
+    return result
 
 
 @tool

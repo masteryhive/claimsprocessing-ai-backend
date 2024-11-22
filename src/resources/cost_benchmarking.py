@@ -14,7 +14,7 @@ password = "JLg8m4aQ8n46nhC"
 
 
 class CostBenchmarking:
-    def __init__(self, email, password):
+    def __init__(self, email=email, password=password):
         self.email = email
         self.password = password
 
@@ -233,7 +233,50 @@ class CostBenchmarking:
         quoted_price = float(quoted_price.replace(",", ""))
         return self.analyze_price(market_prices, quoted_price)
 
+    def get_expected_price_range(
+        self, prices: List[float], threshold: float = 1.5
+    ) -> str:
+        """
+        Calculates the expected price range based on the list of prices.
 
-if __name__ == "__main__":
-    costBenchmarking = CostBenchmarking(email=email, password=password)
-    print(costBenchmarking.run("toyota corolla bumper", "110,450"))
+        Parameters:
+        prices (List[float]): List of market prices.
+        threshold (float): Number of IQR ranges to consider for defining the range.
+
+        Returns:
+        str: The expected price range in a formatted string.
+        """
+        # Remove outliers to clean the data
+        cleaned_prices = self.remove_outliers(prices, threshold)
+
+        if not cleaned_prices:
+            return "Not enough valid data to determine the price range."
+
+        # Convert to numpy array for statistical calculations
+        prices_array = np.array(cleaned_prices)
+
+        # Calculate Q1 and Q3
+        q1 = np.percentile(prices_array, 25)
+        q3 = np.percentile(prices_array, 75)
+
+        # Return the expected price range as a formatted string
+        return f"{int(q1):,} - {int(q3):,}"
+
+    def run_with_expected_range(self, search_term: str):
+        """
+        Extends the `run` method to include the expected price range in the output.
+
+        Parameters:
+        search_term (str): The search term to query.
+        quoted_price (str): The quoted price to analyze.
+
+        Returns:
+        dict: The analysis results and the expected price range.
+        """
+        try:
+            market_prices = self.extract_data(search_term)
+        finally:
+            self.close_driver()
+
+        expected_range = self.get_expected_price_range(market_prices)
+        return f"Expected price range for '{search_term}': {expected_range}"
