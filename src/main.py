@@ -2,9 +2,7 @@ from fastapi import FastAPI, BackgroundTasks, HTTPException, status
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 from datetime import datetime, timezone
-import multiprocessing
-
-import uvicorn
+import multiprocessing,uvicorn
 from src.distsys.rabbitmq import RabbitMQ
 from src.officer_interaction.llm_flow import graph
 from langchain_core.messages import HumanMessage
@@ -74,7 +72,7 @@ def callback(ch, method, properties, body):
     process.join()
 
 
-@app.post("/start-worker",status_code=202)
+@app.post("/start-worker",status_code=status.HTTP_202_ACCEPTED)
 def start_worker(background_tasks: BackgroundTasks,):
     """HTTP endpoint to start the RabbitMQ worker."""
     try:
@@ -91,6 +89,7 @@ def start_worker(background_tasks: BackgroundTasks,):
 def health_check():
     """Health check endpoint."""
     return {"status": "healthy"}
+
 
 
 if __name__ == "__main__":
