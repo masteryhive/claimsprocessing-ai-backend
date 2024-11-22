@@ -112,9 +112,9 @@ CLAIMADJUSTER1SYSTEMPROMPT: |
   <policy_review>
   // Policy is consistent but needs further investigation
   </policy_review>
-  <type_incident>
+  <type_of_incident>
   // the type of incident this claim was filed for
-  </type_incident>
+  </type_of_incident>
   <coverage_status>
   // the type of incident this claim was filed for
   </coverage_status>

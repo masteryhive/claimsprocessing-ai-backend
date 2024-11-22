@@ -1,10 +1,10 @@
 from typing import Dict, Any
 from colorama import init, Fore, Style, Back
 import textwrap
-from datamodels.co_ai import AIClaimsReport
-from database.pd_db import create_claim_report
-from officer_interaction.utilities.parser import extract_claim_data, extract_claim_summary
-from config.db_setup import SessionLocal
+from src.datamodels.co_ai import AIClaimsReport
+from src.database.pd_db import create_claim_report
+from src.officer_interaction.utilities.parser import extract_claim_data, extract_claim_summary
+from src.config.db_setup import SessionLocal
 
 # Initialize colorama for cross-platform color support
 init()
@@ -54,7 +54,9 @@ def fancy_print(s: Dict[str, Any], data: Dict[str, Any]) -> None:
                 result = extract_claim_summary(message.content)
                 print(result)
                 create_claim_report(db,result['fraud_score'],result['fraud_indicators'],
-                                    result['ai_recommendation'],result['policy_review'])
+                                    result['ai_recommendation'], result['policy_review'],
+                                    result['evidence_provided'], result['coverage_status'],
+                                    result['type_of_incident'], result['details'])
                 print_section(message.content,"")
                 return
         # Handle supervisor case

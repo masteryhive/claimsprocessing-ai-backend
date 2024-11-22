@@ -10,12 +10,12 @@ import functools, operator, vertexai
 from typing import Annotated, Sequence
 from typing_extensions import TypedDict
 from langchain_core.messages import BaseMessage
-from officer_interaction.agents import *
+from src.officer_interaction.agents import *
 from langgraph.graph import END, StateGraph, START
 from langchain_google_vertexai import ChatVertexAI
-from officer_interaction.toolkit import *
-from utilities.helpers import load_yaml_file
-from officer_interaction.agent_utils import *
+from src.officer_interaction.toolkit import *
+from src.utilities.helpers import load_yaml_file
+from src.officer_interaction.agent_utils import *
 
 
 llm = ChatVertexAI(model_name="gemini-pro")

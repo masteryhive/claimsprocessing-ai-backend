@@ -1,7 +1,7 @@
 import json
 from typing import Annotated
 from langchain_core.tools import tool
-from config.appconfig import env_config
+from src.config.appconfig import env_config
 
 
 ############## document extraction and completeness check ##############

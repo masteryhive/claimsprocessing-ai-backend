@@ -1,6 +1,6 @@
 from bs4 import BeautifulSoup
 import re
-from datamodels.co_ai import AIClaimsReport
+from src.datamodels.co_ai import AIClaimsReport
 
 
 def extract_claim_summary(data) -> AIClaimsReport:
@@ -13,8 +13,8 @@ def extract_claim_summary(data) -> AIClaimsReport:
     policy_review = re.search(
         r"<policy_review>\s*(?:\/\/)?(.*?)\s*</policy_review>", data, re.DOTALL
     )
-    type_incident = re.search(
-        r"<type_incident>\s*(?:\/\/)?(.*?)\s*</type_incident>", data, re.DOTALL
+    type_of_incident = re.search(
+        r"<type_of_incident>\s*(?:\/\/)?(.*?)\s*</type_of_incident>", data, re.DOTALL
     )
     coverage_status = re.search(
         r"<coverage_status>\s*(?:\/\/)?(.*?)\s*</coverage_status>", data, re.DOTALL
@@ -34,9 +34,9 @@ def extract_claim_summary(data) -> AIClaimsReport:
         "ai_recommendation": [
             recommendation.strip() for recommendation in ai_recommendation
         ],
-        "type_incident": (
-            type_incident.group(1).strip()
-            if type_incident
+        "type_of_incident": (
+            type_of_incident.group(1).strip()
+            if type_of_incident
             else "Information Not Available"
         ),
         "coverage_status": (

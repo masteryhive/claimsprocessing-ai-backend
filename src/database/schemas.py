@@ -1,9 +1,18 @@
-
 from datetime import datetime
 import enum
-from config.db_setup import engine
+from src.config.db_setup import engine
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy import  JSON, Column, Float, String, DateTime, Integer, Enum as SQLEnum, Text
+from sqlalchemy import (
+    JSON,
+    Column,
+    Float,
+    String,
+    DateTime,
+    Integer,
+    Enum as SQLEnum,
+    Text,
+)
+
 Base = declarative_base()
 
 
@@ -13,8 +22,8 @@ class TaskStatus(str, enum.Enum):
     COMPLETED = "completed"
     FAILED = "failed"
     CANCELLED = "cancelled"
-    
-    
+
+
 # Task model
 class Task(Base):
     __tablename__ = "tasks"
@@ -30,33 +39,49 @@ class Task(Base):
     progress = Column(Integer, default=0)  # Optional: track progress percentage
     result = Column(String, nullable=True)  # Store task result if needed
 
+
 class ClaimsReport(Base):
-    __tablename__ = 'claim_reports'
+    __tablename__ = "claim_reports"
 
     id = Column(Integer, primary_key=True)
     fraud_score = Column(Float(precision=2), nullable=False)  # double precision
     fraud_indicators = Column(JSON, nullable=False)  # jsonb array
     ai_recommendation = Column(JSON, nullable=False)  # jsonb array
-    policy_review = Column(String(length=None))      # character varying
-    created_at = Column(DateTime, nullable=False)    # timestamp without time zone
-    updated_at = Column(DateTime, nullable=False)    # timestamp without time zone
+    evidence_provided = Column(JSON, nullable=False)  # jsonb array
+    policy_review = Column(String(length=None))  # character varying
+    type_of_incident = Column(String(length=None))  # character varying
+    details = Column(String(length=None))  # character varying
+    coverage_status = Column(String(length=None))  # character varying
+    created_at = Column(DateTime, nullable=False)  # timestamp without time zone
+    updated_at = Column(DateTime, nullable=False)  # timestamp without time zone
 
-    def __init__(self, 
-                 fraud_score: float,
-                 fraud_indicators: list,
-                 ai_recommendation: list,
-                 policy_review: str,
-                 created_at: datetime = None,
-                 updated_at: datetime = None):
+    def __init__(
+        self,
+        fraud_score: float,
+        fraud_indicators: list,
+        ai_recommendation: list,
+        policy_review: str,
+        evidence_provided: list,
+        coverage_status: str,
+        type_of_incident: str,
+        details: str,
+        created_at: datetime = None,
+        updated_at: datetime = None,
+    ):
         self.fraud_score = fraud_score
         self.fraud_indicators = fraud_indicators
         self.ai_recommendation = ai_recommendation
         self.policy_review = policy_review
+        self.evidence_provided: evidence_provided
+        self.coverage_status=coverage_status
+        self.details=details
+        self.type_of_incident=type_of_incident
         self.created_at = created_at or datetime.utcnow()
         self.updated_at = updated_at or datetime.utcnow()
 
     def __repr__(self):
         return f"<Claim(fraud_score={self.fraud_score}, created_at={self.created_at})>"
+
 
 # Create tables
 Base.metadata.create_all(bind=engine)
