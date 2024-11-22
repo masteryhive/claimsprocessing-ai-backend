@@ -1,19 +1,21 @@
 import json
 from typing import Annotated
 from langchain_core.tools import tool
+from src.resources.cost_benchmarking import CostBenchmarking
+from src.resources.retrieve_vehicle_policy import InsuranceDataExtractor
+from src.resources.image_understanding import claims_image_evidence_recognizer
 from src.config.appconfig import env_config
 
 
 ############## document extraction and completeness check ##############
 @tool
-def claims_document_understanding(
-    prompt: Annotated[str, "what you need to know about the document"],
-    document_url: Annotated[str, "document URL"],
+def supporting_document_understanding(
+    document_url: Annotated[str, "supporting document URL"],
 ):
     """
-    Analyzes the document to determine what it is by providing a prompt and the document URL.
+    Analyzes the document to determine what it is using the document URL.
     """
-    return ""
+    return claims_image_evidence_recognizer(document_url)
 
 
 @tool
@@ -69,42 +71,46 @@ def item_insurance_check(
     """
     calls the NIID database to see if the vehicle has been insured using the vehicle registration number.
     """
-    import requests
-    from requests.auth import HTTPBasicAuth
-
-    url = f"http://127.0.0.1:8000/api/v1/get-vehicle-policy?registration_number{vehicle_registration_number}"
     try:
-        username = "mahengr"
-        password = "admin0000#"
-        response = requests.get(url, auth=HTTPBasicAuth(username, password))
-        response.raise_for_status()
-        return json.dumps(response.json())
-    except requests.exceptions.RequestException as e:
-        return f"An error occurred: {str(e)}"
+        extractor = InsuranceDataExtractor(vehicle_registration_number)
+        try:
+            # Call the method to perform the extraction
+            data = extractor.extract_data()
+        finally:
+            # Ensure the driver is closed after extraction
+            extractor.close_driver()
+        return {"status": "success", "data": data}
+    except Exception as e:
+        return {"status": "error", "message": str(e)}
+    finally:
+        extractor.close_driver()
 
 
 @tool
 def item_pricing_check(
-    damaged_part: Annotated[
-        str, "from the picture evidence which parts are damaged."
-    ]
+    damaged_part: Annotated[str, "Identify the damaged parts from the supporting evidence picture. e.g Honda civic side mirror"],
+    quoted_cost: Annotated[str, "the quoted cost from supporting evidence like invoice, required to fix the damage."]
 ):
     """
-    calls the local market place to verify the quoted cost on the invoice.
+    calls the local market place to verify the quoted cost on the invoice for the vehicle repair claims.
     """
-    #     "implement jiji search and cost extraction for docuement inflation"
-    import requests
-    from requests.auth import HTTPBasicAuth
+    costBenchmarking = CostBenchmarking()
+    result = costBenchmarking.run(damaged_part, quoted_cost)
+    print(result)
+    return result
 
-    url = f"http://127.0.0.1:8000/api/v1/get-vehicle-policy?registration_number{vehicle_registration_number}"
-    try:
-        username = "sam@masteryhive.com"
-        password = "JLg8m4aQ8n46nhC"
-        response = requests.get(url, auth=HTTPBasicAuth(username, password))
-        response.raise_for_status()
-        return json.dumps(response.json())
-    except requests.exceptions.RequestException as e:
-        return f"An error occurred: {str(e)}"
+
+@tool
+def item_pricing_check(
+    damaged_part: Annotated[str, "from the picture evidence which parts are damaged. e.g toyota corolla bumper"],
+):
+    """
+    checks the local market place for how much the damaged part is worth.
+    """
+    costBenchmarking = CostBenchmarking()
+    result = costBenchmarking.run_with_expected_range(damaged_part)
+    print(result)
+    return result
 
 
 @tool
@@ -117,58 +123,6 @@ def calculate_fraud_risk(risk_factor: str):
 
 
 ############## claim summarizer ##############
-@tool
-def save_claim_report_database(
-    vehicle_registration_number: Annotated[
-        str, "claimant's vehicle registration number."
-    ],
-    fraud_indicators: Annotated[list, "List of indicators suggesting potential fraud."],
-    recommmendations: Annotated[
-        list, "List of recommendations based on the claim analysis."
-    ],
-    policy_review: Annotated[str, "Summary of the policy review findings."],
-    fraud_score: Annotated[str, "Calculated fraud risk score."],
-    evidence_provided: Annotated[list, "List of evidence provided for the claim."],
-    type_of_inciddent: Annotated[str, "Type of incident related to the claim."],
-    details: Annotated[str, "Detailed description of the claim."],
-    coverage_status: Annotated[str, "Status of the insurance coverage for the claim."],
-    claim_id: Annotated[str, "Unique identifier for the claim."],
-) -> str:
-    """
-    This tool saves claims information to the database by sending a POST request to the backend API.
-
-    Parameters:
-    - data_to_send: dictionary
-    Returns:
-    - A string message indicating the success or failure of the operation.
-    """
-    import requests
-
-    data_to_send = {
-        "vehicle_registration_number": vehicle_registration_number,
-        "fraud_indicators": fraud_indicators,
-        "ai_recommendation": recommmendations,
-        "policy_review": policy_review,
-        "fraud_score": float(fraud_score),
-        "evidence_provided": evidence_provided,
-        "type_of_incident": type_of_inciddent,
-        "details": details,
-        "coverage_status": coverage_status,
-        "claim_id": claim_id,
-    }
-
-    # Send a POST request to the endpoint
-    response = requests.post(
-        env_config.backend_api + f"/claims-report", json=data_to_send
-    )
-
-    # Check if the request was successful
-    if response.status_code == 201:
-        print(response.json())
-        return "Claim details successfully inserted to database."
-    else:
-        return f"Failed to send claim details: {response.status_code} - {response.text}"
-
 
 # @tool
 # def item_insurance_cost_check(input_data:str):

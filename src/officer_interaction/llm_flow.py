@@ -54,7 +54,7 @@ def _load_prompt_template() -> str:
 
 claims_document_verifier_agent = create_tool_agent(
     llm=llm,
-    tools=[claims_document_completeness],
+    tools=[claims_document_completeness,supporting_document_understanding],
     system_prompt=_load_prompt_template()["CLAIMSDOCUMENTVERIFIERAGENTSYSTEMPROMPT"],
 )
 
@@ -100,7 +100,6 @@ class SupervisorOutput(BaseModel):
 supervisor_chain = create_stirring_agent(
     _load_prompt_template()["STIRRINGAGENTSYSTEMPROMPT"], llm, SupervisorOutput, members
 )
-
 
 # The agent state is the input to each node in the graph
 class AgentState(TypedDict):
