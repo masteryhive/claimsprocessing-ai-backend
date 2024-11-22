@@ -98,6 +98,9 @@ CLAIMADJUSTER1SYSTEMPROMPT: |
 
   # Mandatory Template Structure
   <claim_summary>
+  <id>
+   // the id of the claim
+  </id>
   <fraud_score>
    // the fraud score (float type)
   </fraud_score>

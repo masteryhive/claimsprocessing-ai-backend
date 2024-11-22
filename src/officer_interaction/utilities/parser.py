@@ -4,6 +4,7 @@ from src.datamodels.co_ai import AIClaimsReport
 
 
 def extract_claim_summary(data) -> AIClaimsReport:
+    id = re.search(r"<id>\s*(?:\/\/)?(.*?)\s*</id>", data, re.DOTALL)
     fraud_score = re.search(
         r"<fraud_score>\s*(?:\/\/)?(.*?)\s*</fraud_score>", data, re.DOTALL
     )
@@ -28,6 +29,7 @@ def extract_claim_summary(data) -> AIClaimsReport:
     )
 
     return {
+        "id": id.group(1).strip(),
         "fraud_score": float(fraud_score.group(1).strip()) if fraud_score else 0.0,
         "fraud_indicators": [indicator.strip() for indicator in fraud_indicators],
         "policy_review": policy_review.group(1).strip() if policy_review else None,
