@@ -59,6 +59,7 @@ def get_db() -> Generator[cursor, None, None]:
 
 def create_claim_report(
     db: Session,
+    id: str,
     fraud_score: float,
     fraud_indicators: list,
     ai_recommendation: list,
@@ -72,6 +73,7 @@ def create_claim_report(
     Create a new claim record
     """
     claim_report = ClaimsReport(
+        id=id,
         fraud_score=fraud_score,
         fraud_indicators=fraud_indicators,
         ai_recommendation=ai_recommendation,
