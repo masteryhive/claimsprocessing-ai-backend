@@ -1,5 +1,9 @@
 from pydantic import BaseModel, Field
 
+# Data model for input validation
+class MessageRequest(BaseModel):
+    message: str
+
 class ProcessClaimTask(BaseModel):
     policy_number: str
     task_id: str

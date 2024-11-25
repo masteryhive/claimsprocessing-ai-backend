@@ -236,4 +236,4 @@ class CostBenchmarking:
 
 if __name__ == "__main__":
     costBenchmarking = CostBenchmarking(email=email, password=password)
-    print(costBenchmarking.run("toyota corolla bumper", "110,450"))
+    print(costBenchmarking.run("toyota corolla bumper", "560,450"))
