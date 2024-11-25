@@ -1,6 +1,6 @@
 import pika
 import os
-from config.appconfig import env_config
+from src.config.appconfig import env_config
 import logging
 
 # Suppress pika logs below WARNING level

@@ -1,7 +1,7 @@
 
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
-from config.appconfig import env_config
+from src.config.appconfig import env_config
 # Database setup
 engine = create_engine(
     "postgresql+psycopg2://",

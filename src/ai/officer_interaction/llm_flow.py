@@ -10,12 +10,12 @@ import functools, operator, vertexai
 from typing import Annotated, Sequence
 from typing_extensions import TypedDict
 from langchain_core.messages import BaseMessage
-from officer_interaction.agents import *
+from src.ai.officer_interaction.agents import *
 from langgraph.graph import END, StateGraph, START
 from langchain_google_vertexai import ChatVertexAI
-from officer_interaction.toolkit import *
-from utilities.helpers import load_yaml_file
-from officer_interaction.agent_utils import *
+from src.ai.officer_interaction.toolkit import *
+from src.utilities.helpers import load_yaml_file
+from src.ai.officer_interaction.agent_utils import *
 
 
 llm = ChatVertexAI(model_name="gemini-pro")
@@ -31,7 +31,7 @@ def _load_prompt_template() -> str:
     """Load the instruction prompt template from YAML file."""
     try:
         prompt_path = Path(
-            "src/officer_interaction/prompts/instruction.yaml"
+            "src/ai/officer_interaction/prompts/instruction.yaml"
         )
         if not prompt_path.exists():
             raise FileNotFoundError(f"Prompt template not found at {prompt_path}")
@@ -54,7 +54,7 @@ def _load_prompt_template() -> str:
 
 claims_document_verifier_agent = create_tool_agent(
     llm=llm,
-    tools=[claims_document_completeness],
+    tools=[claims_document_completeness,supporting_document_understanding],
     system_prompt=_load_prompt_template()["CLAIMSDOCUMENTVERIFIERAGENTSYSTEMPROMPT"],
 )
 
@@ -64,6 +64,8 @@ claims_investigator_agent = create_tool_agent(
         claimant_exists,
         policy_status_check,
         item_insurance_check,
+        item_pricing_benmarking,
+        item_pricing_evaluator,
         calculate_fraud_risk,
     ],
     system_prompt=_load_prompt_template()["CLAIMSINVESTIGATORAGENTSYSTEMPROMPT"],
@@ -100,7 +102,6 @@ class SupervisorOutput(BaseModel):
 supervisor_chain = create_stirring_agent(
     _load_prompt_template()["STIRRINGAGENTSYSTEMPROMPT"], llm, SupervisorOutput, members
 )
-
 
 # The agent state is the input to each node in the graph
 class AgentState(TypedDict):
