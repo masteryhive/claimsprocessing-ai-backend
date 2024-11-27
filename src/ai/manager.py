@@ -2,8 +2,8 @@
 from datetime import datetime, timezone
 import multiprocessing
 from langchain_core.messages import HumanMessage
-from src.ai.officer_interaction.utilities.printer import fancy_print
-from src.ai.officer_interaction.llm_flow import graph
+from src.ai.claims_processing.utilities.printer import fancy_print
+from src.ai.claims_processing.llm_flow import graph
 from src.ai.resources.db_ops import get_claim_from_database
 from src.database.schemas import Task, TaskStatus
 from src.config.db_setup import SessionLocal

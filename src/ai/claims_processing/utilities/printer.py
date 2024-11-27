@@ -4,7 +4,7 @@ import textwrap
 from src.ai.resources.db_ops import save_claim_report_database
 from src.datamodels.co_ai import AIClaimsReport
 from src.database.pd_db import create_claim_report
-from src.ai.officer_interaction.utilities.parser import extract_claim_data, extract_claim_summary
+from src.ai.claims_processing.utilities.parser import extract_claim_data, extract_claim_summary
 from src.config.db_setup import SessionLocal
 
 # Initialize colorama for cross-platform color support

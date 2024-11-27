@@ -10,12 +10,12 @@ import functools, operator, vertexai
 from typing import Annotated, Sequence
 from typing_extensions import TypedDict
 from langchain_core.messages import BaseMessage
-from src.officer_interaction.agents import *
+from src.claims_processing.agents import *
 from langgraph.graph import END, StateGraph, START
 from langchain_google_vertexai import ChatVertexAI
-from src.officer_interaction.toolkit import *
+from src.claims_processing.toolkit import *
 from src.utilities.helpers import load_yaml_file
-from src.officer_interaction.agent_utils import *
+from src.claims_processing.agent_utils import *
 
 
 llm = ChatVertexAI(model_name="gemini-pro")
@@ -31,7 +31,7 @@ def _load_prompt_template() -> str:
     """Load the instruction prompt template from YAML file."""
     try:
         prompt_path = Path(
-            "src/officer_interaction/prompts/instruction.yaml"
+            "src/claims_processing/prompts/instruction.yaml"
         )
         if not prompt_path.exists():
             raise FileNotFoundError(f"Prompt template not found at {prompt_path}")
