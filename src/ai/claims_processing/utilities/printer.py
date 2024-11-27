@@ -1,8 +1,9 @@
 from typing import Dict, Any
 from colorama import init, Fore, Style, Back
 import textwrap
+from src.database.schemas import Task, TaskStatus
 from src.ai.resources.db_ops import save_claim_report_database
-from src.datamodels.co_ai import AIClaimsReport
+from src.datamodels.co_ai import AIClaimsReport, ProcessClaimTask
 from src.database.pd_db import create_claim_report
 from src.ai.claims_processing.utilities.parser import extract_claim_data, extract_claim_summary
 from src.config.db_setup import SessionLocal
@@ -37,15 +38,13 @@ def print_tool_info(tool: str, tool_input: str, log: str) -> None:
     #     print(f"   {line}")
     # print()
 
-def fancy_print(s: Dict[str, Any], data: Dict[str, Any]) -> None:
+def fancy_print(claim_request: ProcessClaimTask,s: Dict[str, Any], data: Dict[str, Any]) -> None:
     """Main function to handle fancy printing of the workflow."""
     db = SessionLocal()
     if "__end__" not in s:
         print_header("CO AI Workflow Status")
-        
         # Print the current state
         # print_section("Current State", str(s))
-
         agent = list(s.keys())[0]
         if agent == "claims_adjuster_1":
             messages = data[agent]['messages']
@@ -64,6 +63,13 @@ def fancy_print(s: Dict[str, Any], data: Dict[str, Any]) -> None:
                     "typeOfIncident": result['type_of_incident'],
                     "details": result['details']
                 })
+                # Create new task record
+                task = Task(
+                    task_id=claim_request.task_id, task_type="co_ai", status=TaskStatus.COMPLETED
+                )
+                db.add(task)
+                db.commit()
+                db.refresh(task)
                 print_section(message.content,"")
                 return
         # Handle supervisor case

@@ -32,6 +32,15 @@ def process_message(body):
 
         # Fetch claim data and stream processing
         claim_data = get_claim_from_database(claim_request.model_dump())
+
+        # Create new task record
+        task = Task(
+            task_id=claim_request.task_id, task_type="co_ai", status=TaskStatus.RUNNING
+        )
+        db.add(task)
+        db.commit()
+        db.refresh(task)
+
         for s in graph.stream(
             {
                 "messages": [
@@ -40,7 +49,7 @@ def process_message(body):
             }
         ):
             if "__end__" not in s:
-                fancy_print(s, s)
+                fancy_print(claim_request,s, s)
     finally:
         db.close()
 
