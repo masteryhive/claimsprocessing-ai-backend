@@ -21,8 +21,9 @@ from src.ai.claims_processing.agent_utils import *
 llm = ChatVertexAI(model_name="gemini-pro")
 
 agent1 = "claims_processor"
-agent2 = "claims_investigator"
-agent3 = "claims_adjuster_1"
+agent2 = "claims_preliminary_investigator"
+agent3 = "claims_vehicle_investigator"
+agent4 = "claims_adjuster_1"
 
 members = [agent1, agent2, agent3]
 
@@ -58,7 +59,7 @@ claims_document_verifier_agent = create_tool_agent(
     system_prompt=_load_prompt_template()["CLAIMSDOCUMENTVERIFIERAGENTSYSTEMPROMPT"],
 )
 
-claims_investigator_agent = create_tool_agent(
+claims_preliminary_investigator_agent = create_tool_agent(
     llm=llm,
     tools=[
         claimant_exists,
@@ -66,6 +67,13 @@ claims_investigator_agent = create_tool_agent(
         item_insurance_check,
         item_pricing_benmarking,
         item_pricing_evaluator,
+    ],
+    system_prompt=_load_prompt_template()["CLAIMSINVESTIGATORAGENTSYSTEMPROMPT"],
+)
+
+claims_vehicle_investigator_agent = create_tool_agent(
+    llm=llm,
+    tools=[
         drivers_license_status_check,
         rapid_policy_claims_check,
         vehicle_registration_match,
@@ -122,13 +130,16 @@ workflow = StateGraph(AgentState)
 claims_document_verifier_node = functools.partial(
     crew_nodes, crew_member=claims_document_verifier_agent, name=agent1
 )
-claims_investigator_node = functools.partial(
-    crew_nodes, crew_member=claims_investigator_agent, name=agent1
+claims_preliminary_investigator_node = functools.partial(
+    crew_nodes, crew_member=claims_preliminary_investigator_agent, name=agent2
 )
-
+claims_vehicle_investigator_node = functools.partial(
+    crew_nodes,crew_member=claims_vehicle_investigator_agent,name=agent3
+)
 workflow.add_node(agent1, claims_document_verifier_node)
-workflow.add_node(agent2, claims_investigator_node)
-workflow.add_node(agent3, comms_node)
+workflow.add_node(agent2, claims_preliminary_investigator_node)
+workflow.add_node(agent3, claims_vehicle_investigator_node)
+workflow.add_node(agent4, comms_node)
 
 workflow.add_node("Supervisor", supervisor_chain)
 # set it as entrypoint to the graph.
@@ -137,10 +148,11 @@ workflow.set_entry_point("Supervisor")
 workflow.add_edge("Supervisor", agent1)
 workflow.add_edge(agent1, agent2)
 workflow.add_edge(agent2, agent3)
-workflow.add_edge(agent3, END)
+workflow.add_edge(agent3, agent4)
+workflow.add_edge(agent4, END)
 
 workflow.add_conditional_edges(
-    "Supervisor", lambda x: x["next"], member_options.pop(agent3)
+    "Supervisor", lambda x: x["next"], member_options.pop(agent4)
 )
 
 graph = workflow.compile()
