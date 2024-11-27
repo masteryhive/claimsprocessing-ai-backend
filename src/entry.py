@@ -53,4 +53,4 @@ def process_message(body:str):
         db.close()
 
 if __name__ == "__main__":
-    process_message()
+    process_message("")

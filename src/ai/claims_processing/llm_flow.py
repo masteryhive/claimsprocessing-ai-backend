@@ -23,9 +23,10 @@ llm = ChatVertexAI(model_name="gemini-pro")
 agent1 = "claims_processor"
 agent2 = "claims_preliminary_investigator"
 agent3 = "claims_vehicle_investigator"
-agent4 = "claims_adjuster_1"
+agent4 = "claims_fraud_risk_analyst"
+agent5 = "claims_adjuster_1"
 
-members = [agent1, agent2, agent3]
+members = [agent1, agent2, agent3, agent4,agent5]
 
 
 def _load_prompt_template() -> str:
@@ -48,6 +49,12 @@ def _load_prompt_template() -> str:
             "CLAIMADJUSTER1SYSTEMPROMPT": yaml_data.get(
                 "CLAIMADJUSTER1SYSTEMPROMPT", ""
             ),
+        "CLAIMSVEHICLEINVESTIGATORAGENTSYSTEMPROMPT": yaml_data.get(
+            "CLAIMSVEHICLEINVESTIGATORAGENTSYSTEMPROMPT", ""
+        ),
+        "CLAIMSFRAUDRISKAGENTSYSTEMPROMPT": yaml_data.get(
+            "CLAIMSFRAUDRISKAGENTSYSTEMPROMPT", ""
+        ),
         }
     except Exception as e:
         raise RuntimeError(f"Failed to load prompt template: {str(e)}")
@@ -77,9 +84,16 @@ claims_vehicle_investigator_agent = create_tool_agent(
         drivers_license_status_check,
         rapid_policy_claims_check,
         vehicle_registration_match,
+    ],
+    system_prompt=_load_prompt_template()["CLAIMSVEHICLEINVESTIGATORAGENTSYSTEMPROMPT"],
+)
+
+claims_fraud_risk_analyst_agent = create_tool_agent(
+    llm=llm,
+    tools=[
         fraud_detection_tool
     ],
-    system_prompt=_load_prompt_template()["CLAIMSINVESTIGATORAGENTSYSTEMPROMPT"],
+    system_prompt=_load_prompt_template()["CLAIMSFRAUDRISKAGENTSYSTEMPROMPT"],
 )
 
 claim_adjuster_1_agent = adjuster(
@@ -135,6 +149,9 @@ claims_preliminary_investigator_node = functools.partial(
 )
 claims_vehicle_investigator_node = functools.partial(
     crew_nodes,crew_member=claims_vehicle_investigator_agent,name=agent3
+)
+claims_fraud_risk_analyst_node = functools.partial(
+    crew_nodes,crew_member=claims_fraud_risk_analyst_agent,name=agent4
 )
 workflow.add_node(agent1, claims_document_verifier_node)
 workflow.add_node(agent2, claims_preliminary_investigator_node)
