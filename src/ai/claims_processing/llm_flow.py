@@ -123,7 +123,7 @@ claims_document_verifier_node = functools.partial(
     crew_nodes, crew_member=claims_document_verifier_agent, name=agent1
 )
 claims_investigator_node = functools.partial(
-    crew_nodes, crew_member=claims_investigator_agent, name=agent1
+    crew_nodes, crew_member=claims_investigator_agent, name=agent2
 )
 
 workflow.add_node(agent1, claims_document_verifier_node)
