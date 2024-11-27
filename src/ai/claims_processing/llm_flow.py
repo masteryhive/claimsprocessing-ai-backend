@@ -10,12 +10,12 @@ import functools, operator, vertexai
 from typing import Annotated, Sequence
 from typing_extensions import TypedDict
 from langchain_core.messages import BaseMessage
-from src.ai.officer_interaction.agents import *
+from src.ai.claims_processing.agents import *
 from langgraph.graph import END, StateGraph, START
 from langchain_google_vertexai import ChatVertexAI
-from src.ai.officer_interaction.toolkit import *
+from src.ai.claims_processing.toolkit import *
 from src.utilities.helpers import load_yaml_file
-from src.ai.officer_interaction.agent_utils import *
+from src.ai.claims_processing.agent_utils import *
 
 
 llm = ChatVertexAI(model_name="gemini-pro")
@@ -31,7 +31,7 @@ def _load_prompt_template() -> str:
     """Load the instruction prompt template from YAML file."""
     try:
         prompt_path = Path(
-            "src/ai/officer_interaction/prompts/instruction.yaml"
+            "src/ai/claims_processing/prompts/instruction.yaml"
         )
         if not prompt_path.exists():
             raise FileNotFoundError(f"Prompt template not found at {prompt_path}")
@@ -66,7 +66,10 @@ claims_investigator_agent = create_tool_agent(
         item_insurance_check,
         item_pricing_benmarking,
         item_pricing_evaluator,
-        calculate_fraud_risk,
+        drivers_license_status_check,
+        rapid_policy_claims_check,
+        vehicle_registration_match,
+        fraud_detection_tool
     ],
     system_prompt=_load_prompt_template()["CLAIMSINVESTIGATORAGENTSYSTEMPROMPT"],
 )
