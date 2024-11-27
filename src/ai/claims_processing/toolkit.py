@@ -57,7 +57,7 @@ def claimant_exists(
 
 
 @tool
-def policy_status_check(policy_number: Annotated[str, "claimant's policy_number."]):
+def policy_status_check(policy_number: Annotated[str, "claimant's policy number."]):
     """
     checks if the status of the claimant's insurance policy is active using the policy_id
     """
