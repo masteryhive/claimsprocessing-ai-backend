@@ -4,7 +4,6 @@ from src.datamodels.co_ai import AIClaimsReport
 
 
 def extract_claim_summary(data) -> AIClaimsReport:
-    id = re.search(r"<id>\s*(?:\/\/)?(.*?)\s*</id>", data, re.DOTALL)
     fraud_score = re.search(
         r"<fraud_score>\s*(?:\/\/)?(.*?)\s*</fraud_score>", data, re.DOTALL
     )
@@ -27,13 +26,15 @@ def extract_claim_summary(data) -> AIClaimsReport:
     ai_recommendation = re.findall(
         r"<recommendation>\s*(?:\/\/)?(.*?)\s*</recommendation>", data, re.DOTALL
     )
-    
-    fraud_score_data = fraud_score.group(1).strip()
+    operationStatus = re.search(
+        r"<claims_operation_status>\s*(?:\/\/)?(.*?)\s*</claims_operation_status>", data, re.DOTALL
+    )
+
+    fraud_score_data = fraud_score.group(1).strip() if fraud_score else 0
     if fraud_score_data == 'Information Not Available':
-        fraud_score_data = 0.0
+        fraud_score_data = 0
 
     return {
-        "id": id.group(1).strip(),
         "fraud_score": float(fraud_score_data),
         "fraud_indicators": [indicator.strip() for indicator in fraud_indicators],
         "policy_review": policy_review.group(1).strip() if policy_review else None,
@@ -56,6 +57,7 @@ def extract_claim_summary(data) -> AIClaimsReport:
             if evidence_provided
             else ["Information Not Available"]
         ),
+        "operationStatus":operationStatus.group(1).strip() if details else "",
     }
 
 

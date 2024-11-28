@@ -43,8 +43,8 @@ def _load_prompt_template() -> str:
             "CLAIMSDOCUMENTVERIFIERAGENTSYSTEMPROMPT": yaml_data.get(
                 "CLAIMSDOCUMENTVERIFIERAGENTSYSTEMPROMPT", ""
             ),
-            "CLAIMSINVESTIGATORAGENTSYSTEMPROMPT": yaml_data.get(
-                "CLAIMSINVESTIGATORAGENTSYSTEMPROMPT", ""
+            "CLAIMS_PRELIMINARY_INVESTIGATOR_AGENT_SYSTEM_PROMPT": yaml_data.get(
+                "CLAIMS_PRELIMINARY_INVESTIGATOR_AGENT_SYSTEM_PROMPT", ""
             ),
             "CLAIMADJUSTER1SYSTEMPROMPT": yaml_data.get(
                 "CLAIMADJUSTER1SYSTEMPROMPT", ""
@@ -73,9 +73,9 @@ claims_preliminary_investigator_agent = create_tool_agent(
         policy_status_check,
         item_insurance_check,
         item_pricing_benmarking,
-        item_pricing_evaluator,
+        # item_pricing_evaluator,
     ],
-    system_prompt=_load_prompt_template()["CLAIMSINVESTIGATORAGENTSYSTEMPROMPT"],
+    system_prompt=_load_prompt_template()["CLAIMS_PRELIMINARY_INVESTIGATOR_AGENT_SYSTEM_PROMPT"],
 )
 
 claims_vehicle_investigator_agent = create_tool_agent(
@@ -88,7 +88,7 @@ claims_vehicle_investigator_agent = create_tool_agent(
     system_prompt=_load_prompt_template()["CLAIMSVEHICLEINVESTIGATORAGENTSYSTEMPROMPT"],
 )
 
-claims_fraud_risk_analyst_agent = create_tool_agent(
+claims_fraud_risk_analyst_agent = create_tool_analyst_agent(
     llm=llm,
     tools=[
         fraud_detection_tool
@@ -156,7 +156,8 @@ claims_fraud_risk_analyst_node = functools.partial(
 workflow.add_node(agent1, claims_document_verifier_node)
 workflow.add_node(agent2, claims_preliminary_investigator_node)
 workflow.add_node(agent3, claims_vehicle_investigator_node)
-workflow.add_node(agent4, comms_node)
+workflow.add_node(agent4, claims_fraud_risk_analyst_node)
+workflow.add_node(agent5, comms_node)
 
 workflow.add_node("Supervisor", supervisor_chain)
 # set it as entrypoint to the graph.
@@ -166,10 +167,11 @@ workflow.add_edge("Supervisor", agent1)
 workflow.add_edge(agent1, agent2)
 workflow.add_edge(agent2, agent3)
 workflow.add_edge(agent3, agent4)
-workflow.add_edge(agent4, END)
+workflow.add_edge(agent4, agent5)
+workflow.add_edge(agent5, END)
 
 workflow.add_conditional_edges(
-    "Supervisor", lambda x: x["next"], member_options.pop(agent4)
+    "Supervisor", lambda x: x["next"], member_options.pop(agent5)
 )
 
 graph = workflow.compile()
