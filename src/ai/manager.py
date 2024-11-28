@@ -2,6 +2,7 @@
 from datetime import datetime, timezone
 import multiprocessing
 import time
+import uuid
 from langchain_core.messages import HumanMessage
 from src.ai.claims_processing.workflow_coordinator import  run_coordinator
 from src.ai.claims_processing.llm_flow import graph
@@ -12,27 +13,29 @@ from src.datamodels.co_ai import ProcessClaimTask
 from src.distsys.rabbitmq import RabbitMQ
 
 
-def process_message(body):
+def process_message(body:bytes):
     """Process a single RabbitMQ message."""
     body_str = body.decode("utf-8") if isinstance(body, bytes) else body
     claim_request = ProcessClaimTask(
         policy_number=body_str,
-        task_id=f"task_{int(datetime.now(timezone.utc).timestamp())}",
+        task_id=f"task_{str(uuid.uuid4())}",
     )
     print(f"Processing claim: {claim_request.model_dump()}")
 
     db = SessionLocal()
     try:
         # Create new task record
-        task = Task(
-            task_id=claim_request.task_id, task_type="co_ai", status=TaskStatus.PENDING
-        )
-        db.add(task)
-        db.commit()
-        db.refresh(task)
-        update_claim_status_database(claim_data["id"],status=TaskStatus.PENDING)
+        existing_task = db.query(Task).filter_by(task_id=claim_request.task_id).first()
+        if not existing_task:
+            task = Task(
+                task_id=claim_request.task_id, task_type="co_ai", status=TaskStatus.PENDING
+            )
+            db.add(task)
+            db.commit()
+            db.refresh(task)
         # Fetch claim data and stream processing
         claim_data = get_claim_from_database(claim_request.model_dump())
+        update_claim_status_database(claim_data["id"],status=TaskStatus.PENDING)
         time.sleep(1)
         # Update task record
         task.status = TaskStatus.RUNNING
