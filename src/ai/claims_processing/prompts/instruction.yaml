@@ -398,7 +398,7 @@ CLAIM_ADJUSTER_SUMMARY_PROMPT: |
   </instruction>
 
   <suggestion>
-  Here are some examples on how to use the Mandatory Template Structure.
+  Here are some examples on how to use the Mandatory Template Structure, they are not real data just format usage you can observe.
   EXAMPLE 1:
   <claim_summary>
   <id>XY789012</id>
