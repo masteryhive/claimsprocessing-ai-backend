@@ -9,8 +9,6 @@ from langchain.agents import AgentExecutor, create_tool_calling_agent
 from langchain_core.output_parsers import JsonOutputParser
 
 
-
-
 def create_stirring_agent(system_prompt:str,llm:ChatVertexAI,SupervisorOutput:any,members:list):
     supervisor_parser = JsonOutputParser(pydantic_object=SupervisorOutput)
     prompt = ChatPromptTemplate.from_messages(

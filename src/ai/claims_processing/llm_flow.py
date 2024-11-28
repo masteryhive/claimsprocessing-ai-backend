@@ -20,7 +20,7 @@ from src.utilities.helpers import load_yaml_file
 from src.ai.claims_processing.agent_utils import *
 
 
-llm = ChatVertexAI(model_name="gemini-pro")
+llm = ChatVertexAI(model_name="gemini-pro",kwargs={"temperature":0.2})
 
 agent1 = "claims_document_checker"
 agent2 = "claims_preliminary_investigator"
