@@ -67,6 +67,45 @@ def create_tool_agent(llm: ChatVertexAI, tools: list, system_prompt: str):
     )
     return executor
 
+def create_tool_analyst_agent(llm: ChatVertexAI, tools: list, system_prompt: str):
+    """Helper function to create agents with custom tools and system prompt
+    Args:
+        llm (ChatVertexAI): LLM for the agent
+        tools (list): list of tools the agent will use
+        system_prompt (str): text describing specific agent purpose
+
+    Returns:
+        executor (AgentExecutor): Runnable for the agent created.
+    """
+
+    # Each worker node will be given a name and some tools.
+
+    system_prompt_template = PromptTemplate(
+        template=system_prompt
+        + """
+                ONLY respond to the part of query relevant to your purpose.
+                IGNORE tasks you can't complete.
+                Use the following context to compute the risk score based on the weights: \n {agent_history} \n
+                """,
+        input_variables=["agent_history"],
+    )
+
+    # define system message
+    system_message_prompt = SystemMessagePromptTemplate(prompt=system_prompt_template)
+
+    prompt = ChatPromptTemplate.from_messages(
+        [
+            system_message_prompt,
+            MessagesPlaceholder(variable_name="messages"),
+            MessagesPlaceholder(variable_name="agent_scratchpad"),
+        ]
+    )
+    agent = create_tool_calling_agent(llm, tools, prompt)
+    executor = AgentExecutor(
+        agent=agent, tools=tools, return_intermediate_steps=True, verbose=False
+    )
+    return executor
+
 def adjuster(system_prompt:str,llm: ChatVertexAI):
     system_prompt_template = PromptTemplate(
         template=system_prompt,

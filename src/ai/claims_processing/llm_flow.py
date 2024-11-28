@@ -21,10 +21,12 @@ from src.ai.claims_processing.agent_utils import *
 llm = ChatVertexAI(model_name="gemini-pro")
 
 agent1 = "claims_processor"
-agent2 = "claims_investigator"
-agent3 = "claims_adjuster_1"
+agent2 = "claims_preliminary_investigator"
+agent3 = "claims_vehicle_investigator"
+agent4 = "claims_fraud_risk_analyst"
+agent5 = "claims_adjuster_1"
 
-members = [agent1, agent2, agent3]
+members = [agent1, agent2, agent3, agent4,agent5]
 
 
 def _load_prompt_template() -> str:
@@ -41,12 +43,18 @@ def _load_prompt_template() -> str:
             "CLAIMSDOCUMENTVERIFIERAGENTSYSTEMPROMPT": yaml_data.get(
                 "CLAIMSDOCUMENTVERIFIERAGENTSYSTEMPROMPT", ""
             ),
-            "CLAIMSINVESTIGATORAGENTSYSTEMPROMPT": yaml_data.get(
-                "CLAIMSINVESTIGATORAGENTSYSTEMPROMPT", ""
+            "CLAIMS_PRELIMINARY_INVESTIGATOR_AGENT_SYSTEM_PROMPT": yaml_data.get(
+                "CLAIMS_PRELIMINARY_INVESTIGATOR_AGENT_SYSTEM_PROMPT", ""
             ),
             "CLAIMADJUSTER1SYSTEMPROMPT": yaml_data.get(
                 "CLAIMADJUSTER1SYSTEMPROMPT", ""
             ),
+        "CLAIMSVEHICLEINVESTIGATORAGENTSYSTEMPROMPT": yaml_data.get(
+            "CLAIMSVEHICLEINVESTIGATORAGENTSYSTEMPROMPT", ""
+        ),
+        "CLAIMSFRAUDRISKAGENTSYSTEMPROMPT": yaml_data.get(
+            "CLAIMSFRAUDRISKAGENTSYSTEMPROMPT", ""
+        ),
         }
     except Exception as e:
         raise RuntimeError(f"Failed to load prompt template: {str(e)}")
@@ -58,20 +66,34 @@ claims_document_verifier_agent = create_tool_agent(
     system_prompt=_load_prompt_template()["CLAIMSDOCUMENTVERIFIERAGENTSYSTEMPROMPT"],
 )
 
-claims_investigator_agent = create_tool_agent(
+claims_preliminary_investigator_agent = create_tool_agent(
     llm=llm,
     tools=[
         claimant_exists,
         policy_status_check,
         item_insurance_check,
         item_pricing_benmarking,
-        item_pricing_evaluator,
+        # item_pricing_evaluator,
+    ],
+    system_prompt=_load_prompt_template()["CLAIMS_PRELIMINARY_INVESTIGATOR_AGENT_SYSTEM_PROMPT"],
+)
+
+claims_vehicle_investigator_agent = create_tool_agent(
+    llm=llm,
+    tools=[
         drivers_license_status_check,
         rapid_policy_claims_check,
         vehicle_registration_match,
+    ],
+    system_prompt=_load_prompt_template()["CLAIMSVEHICLEINVESTIGATORAGENTSYSTEMPROMPT"],
+)
+
+claims_fraud_risk_analyst_agent = create_tool_analyst_agent(
+    llm=llm,
+    tools=[
         fraud_detection_tool
     ],
-    system_prompt=_load_prompt_template()["CLAIMSINVESTIGATORAGENTSYSTEMPROMPT"],
+    system_prompt=_load_prompt_template()["CLAIMSFRAUDRISKAGENTSYSTEMPROMPT"],
 )
 
 claim_adjuster_1_agent = adjuster(
@@ -122,13 +144,20 @@ workflow = StateGraph(AgentState)
 claims_document_verifier_node = functools.partial(
     crew_nodes, crew_member=claims_document_verifier_agent, name=agent1
 )
-claims_investigator_node = functools.partial(
-    crew_nodes, crew_member=claims_investigator_agent, name=agent2
+claims_preliminary_investigator_node = functools.partial(
+    crew_nodes, crew_member=claims_preliminary_investigator_agent, name=agent2
 )
-
+claims_vehicle_investigator_node = functools.partial(
+    crew_nodes,crew_member=claims_vehicle_investigator_agent,name=agent3
+)
+claims_fraud_risk_analyst_node = functools.partial(
+    crew_nodes,crew_member=claims_fraud_risk_analyst_agent,name=agent4
+)
 workflow.add_node(agent1, claims_document_verifier_node)
-workflow.add_node(agent2, claims_investigator_node)
-workflow.add_node(agent3, comms_node)
+workflow.add_node(agent2, claims_preliminary_investigator_node)
+workflow.add_node(agent3, claims_vehicle_investigator_node)
+workflow.add_node(agent4, claims_fraud_risk_analyst_node)
+workflow.add_node(agent5, comms_node)
 
 workflow.add_node("Supervisor", supervisor_chain)
 # set it as entrypoint to the graph.
@@ -137,10 +166,12 @@ workflow.set_entry_point("Supervisor")
 workflow.add_edge("Supervisor", agent1)
 workflow.add_edge(agent1, agent2)
 workflow.add_edge(agent2, agent3)
-workflow.add_edge(agent3, END)
+workflow.add_edge(agent3, agent4)
+workflow.add_edge(agent4, agent5)
+workflow.add_edge(agent5, END)
 
 workflow.add_conditional_edges(
-    "Supervisor", lambda x: x["next"], member_options.pop(agent3)
+    "Supervisor", lambda x: x["next"], member_options.pop(agent5)
 )
 
 graph = workflow.compile()

@@ -175,15 +175,15 @@ def drivers_license_status_check(driver_license_number: Annotated[str, "claimant
 
 @tool
 #def fraud_detection_tool(risk_indicators: Annotated[str, "the weights from each tool used in a list. e.g [0.12,0.15,0.13,0.18,0.12,0.05,0.10,0.15]"]) -> str:
-def fraud_detection_tool(risk_indicators: Annotated[str, "A JSON string of risk indicators from fraud detection tools e.g {'claimant_exists': 0.12, 'policy_status_check': 0.15, 'item_insurance_check': 0.13, 'item_pricing_benchmarking': 0.18, 'ghost_claims_vehicle_check': 0.12, 'vehicle_registration_match': 0.05, 'rapid_policy_claims_check': 0.10, 'drivers_license_status_check': 0.15}"]) -> Dict[str, Union[Dict[str, float], float, Dict[str, bool]]]:
+def fraud_detection_tool(risk_indicators: Annotated[dict, 'A JSON string of risk indicators from fraud detection tools e.g {"claimant_exists": 0.12, "policy_status_check": 0.15, "vehicle_insurance_check": 0.13, "item_pricing_benchmarking": 0.18, "ghost_claims_vehicle_check": 0.12, "vehicle_registration_match": 0.05, "rapid_policy_claims_check": 0.10, "drivers_license_status_check": 0.15}']) -> Dict[str, Union[Dict[str, float], float, Dict[str, bool]]]:
     """
-    This tool is used to calculate potential fraud risk.
+    This tool is used to calculate the fraud risk score from the weights of the investigator checks.
     """
     # Predefined weights for each fraud detection tool
     weights = {
         "claimant_exists": 0.12,
         "policy_status_check": 0.15,
-        "item_insurance_check": 0.13,
+        "vehicle_insurance_check": 0.13,
         "item_pricing_benchmarking": 0.18,
         "ghost_claims_vehicle_check": 0.12,
         "vehicle_registration_match": 0.05,
@@ -191,15 +191,9 @@ def fraud_detection_tool(risk_indicators: Annotated[str, "A JSON string of risk 
         "drivers_license_status_check": 0.15,
     }
     
-    # Parse the input risk indicators
-    try:
-        risk_indicators_dict = json.loads(risk_indicators)
-    except json.JSONDecodeError:
-        raise ValueError("Invalid JSON input for risk indicators")
-    
     # Validate input matches expected tools
-    if set(risk_indicators_dict.keys()) != set(weights.keys()):
-        raise ValueError("Mismatch between input tools and expected fraud detection tools")
+    if set(risk_indicators.keys()) != set(weights.keys()):
+        return "Mismatch between input indicators and expected fraud risk indicators. Please check your input!"
     
     # Risk scoring
     risk_scores = {}
@@ -207,7 +201,7 @@ def fraud_detection_tool(risk_indicators: Annotated[str, "A JSON string of risk 
     results = {}
     
     # Calculate risk for each tool
-    for tool, result in risk_indicators_dict.items():
+    for tool, result in risk_indicators.items():
         # Determine if the tool indicates potential fraud
         is_fraud_indicator = result < weights[tool]
         
@@ -229,15 +223,12 @@ def fraud_detection_tool(risk_indicators: Annotated[str, "A JSON string of risk 
         fraud_level = "MEDIUM"
     else:
         fraud_level = "HIGH"
-    
-    return {
-        "individual_risk_scores": risk_scores,
-        "final_risk_score": final_risk_score,
-        "tool_results": results,
+    res = {
+        "indicator_risk_scores": risk_scores,
+        "fraud_risk_score": final_risk_score,
+        "indicators_used": results,
         "fraud_risk_level": fraud_level,
     }
-
+    return res
 
 # implement SSIM
-
-############## claim summarizer ##############
