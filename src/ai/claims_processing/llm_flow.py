@@ -10,6 +10,8 @@ import functools, operator, vertexai
 from typing import Annotated, Sequence
 from typing_extensions import TypedDict
 from langchain_core.messages import BaseMessage
+from src.ai.claims_processing.toolkit.tools import *
+from src.ai.claims_processing.toolkit.fraud_tools import *
 from src.ai.claims_processing.agents import *
 from langgraph.graph import END, StateGraph, START
 from langchain_google_vertexai import ChatVertexAI
@@ -20,7 +22,7 @@ from src.ai.claims_processing.agent_utils import *
 
 llm = ChatVertexAI(model_name="gemini-pro")
 
-agent1 = "claims_processor"
+agent1 = "claims_document_checker"
 agent2 = "claims_preliminary_investigator"
 agent3 = "claims_vehicle_investigator"
 agent4 = "claims_fraud_risk_analyst"
@@ -40,14 +42,14 @@ def _load_prompt_template() -> str:
         yaml_data = load_yaml_file(prompt_path)
         return {
             "STIRRINGAGENTSYSTEMPROMPT": yaml_data.get("STIRRINGAGENTSYSTEMPROMPT", ""),
-            "CLAIMSDOCUMENTVERIFIERAGENTSYSTEMPROMPT": yaml_data.get(
-                "CLAIMSDOCUMENTVERIFIERAGENTSYSTEMPROMPT", ""
+            "CLAIMS_DOCUMENT_VERIFIER_AGENT_SYSTEM_PROMPT": yaml_data.get(
+                "CLAIMS_DOCUMENT_VERIFIER_AGENT_SYSTEM_PROMPT", ""
             ),
             "CLAIMS_PRELIMINARY_INVESTIGATOR_AGENT_SYSTEM_PROMPT": yaml_data.get(
                 "CLAIMS_PRELIMINARY_INVESTIGATOR_AGENT_SYSTEM_PROMPT", ""
             ),
-            "CLAIMADJUSTER1SYSTEMPROMPT": yaml_data.get(
-                "CLAIMADJUSTER1SYSTEMPROMPT", ""
+            "CLAIM_ADJUSTER_SUMMARY_PROMPT": yaml_data.get(
+                "CLAIM_ADJUSTER_SUMMARY_PROMPT", ""
             ),
         "CLAIMSVEHICLEINVESTIGATORAGENTSYSTEMPROMPT": yaml_data.get(
             "CLAIMSVEHICLEINVESTIGATORAGENTSYSTEMPROMPT", ""
@@ -62,8 +64,9 @@ def _load_prompt_template() -> str:
 
 claims_document_verifier_agent = create_tool_agent(
     llm=llm,
-    tools=[claims_document_completeness,supporting_document_understanding],
-    system_prompt=_load_prompt_template()["CLAIMSDOCUMENTVERIFIERAGENTSYSTEMPROMPT"],
+    tools=[claims_document_completeness,
+           supporting_document_understanding],
+    system_prompt=_load_prompt_template()["CLAIMS_DOCUMENT_VERIFIER_AGENT_SYSTEM_PROMPT"],
 )
 
 claims_preliminary_investigator_agent = create_tool_agent(
@@ -97,7 +100,7 @@ claims_fraud_risk_analyst_agent = create_tool_analyst_agent(
 )
 
 claim_adjuster_1_agent = adjuster(
-    _load_prompt_template()["CLAIMADJUSTER1SYSTEMPROMPT"], llm
+    _load_prompt_template()["CLAIM_ADJUSTER_SUMMARY_PROMPT"], llm
 )
 
 

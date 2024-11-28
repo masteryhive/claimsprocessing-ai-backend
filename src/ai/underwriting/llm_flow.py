@@ -44,8 +44,8 @@ def _load_prompt_template() -> str:
             "CLAIMSINVESTIGATORAGENTSYSTEMPROMPT": yaml_data.get(
                 "CLAIMSINVESTIGATORAGENTSYSTEMPROMPT", ""
             ),
-            "CLAIMADJUSTER1SYSTEMPROMPT": yaml_data.get(
-                "CLAIMADJUSTER1SYSTEMPROMPT", ""
+            "CLAIM_ADJUSTER_SUMMARY_PROMPT": yaml_data.get(
+                "CLAIM_ADJUSTER_SUMMARY_PROMPT", ""
             ),
         }
     except Exception as e:
@@ -70,7 +70,7 @@ claims_investigator_agent = create_tool_agent(
 )
 
 claim_adjuster_1_agent = adjuster(
-    _load_prompt_template()["CLAIMADJUSTER1SYSTEMPROMPT"], llm
+    _load_prompt_template()["CLAIM_ADJUSTER_SUMMARY_PROMPT"], llm
 )
 
 

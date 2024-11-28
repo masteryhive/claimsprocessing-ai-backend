@@ -29,36 +29,38 @@ def extract_claim_summary(data) -> AIClaimsReport:
     operationStatus = re.search(
         r"<claims_operation_status>\s*(?:\/\/)?(.*?)\s*</claims_operation_status>", data, re.DOTALL
     )
+    try:
+        fraud_score_data = fraud_score.group(1).strip() if fraud_score else 0
+        if fraud_score_data == 'Information Not Available':
+            fraud_score_data = 0
 
-    fraud_score_data = fraud_score.group(1).strip() if fraud_score else 0
-    if fraud_score_data == 'Information Not Available':
-        fraud_score_data = 0
-
-    return {
-        "fraud_score": float(fraud_score_data),
-        "fraud_indicators": [indicator.strip() for indicator in fraud_indicators],
-        "policy_review": policy_review.group(1).strip() if policy_review else None,
-        "ai_recommendation": [
-            recommendation.strip() for recommendation in ai_recommendation
-        ],
-        "type_of_incident": (
-            type_of_incident.group(1).strip()
-            if type_of_incident
-            else "Information Not Available"
-        ),
-        "coverage_status": (
-            coverage_status.group(1).strip()
-            if coverage_status
-            else "Information Not Available"
-        ),
-        "details": details.group(1).strip() if details else "Information Not Available",
-        "evidence_provided": (
-            [evidence.strip() for evidence in evidence_provided]
-            if evidence_provided
-            else ["Information Not Available"]
-        ),
-        "operationStatus":operationStatus.group(1).strip() if details else "",
-    }
+        return {
+            "fraud_score": float(fraud_score_data),
+            "fraud_indicators": [indicator.strip() for indicator in fraud_indicators],
+            "policy_review": policy_review.group(1).strip() if policy_review else None,
+            "ai_recommendation": [
+                recommendation.strip() for recommendation in ai_recommendation
+            ],
+            "type_of_incident": (
+                type_of_incident.group(1).strip()
+                if type_of_incident
+                else "Information Not Available"
+            ),
+            "coverage_status": (
+                coverage_status.group(1).strip()
+                if coverage_status
+                else "Information Not Available"
+            ),
+            "details": details.group(1).strip() if details else "Information Not Available",
+            "evidence_provided": (
+                [evidence.strip() for evidence in evidence_provided]
+                if evidence_provided
+                else ["Information Not Available"]
+            ),
+            "operationStatus":operationStatus.group(1).strip() if operationStatus else "Information Not Available",
+        }
+    except Exception as e:
+        print(e)
 
 
 def extract_claim_data(html_content) -> AIClaimsReport:
