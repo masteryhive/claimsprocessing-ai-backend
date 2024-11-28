@@ -30,9 +30,9 @@ def process_message(body):
         db.add(task)
         db.commit()
         db.refresh(task)
-        update_claim_status_database(claim_data["id"],status=TaskStatus.PENDING)
         # Fetch claim data and stream processing
         claim_data = get_claim_from_database(claim_request.model_dump())
+        update_claim_status_database(claim_data["id"],status=TaskStatus.PENDING)
         time.sleep(1)
         # Update task record
         task.status = TaskStatus.RUNNING
