@@ -1,21 +1,93 @@
 from fastapi import FastAPI, BackgroundTasks, HTTPException, status
 from fastapi.responses import JSONResponse
-import uvicorn
+import uvicorn,os
+from fastapi.middleware.cors import CORSMiddleware
+from contextlib import asynccontextmanager
+from src.ai.model import init_vertexai
+from src.config.db_setup import SessionLocal
 from src.ai.manager import rabbitmq_worker
-import os
+from src.config.settings import get_setting
+from src.config.appconfig import env_config
+from src.utilities.Printer import printer
+from starlette.middleware.httpsredirect import HTTPSRedirectMiddleware
 
 # Suppress logging warnings
 os.environ["GRPC_VERBOSITY"] = "ERROR"
 os.environ["GLOG_minloglevel"] = "2"
 
-app = FastAPI()
+# Get application settings
+settings = get_setting()
+
+# Description for API documentation
+description = f"""
+{settings.API_STR} helps you do awesome stuff. 🚀
+"""
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """
+    Context manager for application lifespan.
+    This function initializes and cleans up resources during the application's lifecycle.
+    """
+    init_vertexai()
+    print(running_mode)
+    print()
+    printer(" ⚡️🚀 AI Server::Started", "sky_blue")
+    print()
+    printer(" ⚡️🏎  AI Server::Running", "sky_blue")
+    yield
+    printer(" ⚡️🚀 AI Server::SHUTDOWN", "red")
+
+
+# Create FastAPI app instance
+app = FastAPI(
+    title=settings.PROJECT_NAME,
+    description=description,
+    openapi_url=f"{settings.API_STR}/openapi.json",
+    license_info={
+        "name": "Apache 2.0",
+        "url": "https://www.apache.org/licenses/LICENSE-2.0.html",
+    },
+    lifespan=lifespan,
+)
+
+
+# Dependency to get DB session
+def get_db():
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
+
+
+# Configure for development or production mode
+if env_config.env == "development":
+    running_mode = "  👩‍💻 🛠️  Running in::development mode"
+else:
+    app.add_middleware(HTTPSRedirectMiddleware)
+    running_mode = "  🏭 ☁  Running in::production mode"
+
+# Origins for CORS
+origins = ["*"]
+
+# Add middleware to allow CORS requests
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["POST", "GET", "OPTIONS"],
+    allow_headers=["*"],
+    expose_headers=["*"],
+)
 
 
 @app.get("/")
 def home():
     """Home endpoint."""
     return {
-        "ApplicationName": "Claims AI Server",
+        "ApplicationName": "Claims AI BackEnd Server",
         "ApplicationOwner": "MasteryHive AI",
         "ApplicationVersion": "1.0",
         "ApplicationEngineer": "Sam Ayo",
