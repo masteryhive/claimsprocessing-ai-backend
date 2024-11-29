@@ -18,7 +18,6 @@ class RabbitMQ:
 
     def connect(self):
         # parameters = pika.ConnectionParameters(host=self.host, port=self.port, credentials=credentials)
-        parameters = pika.URLParameters(env_config.amqp)
         self.connection = pika.BlockingConnection(pika.ConnectionParameters(host='104.154.137.57'))
         self.channel = self.connection.channel()
 
