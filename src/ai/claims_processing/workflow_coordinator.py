@@ -52,6 +52,8 @@ def run_coordinator(db: Session,claim_id:str,claim_request: ProcessClaimTask,tas
         if agent == "claims_adjuster_1":
             update_claim_status_database(claim_id=claim_id,status="Vehicle fraud checks completed!")
             time.sleep(3)
+            update_claim_status_database(claim_id=claim_id,status="Calculating risk")
+            time.sleep(3)
             update_claim_status_database(claim_id=claim_id,status="Generating fraud score")
             time.sleep(4)
             update_claim_status_database(claim_id=claim_id,status="Creating Report Summary")
@@ -90,7 +92,7 @@ def run_coordinator(db: Session,claim_id:str,claim_request: ProcessClaimTask,tas
         print_header(agent)
         agent_history = data[agent]['agent_history']
         if agent == members[0]:
-            update_claim_status_database(claim_id=claim_id,status="Running document completeness check")
+            update_claim_status_database(claim_id=claim_id,status="Examining claim form")
             for entry in agent_history:
                 intermediate_steps = entry.additional_kwargs.get('intermediate_steps', [])
                 
@@ -111,9 +113,9 @@ def run_coordinator(db: Session,claim_id:str,claim_request: ProcessClaimTask,tas
                 print(f"{Fore.CYAN}{'─'*80}{Style.RESET_ALL}\n")
                 return
         elif agent == members[1]:
-            update_claim_status_database(claim_id=claim_id,status="Document Completeness Check Done!")
+            update_claim_status_database(claim_id=claim_id,status="Claim Form Examination Complete!")
             time.sleep(0.6)
-            update_claim_status_database(claim_id=claim_id,status="Running document fraud checks")
+            update_claim_status_database(claim_id=claim_id,status="Evaluating Supporing docs")
             for entry in agent_history:
                 intermediate_steps = entry.additional_kwargs.get('intermediate_steps', [])
                 
@@ -133,7 +135,30 @@ def run_coordinator(db: Session,claim_id:str,claim_request: ProcessClaimTask,tas
                 print(f"{Fore.CYAN}{'─'*80}{Style.RESET_ALL}\n")
                 return
         elif agent == members[2]:
-            update_claim_status_database(claim_id=claim_id,status="Document Fraud Check completed!")
+            update_claim_status_database(claim_id=claim_id,status="Evaluation Complete!")
+            time.sleep(1)
+            update_claim_status_database(claim_id=claim_id,status="Running document fraud checks")
+            for entry in agent_history:
+                intermediate_steps = entry.additional_kwargs.get('intermediate_steps', [])
+                
+                if intermediate_steps:
+                    print_header("Tool Executions")
+                    for step in intermediate_steps:
+                        print_tool_info(
+                            step[0].tool,
+                            step[0].tool_input,
+                            step[0].log
+                        )
+                
+                # Print AI Message content
+                ai_message_content = entry.content
+                print_header(f"{agent} Response")
+                print_section(ai_message_content,"")
+                
+                print(f"{Fore.CYAN}{'─'*80}{Style.RESET_ALL}\n")
+                return
+        elif agent == members[3]:
+            update_claim_status_database(claim_id=claim_id,status="Document fraud checks Done!")
             time.sleep(1)
             update_claim_status_database(claim_id=claim_id,status="Running vehicle fraud checks")
             for entry in agent_history:
@@ -155,3 +180,4 @@ def run_coordinator(db: Session,claim_id:str,claim_request: ProcessClaimTask,tas
                 
                 print(f"{Fore.CYAN}{'─'*80}{Style.RESET_ALL}\n")
                 return
+            
