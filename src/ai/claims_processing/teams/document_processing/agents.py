@@ -124,4 +124,4 @@ document_check_builder.add_edge(agentX, END)
 #     },
 # )
 document_check_graph = document_check_builder.compile()
-save_graph_mermaid(document_check_graph,output_file="display/doc_langgraph.png")
+# save_graph_mermaid(document_check_graph,output_file="display/doc_langgraph.png")

@@ -14,6 +14,7 @@ from src.ai.claims_processing.stirring_agent import super_graph
 def process_message(body:bytes):
     """Process a single RabbitMQ message."""
     body_str = body.decode("utf-8") if isinstance(body, bytes) else body
+    print("here")
     claim_request = ProcessClaimTask(
         claim_id=body_str,
         task_id=f"task_{str(uuid.uuid4())}",

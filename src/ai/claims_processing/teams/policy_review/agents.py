@@ -105,4 +105,4 @@ policy_check_builder.add_edge("supervisor", agent1)
 policy_check_builder.add_edge(agent1,END)
 
 policy_check_graph = policy_check_builder.compile()
-save_graph_mermaid(policy_check_graph,output_file='display/policy_langgraph.png')
+# save_graph_mermaid(policy_check_graph,output_file='display/policy_langgraph.png')
