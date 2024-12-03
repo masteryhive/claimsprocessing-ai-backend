@@ -1,4 +1,5 @@
 # encoding: utf-8
+import os
 from pydantic_settings import BaseSettings
 from src.config.appconfig import env_config
 
@@ -23,7 +24,11 @@ class Settings(BaseSettings):
 
     VERSION: str = "3.0.2"
     
-    PROJECT_NAME: str = "AI Server"
+    PROJECT_NAME: str = "MasteryHive Claims Processing Backend AI Server"
+
+    os.environ["LANGCHAIN_PROJECT"] = PROJECT_NAME
+
+    print("API Keys loaded and tracing set with project name: ", PROJECT_NAME)
 
   
 

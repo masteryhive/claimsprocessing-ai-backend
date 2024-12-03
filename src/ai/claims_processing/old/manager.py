@@ -4,8 +4,8 @@ import multiprocessing
 import time
 import uuid
 from langchain_core.messages import HumanMessage
-from src.ai.claims_processing.workflow_coordinator import  run_coordinator
-from src.ai.claims_processing.llm_flow import graph
+from ai.claims_processing.old.workflow_coordinator import  run_coordinator
+from ai.claims_processing.old.llm_flow import graph
 from src.ai.resources.db_ops import get_claim_from_database, update_claim_status_database
 from src.database.schemas import Task, TaskStatus
 from src.config.db_setup import SessionLocal
@@ -17,7 +17,7 @@ def process_message(body:bytes):
     """Process a single RabbitMQ message."""
     body_str = body.decode("utf-8") if isinstance(body, bytes) else body
     claim_request = ProcessClaimTask(
-        policy_number=body_str,
+        claim_id=body_str,
         task_id=f"task_{str(uuid.uuid4())}",
     )
     print(f"Processing claim: {claim_request.model_dump()}")

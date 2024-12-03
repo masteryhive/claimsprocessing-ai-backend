@@ -19,10 +19,10 @@ async def save_claim_database(data_to_send: dict) -> bool:
         else:
             return f"Failed to send claim details: {response.status_code} - {response.text}"
 
-def get_claim_from_database(policy:dict) -> dict:
+def get_claim_from_database(claim_request:dict) -> dict:
         import requests
         # Send a POST request to the endpoint
-        response = requests.get(env_config.backend_api+f"/claims/policy/{policy['policy_number']}")
+        response = requests.get(env_config.backend_api+f"/claims/{claim_request['claim_id']}")
 
         # Check if the request was successful
         if response.status_code == 200:

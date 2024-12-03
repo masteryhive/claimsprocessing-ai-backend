@@ -12,12 +12,12 @@ from typing_extensions import TypedDict
 from langchain_core.messages import BaseMessage
 from src.ai.claims_processing.toolkit.tools import *
 from src.ai.claims_processing.toolkit.fraud_tools import *
-from src.ai.claims_processing.agents import *
+from ai.claims_processing.old.agents import *
 from langgraph.graph import END, StateGraph, START
 from langchain_google_vertexai import ChatVertexAI
 from src.ai.claims_processing.toolkit import *
 from src.utilities.helpers import load_yaml_file
-from src.ai.claims_processing.agent_utils import *
+from ai.claims_processing.teams.create_agent_utils import *
 
 
 llm = ChatVertexAI(model_name="gemini-pro", kwargs={"temperature": 0.2})

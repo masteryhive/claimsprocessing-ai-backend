@@ -9,7 +9,7 @@ from src.datamodels.co_ai import AIClaimsReport, ProcessClaimTask
 from src.database.pd_db import create_claim_report
 from src.ai.claims_processing.utilities.parser import extract_claim_data, extract_claim_summary
 from src.config.db_setup import SessionLocal
-from src.ai.claims_processing.llm_flow import members
+from ai.claims_processing.old.llm_flow import members
 
 # Initialize colorama for cross-platform color support
 init()
