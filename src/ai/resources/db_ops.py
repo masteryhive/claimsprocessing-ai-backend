@@ -30,7 +30,7 @@ def get_claim_from_database(claim_request:dict) -> dict:
         else:
             return f"Failed to send claim details: {response.status_code} - {response.text}"
 
-def update_claim_status_database(claim_id: str, status:str) -> str:
+def update_claim_status_database(claim_id: int, status:str) -> str:
     """
     This tool saves claims information to the database by sending a POST request to the backend API.
     
