@@ -113,4 +113,4 @@ def start_worker(background_tasks: BackgroundTasks,):
 
 
 if __name__ == "__main__":
-    uvicorn.run(app, host="0.0.0.0")
+    uvicorn.run(app, host="0.0.0.0",port=env_config.app_port)
