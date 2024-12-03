@@ -69,6 +69,7 @@ CLAIM_ADJUSTER_SUMMARY_PROMPT: |
   </indicator>
   </fraud_indicators>
   <claim_validation_factors>
+  // minimum of atleast 5 factors
   <factor>
   <!-- Example: Repair invoice amount 38% higher than market average -->
   </factor>
@@ -105,11 +106,9 @@ CLAIM_ADJUSTER_SUMMARY_PROMPT: |
 
   Examples:
   Fewshot 1: Incomplete Claim Form
-  xml
-  Copy code
   <claim_summary>
   <id>
-  CLM-20231202010
+  77
   </id>
   <fraud_score>
   Information Not Available
@@ -128,6 +127,15 @@ CLAIM_ADJUSTER_SUMMARY_PROMPT: |
   </factor>
   <factor>
   Incident description lacks key details (e.g., time, location)
+  </factor>
+  <factor>
+  Incomplete policy information submitted
+  </factor>
+  <factor>
+  Discrepancies in reported and actual damage
+  </factor>
+  <factor>
+  Lack of witness statements or third-party reports
   </factor>
   </claim_validation_factors>
   <policy_review>
@@ -163,7 +171,7 @@ CLAIM_ADJUSTER_SUMMARY_PROMPT: |
   Fewshot 2: High-Risk Fraud
   <claim_summary>
   <id>
-  CLM-20231125004
+  24
   </id>
   <fraud_score>
   0.85
@@ -232,7 +240,7 @@ CLAIM_ADJUSTER_SUMMARY_PROMPT: |
   Fewshot 3: Low-Risk Valid Claim
   <claim_summary>
   <id>
-  CLM-20231201009
+   39
   </id>
   <fraud_score>
   0.15
