@@ -61,7 +61,8 @@ def control_workflow(db: Session,claim_id:str,claim_request: ProcessClaimTask,ta
             save_claim_report_database({
                 "claimId": claim_id,
                 "fraudScore": result['fraud_score'],
-                "fraudIndicators": result['fraud_indicators'],
+               # "fraudIndicators": result['fraud_indicators'],
+                 "fraudIndicators": result['claim_validation_factors'],
                 "aiRecommendation": result['ai_recommendation'],
                 "policyReview": result['policy_review'],
                 "evidenceProvided": result['evidence_provided'],
