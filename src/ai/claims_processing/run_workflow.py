@@ -41,7 +41,7 @@ def print_tool_info(tool: str, tool_input: str, log: str) -> None:
     #     print(f"   {line}")
     # print()
 
-def control_workflow(db: Session,claim_id:str,claim_request: ProcessClaimTask,task: Task,process_call: Dict[str, Any]) -> None:
+def control_workflow(db: Session,claim_id:int,claim_request: ProcessClaimTask,task: Task,process_call: Dict[str, Any]) -> None:
     """Main function to handle fancy printing of the workflow."""
     if "__end__" not in process_call:
         print_header("CO AI Workflow Status")

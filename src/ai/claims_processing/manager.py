@@ -33,13 +33,13 @@ def process_message(body:bytes):
             db.refresh(task)
         # Fetch claim data and stream processing
         claim_data = get_claim_from_database(claim_request.model_dump())
-        update_claim_status_database(claim_data["id"],status=TaskStatus.PENDING)
+        update_claim_status_database(int(claim_data["id"]),status=TaskStatus.PENDING)
         time.sleep(1)
         # Update task record
         task.status = TaskStatus.RUNNING
         db.commit()
         db.refresh(task)
-        update_claim_status_database(claim_data["id"],status=TaskStatus.RUNNING)
+        update_claim_status_database(int(claim_data["id"]),status=TaskStatus.RUNNING)
         for s in super_graph.stream(
             {
                 "messages": [
@@ -48,7 +48,7 @@ def process_message(body:bytes):
             }
         ):
             if "__end__" not in s:
-                control_workflow(db,claim_data["id"],claim_request,task,s)
+                control_workflow(db,int(claim_data["id"]),claim_request,task,s)
                 # Break the loop when 'summary_team' processes the claim
                 if "summary_team" in s:
                     print("Summary team has completed processing. Exiting the loop.")
