@@ -2,7 +2,7 @@ import base64,requests
 from langgraph.graph.state import CompiledStateGraph
 
 
-def save_graph_mermaid(graph:CompiledStateGraph, output_file:str='langgraph.png'):
+def save_graph_mermaid(graph:CompiledStateGraph, output_file:str='display/langgraph.png'):
     # Get the Mermaid string from your graph
     mermaid_string = graph.get_graph().draw_mermaid()
     

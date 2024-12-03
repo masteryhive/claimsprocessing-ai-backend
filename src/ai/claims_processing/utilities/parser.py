@@ -4,11 +4,15 @@ from src.datamodels.co_ai import AIClaimsReport
 
 
 def extract_claim_summary(data) -> AIClaimsReport:
+    data = data.strip("xml\n").strip("```")
     fraud_score = re.search(
         r"<fraud_score>\s*(?:\/\/)?(.*?)\s*</fraud_score>", data, re.DOTALL
     )
     fraud_indicators = re.findall(
         r"<indicator>\s*(?:\/\/)?(.*?)\s*</indicator>", data, re.DOTALL
+    )
+    claim_validation_factors = re.findall(
+        r"<factor>\s*(?:\/\/)?(.*?)\s*</factor>", data, re.DOTALL
     )
     policy_review = re.search(
         r"<policy_review>\s*(?:\/\/)?(.*?)\s*</policy_review>", data, re.DOTALL
@@ -37,6 +41,7 @@ def extract_claim_summary(data) -> AIClaimsReport:
         return {
             "fraud_score": float(fraud_score_data),
             "fraud_indicators": [indicator.strip() for indicator in fraud_indicators],
+            "claim_validation_factors":[factor.strip() for factor in claim_validation_factors],
             "policy_review": policy_review.group(1).strip() if policy_review else None,
             "ai_recommendation": [
                 recommendation.strip() for recommendation in ai_recommendation

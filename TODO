@@ -1,3 +1,12 @@
 create a video to image analyzer to verify that a car's video match a segment of the images
 Expand on the fraud indicators
 Log the checks
+setup redflags e.g policy_active_status
+RENEWAL DATE: 16/11/2023
+ANNUAL PREMIUM: N180,000.00
+PREMIUM PAID: N180,000.00
+
+check if annual premium is paid or owe.
+check if policy is expired.
+
+check the image similarity between two images.
