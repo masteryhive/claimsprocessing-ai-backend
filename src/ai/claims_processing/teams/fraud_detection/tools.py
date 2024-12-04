@@ -27,7 +27,7 @@ def claimant_exists(
 
 
 @tool
-def item_insurance_check(
+def vehicle_insurance_check(
     vehicle_registration_number: Annotated[
         str, "claimant's vehicle registration number."
     ]
@@ -79,7 +79,7 @@ def item_pricing_evaluator(
 
 
 @tool
-def ghost_claims_check(vehicle_information: Annotated[str, "vehicle make and brand. e.g toyota corolla 2012"]):
+def nonexistent_vehicle_check(vehicle_information: Annotated[str, "vehicle make and brand. e.g toyota corolla 2012"]):
     """
     Check for non-existent vehicles.
     """

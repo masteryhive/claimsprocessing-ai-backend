@@ -47,13 +47,13 @@ def _load_prompt_template() -> str:
 
 claim_form_fraud_investigator_agent = create_tool_agent(
     llm=llm,
-    tools=[    ],
+    tools=[claimant_exists,rapid_policy_claims_check,item_pricing_benmarking,item_pricing_evaluator],
     system_prompt=_load_prompt_template()["CLAIMS_FORM_FRAUD_INVESTIGATOR_AGENT_SYSTEM_PROMPT"],
 )
 
 vehicle_fraud_investigator_agent  = create_tool_agent(
     llm=llm,
-    tools=[],
+    tools=[vehicle_insurance_check,nonexistent_vehicle_check,vehicle_registration_match,drivers_license_status_check],
     system_prompt=_load_prompt_template()["VEHICLE_FRAUD_INVESTIGATOR_AGENT_SYSTEM_PROMPT"],
 )
 
