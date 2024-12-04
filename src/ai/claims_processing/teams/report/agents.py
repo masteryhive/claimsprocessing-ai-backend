@@ -4,9 +4,14 @@ from pydantic import BaseModel
 from enum import Enum
 from src.ai.claims_processing.llm import llm
 from src.ai.resources.gen_mermaid import save_graph_mermaid
-from src.ai.claims_processing.teams.create_agent import AgentState, create_ordinary_agent,create_supervisor_node
+from src.ai.claims_processing.teams.create_agent import (
+    AgentState,
+    create_ordinary_agent,
+    create_supervisor_node,
+)
 from langgraph.graph import END, StateGraph, START
 from src.utilities.helpers import load_yaml_file
+from src.config.appconfig import env_config
 
 agent1 = "claims_adjuster_1"
 
@@ -16,7 +21,9 @@ members = [agent1]
 def _load_prompt_template() -> str:
     """Load the instruction prompt template from YAML file."""
     try:
-        prompt_path = Path("src/ai/claims_processing/teams/report/prompts/instruction.yaml")
+        prompt_path = Path(
+            "src/ai/claims_processing/teams/report/prompts/instruction.yaml"
+        )
         if not prompt_path.exists():
             raise FileNotFoundError(f"Prompt template not found at {prompt_path}")
         yaml_data = load_yaml_file(prompt_path)
@@ -25,7 +32,6 @@ def _load_prompt_template() -> str:
             "CLAIM_ADJUSTER_SUMMARY_PROMPT": yaml_data.get(
                 "CLAIM_ADJUSTER_SUMMARY_PROMPT", ""
             ),
-
         }
     except Exception as e:
         raise RuntimeError(f"Failed to load prompt template: {str(e)}")
@@ -78,4 +84,5 @@ workflow.add_edge("Supervisor", agent1)
 workflow.add_conditional_edges("Supervisor", lambda state: state["next"])
 
 report_graph = workflow.compile()
-# save_graph_mermaid(report_graph,output_file='display/summary_langgraph.png')
+if env_config.env == "development":
+    save_graph_mermaid(report_graph, output_file="display/summary_langgraph.png")
