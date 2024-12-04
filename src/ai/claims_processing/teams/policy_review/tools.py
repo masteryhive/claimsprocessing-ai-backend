@@ -1,9 +1,7 @@
-from datetime import datetime
+
 from typing import Annotated
 from langchain_core.tools import tool
-
 from src.ai.rag.context_stuffing import process_query
-from src.ai.rag.retriever import retrieve_from_bigquery
 from src.ai.rag.generate_embedding import bq_store
 from src.utilities.helpers import _new_get_datetime
 

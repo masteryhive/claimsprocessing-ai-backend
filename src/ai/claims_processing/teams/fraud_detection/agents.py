@@ -10,54 +10,64 @@ from src.ai.claims_processing.teams.fraud_detection.tools import *
 from src.ai.claims_processing.teams.create_agent import *
 from langgraph.graph import END, StateGraph, START
 from src.utilities.helpers import load_yaml_file
+from src.config.appconfig import env_config
 
-agent1 = "insurance_policy_essential_data_retriever"
-agent2 = "insurance_policy_verifier"
+agent1 = "claims_form_fraud_investigator"  # New agent added
+agent2 = "vehicle_fraud_investigator"
+agent3 = "fraud_risk_analyst"
 agentX = "team_task_summarizer"
-members = [agent1,agent2, agentX]
+members = [agent1, agent2,agent3, agentX]
 
 
 def _load_prompt_template() -> str:
     """Load the instruction prompt template from YAML file."""
     try:
-        prompt_path = Path("src/ai/claims_processing/teams/fraud_detection/prompts/instruction.yaml")
+        prompt_path = Path(
+            "src/ai/claims_processing/teams/fraud_detection/prompts/instruction.yaml"
+        )
         if not prompt_path.exists():
             raise FileNotFoundError(f"Prompt template not found at {prompt_path}")
         yaml_data = load_yaml_file(prompt_path)
         return {
             "STIRRINGAGENTSYSTEMPROMPT": yaml_data.get("STIRRINGAGENTSYSTEMPROMPT", ""),
-            "INSURANCE_CLAIM_VERIFICATION": yaml_data.get(
-                "INSURANCE_CLAIM_VERIFICATION", ""
+            "CLAIMS_FORM_FRAUD_INVESTIGATOR_AGENT_SYSTEM_PROMPT": yaml_data.get(
+                "CLAIMS_FORM_FRAUD_INVESTIGATOR_AGENT_SYSTEM_PROMPT", ""
             ),
-        "INSURANCE_CLAIM_POLICY_DATA": yaml_data.get("INSURANCE_CLAIM_POLICY_DATA", ""),
-        "PROCESS_CLERK_PROMPT": yaml_data.get("PROCESS_CLERK_PROMPT", ""),
+            "VEHICLE_FRAUD_INVESTIGATOR_AGENT_SYSTEM_PROMPT": yaml_data.get(
+                "VEHICLE_FRAUD_INVESTIGATOR_AGENT_SYSTEM_PROMPT", ""
+            ),
+            "FRAUD_RISK_AGENT_SYSTEM_PROMPT": yaml_data.get(
+                "FRAUD_RISK_AGENT_SYSTEM_PROMPT", ""
+            ),
+            "PROCESS_CLERK_PROMPT": yaml_data.get("PROCESS_CLERK_PROMPT", ""),
         }
     except Exception as e:
         raise RuntimeError(f"Failed to load prompt template: {str(e)}")
 
 
-
-insurance_policy_verifier_agent = create_tool_agent(
+claim_form_fraud_investigator_agent = create_tool_agent(
     llm=llm,
-    tools=[check_if_claim_is_within_insurance_period,check_if_claim_is_reported_within_insurance_period,
-           check_geographical_coverage,check_premium_coverage],
-    system_prompt=_load_prompt_template()[
-        "INSURANCE_CLAIM_VERIFICATION"
-    ],
+    tools=[    ],
+    system_prompt=_load_prompt_template()["CLAIMS_FORM_FRAUD_INVESTIGATOR_AGENT_SYSTEM_PROMPT"],
 )
 
-insurance_policy_essential_data_agent = create_tool_agent(
+vehicle_fraud_investigator_agent  = create_tool_agent(
     llm=llm,
-    tools=[provide_policy_details],
-    system_prompt=_load_prompt_template()[
-        "INSURANCE_CLAIM_POLICY_DATA"
-    ],
+    tools=[],
+    system_prompt=_load_prompt_template()["VEHICLE_FRAUD_INVESTIGATOR_AGENT_SYSTEM_PROMPT"],
+)
+
+fraud_risk_analyst_agent = create_tool_agent(
+    llm=llm,
+    tools=[fraud_detection_tool],
+    system_prompt=_load_prompt_template()["FRAUD_RISK_AGENT_SYSTEM_PROMPT"],
 )
 
 
 fraud_detection_clerk_agent = summarizer(
     _load_prompt_template()["PROCESS_CLERK_PROMPT"], llm
 )
+
 
 def comms_node(state):
     # read the last message in the message history.
@@ -69,11 +79,13 @@ def comms_node(state):
     # respond back to the user.
     return {"messages": [result]}
 
+
 # create options map for the supervisor output parser.
 member_options = {member: member for member in members}
 
 # create Enum object
 MemberEnum = Enum("MemberEnum", member_options)
+
 
 class Router(BaseModel):
     """
@@ -82,6 +94,7 @@ class Router(BaseModel):
 
     next: MemberEnum
 
+
 fraud_detection_supervisor_node = create_supervisor_node(
     _load_prompt_template()["STIRRINGAGENTSYSTEMPROMPT"], llm, Router, members
 )
@@ -89,31 +102,32 @@ fraud_detection_supervisor_node = create_supervisor_node(
 
 fraud_detection_builder = StateGraph(AgentState)
 
-insurance_policy_essential_data_node = functools.partial(
-    crew_nodes, crew_member=insurance_policy_essential_data_agent, name=agent1
+claim_form_fraud_investigator_node = functools.partial(
+    crew_nodes, crew_member=claim_form_fraud_investigator_agent, name=agent1
 )
-insurance_policy_verifier_node = functools.partial(
-    crew_nodes, crew_member=insurance_policy_verifier_agent, name=agent2
+vehicle_fraud_investigator_node = functools.partial(
+    crew_nodes, crew_member=vehicle_fraud_investigator_agent, name=agent2
+)
+fraud_risk_analyst_node = functools.partial(
+    crew_nodes, crew_member=fraud_risk_analyst_agent, name=agent3
 )
 
+
 fraud_detection_builder.add_node("supervisor", fraud_detection_supervisor_node)
-fraud_detection_builder.add_node(agent1, insurance_policy_essential_data_node)
-fraud_detection_builder.add_node(agent2, insurance_policy_verifier_node)
+fraud_detection_builder.add_node(agent1, claim_form_fraud_investigator_node)
+fraud_detection_builder.add_node(agent2, vehicle_fraud_investigator_node)
+fraud_detection_builder.add_node(agent3, fraud_risk_analyst_node)
 fraud_detection_builder.add_node(agentX, comms_node)
 
 # Define the control flow
 fraud_detection_builder.set_entry_point("supervisor")
 # We want our workers to ALWAYS "report back" to the supervisor when done
-fraud_detection_builder.add_edge("supervisor",agent1)
+fraud_detection_builder.add_edge("supervisor", agent1)
 fraud_detection_builder.add_edge(agent1, agent2)
-fraud_detection_builder.add_edge(agent2, agentX)
+fraud_detection_builder.add_edge(agent2, agent3)
+fraud_detection_builder.add_edge(agent3, agentX)
 fraud_detection_builder.add_edge(agentX, END)
-# fraud_detection_builder.add_conditional_edges(  ## sup choice to go to email, or LLM or bye based on result of function decide_next_node
-#     "supervisor",
-#     router,
-#     {members[0]:members[0],members[1]:members[1],
-#          "__end__": END
-#     },
-# )
+
 fraud_detection_graph = fraud_detection_builder.compile()
-# save_graph_mermaid(fraud_detection_graph,output_file="display/policy_langgraph.png")
+if env_config.env == "development":
+    save_graph_mermaid(fraud_detection_graph, output_file="display/fraud_langgraph.png")

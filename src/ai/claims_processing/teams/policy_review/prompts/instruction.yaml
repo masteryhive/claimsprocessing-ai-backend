@@ -25,7 +25,8 @@ STIRRINGAGENTSYSTEMPROMPT: |
   Ensure that each task follows the order defined in the routine, regardless of individual responses.
   Example Workflow:
 
-  Start with the insurance_policy_verifier.
+  Start with the insurance_policy_essential_data_retriever.
+  when insurance_policy_essential_data_retriever responds, move to insurance_policy_verifier
   insurance_policy_verifier responds.
   Respond with "FINISH" to indicate the task is complete.
   Context:
