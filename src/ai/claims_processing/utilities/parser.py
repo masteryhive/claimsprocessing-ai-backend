@@ -8,6 +8,9 @@ def extract_claim_summary(data) -> AIClaimsReport:
     fraud_score = re.search(
         r"<fraud_score>\s*(?:\/\/)?(.*?)\s*</fraud_score>", data, re.DOTALL
     )
+    discoveries = re.findall(
+        r"<discovery>\s*(?:\/\/)?(.*?)\s*</discovery>", data, re.DOTALL
+    )
     fraud_indicators = re.findall(
         r"<indicator>\s*(?:\/\/)?(.*?)\s*</indicator>", data, re.DOTALL
     )
@@ -46,6 +49,7 @@ def extract_claim_summary(data) -> AIClaimsReport:
             "ai_recommendation": [
                 recommendation.strip() for recommendation in ai_recommendation
             ],
+            "discoveries": [discovery.strip() for discovery in discoveries],
             "type_of_incident": (
                 type_of_incident.group(1).strip()
                 if type_of_incident

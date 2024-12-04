@@ -1,22 +1,20 @@
-from typing import List, Literal
+from enum import Enum
+import functools
 from pydantic import BaseModel
-from langchain_core.language_models.chat_models import BaseChatModel
-from langgraph.graph import StateGraph, MessagesState, START, END
-from langchain_core.messages import HumanMessage, trim_messages
-from langgraph.prebuilt import create_react_agent
+from langgraph.graph import StateGraph, END
 from pathlib import Path
-from langchain_google_vertexai import ChatVertexAI
+from src.ai.claims_processing.teams.create_agent_utils import crew_nodes
+from src.ai.claims_processing.llm import llm
 from src.ai.resources.gen_mermaid import save_graph_mermaid
 from src.ai.claims_processing.teams.policy_review.tools import *
+from src.ai.claims_processing.teams.create_agent import *
 from langgraph.graph import END, StateGraph, START
 from src.utilities.helpers import load_yaml_file
 
-
-llm = ChatVertexAI(model_name="gemini-pro", kwargs={"temperature": 0.2})
-
-agent1 = "policy_valid_checker"
-
-members = [agent1]
+agent1 = "insurance_policy_essential_data_retriever"
+agent2 = "insurance_policy_verifier"
+agentX = "team_task_summarizer"
+members = [agent1,agent2, agentX]
 
 
 def _load_prompt_template() -> str:
@@ -28,81 +26,102 @@ def _load_prompt_template() -> str:
         yaml_data = load_yaml_file(prompt_path)
         return {
             "STIRRINGAGENTSYSTEMPROMPT": yaml_data.get("STIRRINGAGENTSYSTEMPROMPT", ""),
-"POLICY_CHECK_VERIFIER_AGENT_SYSTEM_PROMPT":yaml_data.get("POLICY_CHECK_VERIFIER_AGENT_SYSTEM_PROMPT"),
+            "INSURANCE_CLAIM_VERIFICATION": yaml_data.get(
+                "INSURANCE_CLAIM_VERIFICATION", ""
+            ),
+        "INSURANCE_CLAIM_POLICY_DATA": yaml_data.get("INSURANCE_CLAIM_POLICY_DATA", ""),
+        "PROCESS_CLERK_PROMPT": yaml_data.get("PROCESS_CLERK_PROMPT", ""),
         }
     except Exception as e:
         raise RuntimeError(f"Failed to load prompt template: {str(e)}")
 
 
-# The agent state is the input to each node in the graph
-class AgentState(MessagesState):
-    # The 'next' field indicates where to route to next
-    next: str
 
+insurance_policy_verifier_agent = create_tool_agent(
+    llm=llm,
+    tools=[check_if_claim_is_within_insurance_period,check_if_claim_is_reported_within_insurance_period,
+           check_geographical_coverage,check_premium_coverage],
+    system_prompt=_load_prompt_template()[
+        "INSURANCE_CLAIM_VERIFICATION"
+    ],
+)
 
-def make_supervisor_node(llm: BaseChatModel, members: list[str]) -> str:
-    options = ["FINISH"] + members
-    system_prompt = (
-        "You are a supervisor tasked with managing a conversation between the"
-        f" following workers: {members}. Given the following user request,"
-        " respond with the worker to act next. Each worker will perform a"
-        " task and respond with their results and status. When finished,"
-        " respond with FINISH."
-    )
-
-
-    class Router(BaseModel):
-        """
-        Worker to route to the next step. If no workers are needed, route to FINISH.
-        """
-
-        next: List[str] = options
-
-    def supervisor_node(state: MessagesState) -> MessagesState:
-        """An LLM-based router."""
-        messages = [
-            {"role": "system", "content": system_prompt},
-        ] + state["messages"]
-        response = llm.with_structured_output(Router).invoke(messages)
-        if response is not None:
-            next_ = response.next
-            return {"next": next_[0]}
-
-    return supervisor_node
-
-
-policy_claim_verifier_agent = create_react_agent(
-    llm,
-    tools=[policy_validity],
-    state_modifier=_load_prompt_template()[
-        "POLICY_CHECK_VERIFIER_AGENT_SYSTEM_PROMPT"
+insurance_policy_essential_data_agent = create_tool_agent(
+    llm=llm,
+    tools=[provide_policy_details],
+    system_prompt=_load_prompt_template()[
+        "INSURANCE_CLAIM_POLICY_DATA"
     ],
 )
 
 
+policy_review_clerk_agent = summarizer(
+    _load_prompt_template()["PROCESS_CLERK_PROMPT"], llm
+)
 
-def policy_claim_verifier_node(state: AgentState) -> AgentState:
-    result = policy_claim_verifier_agent.invoke(state)
-    return {
-        "messages": [HumanMessage(content=result["messages"][-1].content, name=agent1)]
+def comms_node(state):
+    # read the last message in the message history.
+    input = {
+        "messages": [state["messages"][-1]],
+        "agent_history": state["agent_history"],
     }
+    result = policy_review_clerk_agent.invoke(input)
+    # respond back to the user.
+    return {"messages": [result]}
+
+# create options map for the supervisor output parser.
+member_options = {member: member for member in members}
+
+# create Enum object
+MemberEnum = Enum("MemberEnum", member_options)
+
+class Router(BaseModel):
+    """
+    Worker to route to the next step. If no workers are needed, route to FINISH.
+    """
+
+    next: MemberEnum
+
+policy_review_supervisor_node = create_supervisor_node(
+    _load_prompt_template()["STIRRINGAGENTSYSTEMPROMPT"], llm, Router, members
+)
 
 
 
-policy_check_supervisor_node = make_supervisor_node(llm, members)
+# def router(state) -> Literal[*options]:
+#     # This is the router
+#     if state.get("next"):
+#         return state.get("next")
+#     else:
+#         return '__end__'
 
+policy_review_builder = StateGraph(AgentState)
 
-policy_check_builder = StateGraph(MessagesState)
-policy_check_builder.add_node("supervisor", policy_check_supervisor_node)
-policy_check_builder.add_node(agent1, policy_claim_verifier_node)
+insurance_policy_essential_data_node = functools.partial(
+    crew_nodes, crew_member=insurance_policy_essential_data_agent, name=agent1
+)
+insurance_policy_verifier_node = functools.partial(
+    crew_nodes, crew_member=insurance_policy_verifier_agent, name=agent2
+)
 
+policy_review_builder.add_node("supervisor", policy_review_supervisor_node)
+policy_review_builder.add_node(agent1, insurance_policy_essential_data_node)
+policy_review_builder.add_node(agent2, insurance_policy_verifier_node)
+policy_review_builder.add_node(agentX, comms_node)
 
 # Define the control flow
-policy_check_builder.add_edge(START, "supervisor")
+policy_review_builder.set_entry_point("supervisor")
 # We want our workers to ALWAYS "report back" to the supervisor when done
-
-policy_check_builder.add_edge("supervisor", agent1)
-policy_check_builder.add_edge(agent1,END)
-
-policy_check_graph = policy_check_builder.compile()
-# save_graph_mermaid(policy_check_graph,output_file='display/policy_langgraph.png')
+policy_review_builder.add_edge("supervisor",agent1)
+policy_review_builder.add_edge(agent1, agent2)
+policy_review_builder.add_edge(agent2, agentX)
+policy_review_builder.add_edge(agentX, END)
+# policy_review_builder.add_conditional_edges(  ## sup choice to go to email, or LLM or bye based on result of function decide_next_node
+#     "supervisor",
+#     router,
+#     {members[0]:members[0],members[1]:members[1],
+#          "__end__": END
+#     },
+# )
+policy_review_graph = policy_review_builder.compile()
+save_graph_mermaid(policy_review_graph,output_file="display/policy_langgraph.png")

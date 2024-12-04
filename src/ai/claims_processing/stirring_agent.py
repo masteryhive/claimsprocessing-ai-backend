@@ -10,7 +10,7 @@ from src.ai.claims_processing.teams.create_agent import (
     AgentState,
     create_supervisor_node,
 )
-from src.ai.claims_processing.teams.policy_review.agents import policy_check_graph
+from src.ai.claims_processing.teams.policy_review.agents import policy_review_graph
 from src.ai.claims_processing.teams.report.agents import report_graph
 from src.ai.claims_processing.teams.document_processing.agents import (
     document_check_graph,
@@ -86,10 +86,18 @@ Workflow Steps:
    - If documents are incomplete or missing, report the specific deficiencies
    - Do NOT request additional information or clarify further
 
-2. Summary Team
+2. Policy Review Team
    - Receives the screening team's response
-   - Create a concise summary of the screening team's findings
-   - Highlight key issues or missing document types
+   - Verify the validity and status of the insurance policy
+   - Ensure all policy terms are met and the policy is active
+   - Report any discrepancies or issues found during the review
+   - If issues are found, proceed directly to the summary team for reporting
+   - Do NOT request additional information or clarify further
+
+2. Summary Team
+   - Receives the all the team's response
+   - Create a concise summary of all the team's findings
+   - Highlight key issues including missing document types, policy essential details, policy verification reports etc.
    - Prepare a clear, professional summary for final review
 
 3. Closure
@@ -111,7 +119,7 @@ You always need the summary team to keep your work astute and presentable.
 
 You MUST route the screening team's response to the summary team before closing the task.
 Given the following task and conversation history, the next worker to act MUST follow this flow: 
- - claim_form_screening_team -> summary_team.
+ - claim_form_screening_team -> policy_review_team -> summary_team.
 Select one of: {options} 
 \n{format_instructions}\n
 
@@ -139,7 +147,12 @@ def call_doc_team(state: AgentState) -> AgentState:
 
 
 def call_pol_team(state: AgentState) -> AgentState:
-    response = policy_check_graph.invoke({"messages": state["messages"][-1]})
+    response = policy_review_graph.invoke(
+        {
+            "messages": [state["messages"][-1]],
+            "agent_history": state["agent_history"],
+        }
+    )
     return {
         "messages": [
             HumanMessage(
@@ -182,20 +195,22 @@ super_builder.add_node(members[2], call_summary_team)
 # Define the control flow
 super_builder.add_edge(START, "supervisor")
 # We want our teams to ALWAYS "report back" to the top-level supervisor when done
-super_builder.add_edge(members[0], "supervisor")
-super_builder.add_edge(members[1], "supervisor")
-super_builder.add_edge(members[2], "supervisor")
+super_builder.add_edge("supervisor",members[0])
+super_builder.add_edge(members[0], members[1])
+super_builder.add_edge(members[1], members[2])
+super_builder.add_edge(members[2], END)
+
 #super_builder.add_edge("supervisor", END)
-super_builder.add_conditional_edges(  ## sup choice to go to email, or LLM or bye based on result of function decide_next_node
-    "supervisor",
-    router,
-    {
-        members[0]: members[0],
-        members[1]: members[1],
-        members[2]: members[2],
-        "__end__": END,
-    },
-)
+# super_builder.add_conditional_edges(  ## sup choice to go to email, or LLM or bye based on result of function decide_next_node
+#     "supervisor",
+#     router,
+#     {
+#         members[0]: members[0],
+#         members[1]: members[1],
+#         members[2]: members[2],
+#         "__end__": END,
+#     },
+# )
 
 super_graph = super_builder.compile()
-# save_graph_mermaid(super_graph, output_file="display/super_langgraph.png")
+save_graph_mermaid(super_graph, output_file="display/super_langgraph.png")

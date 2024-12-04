@@ -5,13 +5,13 @@ class MessageRequest(BaseModel):
     message: str
 
 class ProcessClaimTask(BaseModel):
-    claim_id: str
+    claim_id: int
     task_id: str
 
     class Config:
         json_schema_extra = {
             "example": {
-                "claim_id": "56",
+                "claim_id": 56,
                 "task_id": "TASK123_12:08:34"
             }
         }

@@ -62,6 +62,7 @@ def create_claim_report(
     id: str,
     fraud_score: float,
     fraud_indicators: list,
+    discoveries: list,
     ai_recommendation: list,
     policy_review: str,
     evidence_provided: list,
@@ -75,6 +76,7 @@ def create_claim_report(
     claim_report = ClaimsReport(
         id=id,
         fraud_score=fraud_score,
+        discoveries=discoveries,
         fraud_indicators=fraud_indicators,
         ai_recommendation=ai_recommendation,
         policy_review=policy_review,
