@@ -61,6 +61,7 @@ def control_workflow(db: Session,claim_id:int,claim_request: ProcessClaimTask,ta
             save_claim_report_database({
                 "claimId": claim_id,
                 "fraudScore": result['fraud_score'],
+                "discoveries":result["discoveries"],
                # "fraudIndicators": result['fraud_indicators'],
                  "fraudIndicators": result['claim_validation_factors'],
                 "aiRecommendation": result['ai_recommendation'],
@@ -87,39 +88,27 @@ def control_workflow(db: Session,claim_id:int,claim_request: ProcessClaimTask,ta
         print_header(agent)
 
         if agent == members[0]:
-            print(process_call)
             messages = process_call[agent]['messages']
             content = [m.content for m in messages if isinstance(m, HumanMessage)]
             update_claim_status_database(claim_id=claim_id,status="Examining claim form")
-            
             # Print AI Message content
             ai_message_content = content[0]
             print_header(f"{agent} Response")
             print_section(ai_message_content,"")
             
             print(f"{Fore.CYAN}{'─'*80}{Style.RESET_ALL}\n")
-        # elif agent == members[1]:
-        #     update_claim_status_database(claim_id=claim_id,status="Claim Form Examination Complete!")
-        #     time.sleep(0.6)
-        #     update_claim_status_database(claim_id=claim_id,status="Evaluating Supporing docs")
-        #     for entry in agent_history:
-        #         intermediate_steps = entry.additional_kwargs.get('intermediate_steps', [])
-                
-        #         if intermediate_steps:
-        #             print_header("Tool Executions")
-        #             for step in intermediate_steps:
-        #                 print_tool_info(
-        #                     step[0].tool,
-        #                     step[0].tool_input,
-        #                     step[0].log
-        #                 )
-                
-        #         # Print AI Message content
-        #         ai_message_content = entry.content
-        #         print_header(f"{agent} Response")
-        #         print_section(ai_message_content,"")
-        #         print(f"{Fore.CYAN}{'─'*80}{Style.RESET_ALL}\n")
-        #         return
+        elif agent == members[1]:
+            messages = process_call[agent]['messages']
+            content = [m.content for m in messages if isinstance(m, HumanMessage)]
+            update_claim_status_database(claim_id=claim_id,status="Claim Form Examination Complete!")
+            time.sleep(0.6)
+            update_claim_status_database(claim_id=claim_id,status="Reviewing claim policy")
+            # Print AI Message content
+            ai_message_content = content[0]
+            print_header(f"{agent} Response")
+            print_section(ai_message_content,"")
+            print(f"{Fore.CYAN}{'─'*80}{Style.RESET_ALL}\n")
+
         # elif agent == members[2]:
         #     update_claim_status_database(claim_id=claim_id,status="Evaluation Complete!")
         #     time.sleep(1)

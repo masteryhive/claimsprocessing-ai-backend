@@ -17,7 +17,39 @@ def load_yaml_file(file_path):
         data = yaml.safe_load(file)
     return data
 
+def _new_get_datetime(date_string):
+    """
+    Converts an input date string to 'Month Day, Year' (e.g., 'October 11, 2024')
+    after ensuring the date string is converted to the non-US format 'YYYY-MM-DD'.
+    """
+    try:
+        # List of potential input formats
+        formats = [
+            "%Y/%m/%d", "%d/%m/%Y", "%m-%d-%Y", "%d-%m-%Y",
+            "%Y-%m-%d", "%b %d, %Y", "%B %d, %Y",
+        ]
+        
+        date_obj = None
+        for fmt in formats:
+            try:
+                date_obj = dts.strptime(date_string, fmt)
+                break
+            except ValueError:
+                continue
+        
+        if not date_obj:
+            raise ValueError("Date format not recognized.")
+        
+        # Convert the date to non-US format (YYYY-MM-DD)
+        non_us_date = date_obj.strftime("%Y-%m-%d")
+        
+        # Format the non-US date to 'Month Day, Year'
+        formatted_date = dts.strptime(non_us_date, "%Y-%m-%d").strftime("%B %d %Y")
 
+        return formatted_date
+    
+    except Exception as e:
+        return f"Error: {str(e)}"
 
 def get_day_date_month_year_time():
     """
