@@ -14,9 +14,10 @@ from src.config.appconfig import env_config
 
 agent1 = "claims_form_fraud_investigator"  # New agent added
 agent2 = "vehicle_fraud_investigator"
-agent3 = "fraud_risk_analyst"
+agent3 = "damage_cost_fraud_investigator"
+agent4 = "fraud_risk_analyst"
 agentX = "team_task_summarizer"
-members = [agent1, agent2,agent3, agentX]
+members = [agent1, agent2,agent3,agent4, agentX]
 
 
 def _load_prompt_template() -> str:
@@ -36,6 +37,9 @@ def _load_prompt_template() -> str:
             "VEHICLE_FRAUD_INVESTIGATOR_AGENT_SYSTEM_PROMPT": yaml_data.get(
                 "VEHICLE_FRAUD_INVESTIGATOR_AGENT_SYSTEM_PROMPT", ""
             ),
+            "DAMAGE_COST_FRAUD_INVESTIGATOR_AGENT_SYSTEM_PROMPT": yaml_data.get(
+                "DAMAGE_COST_FRAUD_INVESTIGATOR_AGENT_SYSTEM_PROMPT", ""
+            ),
             "FRAUD_RISK_AGENT_SYSTEM_PROMPT": yaml_data.get(
                 "FRAUD_RISK_AGENT_SYSTEM_PROMPT", ""
             ),
@@ -47,19 +51,25 @@ def _load_prompt_template() -> str:
 
 claim_form_fraud_investigator_agent = create_tool_agent(
     llm=llm,
-    tools=[claimant_exists,rapid_policy_claims_check,item_pricing_benmarking,item_pricing_evaluator],
+    tools=[verify_this_claimant_exists_as_a_customer,investigate_if_this_claimant_is_attempting_a_rapid_policy_claim],
     system_prompt=_load_prompt_template()["CLAIMS_FORM_FRAUD_INVESTIGATOR_AGENT_SYSTEM_PROMPT"],
 )
 
 vehicle_fraud_investigator_agent  = create_tool_agent(
     llm=llm,
-    tools=[vehicle_insurance_check,nonexistent_vehicle_check,vehicle_registration_match,drivers_license_status_check],
+    tools=[validate_if_this_is_a_real_vehicle,check_NIID_database_to_confirm_vehicle_insurance],
     system_prompt=_load_prompt_template()["VEHICLE_FRAUD_INVESTIGATOR_AGENT_SYSTEM_PROMPT"],
+)
+
+damage_cost_fraud_investigator_agent = create_tool_agent(
+    llm=llm,
+    tools=[item_cost_price_benmarking_in_local_market,item_pricing_evaluator],
+    system_prompt=_load_prompt_template()["DAMAGE_COST_FRAUD_INVESTIGATOR_AGENT_SYSTEM_PROMPT"],
 )
 
 fraud_risk_analyst_agent = create_tool_agent(
     llm=llm,
-    tools=[fraud_detection_tool],
+    tools=[],
     system_prompt=_load_prompt_template()["FRAUD_RISK_AGENT_SYSTEM_PROMPT"],
 )
 
@@ -108,15 +118,19 @@ claim_form_fraud_investigator_node = functools.partial(
 vehicle_fraud_investigator_node = functools.partial(
     crew_nodes, crew_member=vehicle_fraud_investigator_agent, name=agent2
 )
+damage_cost_fraud_investigator_node = functools.partial(
+    crew_nodes, crew_member=damage_cost_fraud_investigator_agent, name=agent3
+)
 fraud_risk_analyst_node = functools.partial(
-    crew_nodes, crew_member=fraud_risk_analyst_agent, name=agent3
+    crew_nodes, crew_member=fraud_risk_analyst_agent, name=agent4
 )
 
 
 fraud_detection_builder.add_node("supervisor", fraud_detection_supervisor_node)
 fraud_detection_builder.add_node(agent1, claim_form_fraud_investigator_node)
 fraud_detection_builder.add_node(agent2, vehicle_fraud_investigator_node)
-fraud_detection_builder.add_node(agent3, fraud_risk_analyst_node)
+fraud_detection_builder.add_node(agent3, damage_cost_fraud_investigator_node)
+fraud_detection_builder.add_node(agent4, fraud_risk_analyst_node)
 fraud_detection_builder.add_node(agentX, comms_node)
 
 # Define the control flow
@@ -125,9 +139,10 @@ fraud_detection_builder.set_entry_point("supervisor")
 fraud_detection_builder.add_edge("supervisor", agent1)
 fraud_detection_builder.add_edge(agent1, agent2)
 fraud_detection_builder.add_edge(agent2, agent3)
-fraud_detection_builder.add_edge(agent3, agentX)
+fraud_detection_builder.add_edge(agent3, agent4)
+fraud_detection_builder.add_edge(agent4, agentX)
 fraud_detection_builder.add_edge(agentX, END)
 
 fraud_detection_graph = fraud_detection_builder.compile()
-if env_config.env == "development":
+if env_config.env == "local":
     save_graph_mermaid(fraud_detection_graph, output_file="display/fraud_langgraph.png")

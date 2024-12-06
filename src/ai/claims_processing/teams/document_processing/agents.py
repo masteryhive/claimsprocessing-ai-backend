@@ -129,5 +129,5 @@ document_check_builder.add_edge(agentX, END)
 #     },
 # )
 document_check_graph = document_check_builder.compile()
-if env_config.env == "development":
+if env_config.env == "local":
     save_graph_mermaid(document_check_graph, output_file="display/doc_langgraph.png")

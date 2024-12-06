@@ -19,6 +19,9 @@ class CostBenchmarking:
         self.password = password
 
         chrome_options = Options()
+        chrome_options.add_argument("--headless")
+        chrome_options.add_argument("--no-sandbox")  # Optional for some environments
+        chrome_options.add_argument("--disable-dev-shm-usage")
         self.driver = webdriver.Chrome(options=chrome_options)
         self.url = "https://www.jiji.ng/login.html"
 
@@ -31,10 +34,18 @@ class CostBenchmarking:
             modal_container = WebDriverWait(self.driver, 10).until(
                 EC.presence_of_element_located((By.CLASS_NAME, "fw-popup__container"))
             )
-
+            
+            # Use JavaScript to scroll the element into view
+            self.driver.execute_script("arguments[0].scrollIntoView(true);", modal_container)
+            
             # Find the "E-mail or phone" button within the modal
             email_phone_button = modal_container.find_element(
                 By.XPATH, ".//button[contains(span, 'E-mail or phone')]"
+            )
+
+            # Ensure the button is visible and interactable
+            WebDriverWait(self.driver, 10).until(
+                EC.element_to_be_clickable((By.XPATH, ".//button[contains(span, 'E-mail or phone')]"))
             )
 
             # Click the button
@@ -215,16 +226,22 @@ class CostBenchmarking:
             print("❌ This price appears UNREALISTIC based on market data")
 
         analysis = result["analysis"]
-        print(f"\nMarket Statistics (after removing outliers):")
-        print(f"- Median price: {analysis['median_price']:,.0f}")
-        print(
-            f"- Realistic price range: {analysis['price_range']['lower_bound']:,.0f} to {analysis['price_range']['upper_bound']:,.0f}"
-        )
-        print(
-            f"- Your price is in the {analysis['quoted_price_percentile']:.1f}th percentile"
-        )
+        # print(f"\nMarket Statistics (after removing outliers):")
+        # print(f"- Median price: {analysis['median_price']:,.0f}")
+        # print(
+        #     f"- Realistic price range: {analysis['price_range']['lower_bound']:,.0f} to {analysis['price_range']['upper_bound']:,.0f}"
+        # )
+        # print(
+        #     f"- Your price is in the {analysis['quoted_price_percentile']:.1f}th percentile"
+        # )
         # print(f"- Difference from median: {analysis['percent_difference_from_median']:+.1f}%")
-
+        market_statistics = {
+            "median_price": analysis['median_price'],
+            "realistic_price_range": f"{analysis['price_range']['lower_bound']:,.0f} to {analysis['price_range']['upper_bound']:,.0f}",
+            "quoted_price_percentile": f"- Your price is in the {analysis['quoted_price_percentile']:.1f}th percentile"
+        }
+        return market_statistics
+    
     def run(self, search_term: str, quoted_price: str):
         try:
             market_prices = self.extract_data(search_term)
@@ -280,3 +297,10 @@ class CostBenchmarking:
 
         expected_range = self.get_expected_price_range(market_prices)
         return f"Expected price range for '{search_term}': {expected_range}"
+
+
+if __name__ == "__main__":
+    # Assuming the class is named `InsuranceDataExtractor`
+    costBenchmarking = CostBenchmarking(email=email,password=password)
+    result = costBenchmarking.run_with_expected_range("toyota bumper")
+    print(result)

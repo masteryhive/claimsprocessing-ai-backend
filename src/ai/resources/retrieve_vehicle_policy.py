@@ -90,14 +90,18 @@ class InsuranceDataExtractor:
         # Close the WebDriver
         self.driver.quit()
 
+    def run(self):
+        try:
+            # Call the method to perform the extraction
+            data = self.extract_data()
+        finally:
+            # Ensure the driver is closed after extraction
+            self.close_driver()
+        return {"status": "success", "data": data}
+
 
 # if __name__ == "__main__":
 #     # Assuming the class is named `InsuranceDataExtractor`
 #     extractor = InsuranceDataExtractor("LND357JC")
-#     try:
-#         # Call the method to perform the extraction
-#         print(extractor.extract_data())
-#     finally:
-#         # Ensure the driver is closed after extraction
-#         extractor.close_driver()
+#     print(extractor.run())
 

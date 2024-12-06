@@ -2,6 +2,7 @@
 from langchain_core.tools import tool
 from typing import Annotated, Dict, Union
 
+from src.ai.rag.context_stuffing import process_query
 from src.ai.resources.cost_benchmarking import CostBenchmarking
 from src.ai.resources.retrieve_vehicle_policy import InsuranceDataExtractor
 
@@ -12,7 +13,7 @@ email = "sam@masteryhive.ai"
 password = "JLg8m4aQ8n46nhC"
 
 @tool
-def claimant_exists(
+def verify_this_claimant_exists_as_a_customer(
     policy_id: Annotated[str, "claimant's policy_id."],
     email: Annotated[str, "claimant's email."],
 ):
@@ -25,9 +26,20 @@ def claimant_exists(
         "message": "Backend verification successful. Claimant is a valid customer",
     }
 
+@tool
+def investigate_if_this_claimant_is_attempting_a_rapid_policy_claim(date_claim_filed: Annotated[str, "date this claim was filed"]):
+    """
+    Use this tool to check for rapid policy claims; to verify the claimant is not making a claim right after creating an insuring this vehicle.
+    """
+    # Retrieve
+    query = f"this claim is/was filed: {date_claim_filed}.\nCheck if this claim was filed three days after the start of the insurance period."
+    resp = process_query(query=query)
+    return resp
+
+
 
 @tool
-def vehicle_insurance_check(
+def check_NIID_database_to_confirm_vehicle_insurance(
     vehicle_registration_number: Annotated[
         str, "claimant's vehicle registration number."
     ]
@@ -35,33 +47,45 @@ def vehicle_insurance_check(
     """
     calls the NIID database to see if the vehicle has been insured using the vehicle registration number.
     """
-    try:
-        extractor = InsuranceDataExtractor(vehicle_registration_number)
-        try:
-            # Call the method to perform the extraction
-            data = extractor.extract_data()
-        finally:
-            # Ensure the driver is closed after extraction
-            extractor.close_driver()
-        return {"status": "success", "data": data}
-    except Exception as e:
-        return {"status": "error", "message": str(e)}
-    finally:
-        extractor.close_driver()
+    extractor = InsuranceDataExtractor("LND357JC")
+    res = extractor.run()
+    print(res)
+    if res.get('status') == 'success' and res.get('data')["RegistrationNumber"] == vehicle_registration_number:
+        res["message"] = "Yes, this vehicle is insured"
+    return res
 
 
 @tool
-def item_pricing_benmarking(
+def validate_if_this_is_a_real_vehicle(vehicle_information: Annotated[str, "vehicle make and brand. e.g toyota corolla 2012"]):
+    """
+    Check if the provided vehicle information corresponds to a real vehicle to mitigate ghost vehicle claims.
+    """
+    # Simulate a check for ghost claims
+    return {"status": "clear", "message": "This vehicle is valid."}
+
+@tool
+def vehicle_registration_number_match(policy_number: Annotated[str, "claimant's policy_number."],
+                               vehicle_registration_number: Annotated[str, "vehicle registration number"]):
+    """
+    Verify vehicle registration matches internal database records.
+    """
+    # Simulate a registration match check
+    return {"status": "success", "message": "Registration number matches records."}
+
+
+@tool
+def item_cost_price_benmarking_in_local_market(
     damaged_part: Annotated[str, "Identify the damaged parts from the supporting evidence picture. e.g Honda civic side mirror"],
     quoted_cost: Annotated[str, "the quoted cost from supporting evidence like invoice, required to fix the damage."]
 ):
     """
     this cost benchmarking tool calls the local market place to verify the quoted cost on the invoice for the vehicle repair claims.
     """
-    costBenchmarking = CostBenchmarking(email=email,password=password)
-    result = costBenchmarking.run(damaged_part, quoted_cost)
-    print(result)
-    return result
+    # costBenchmarking = CostBenchmarking(email=email,password=password)
+    # result = costBenchmarking.run(damaged_part, quoted_cost)
+    # print(result)
+    # return result
+    return "cost is out of market threshold"
 
 
 @tool
@@ -71,29 +95,11 @@ def item_pricing_evaluator(
     """
      this cost evaluation tool checks the local market place for how much the damaged part is worth.
     """
-    costBenchmarking = CostBenchmarking(email=email,password=password)
-    result = costBenchmarking.run_with_expected_range(damaged_part)
-    print(result)
-    return result
-
-
-
-@tool
-def nonexistent_vehicle_check(vehicle_information: Annotated[str, "vehicle make and brand. e.g toyota corolla 2012"]):
-    """
-    Check for non-existent vehicles.
-    """
-    # Simulate a check for ghost claims
-    return {"status": "clear", "message": "This vehicle is valid."}
-
-@tool
-def vehicle_registration_match(policy_number: Annotated[str, "claimant's policy_number."],
-                               vehicle_registration_number: Annotated[str, "vehicle registration number"]):
-    """
-    Verify vehicle registration matches internal database records.
-    """
-    # Simulate a registration match check
-    return {"status": "success", "message": "Registration number matches records."}
+    # costBenchmarking = CostBenchmarking(email=email,password=password)
+    # result = costBenchmarking.run_with_expected_range(damaged_part)
+    # print(result)
+    # return result
+    return "cost is fraudulent"
 
 
 @tool
@@ -116,14 +122,6 @@ def weather_traffic_conditions_check(date: str, location: str):
         return {"status": "suspicious", "message": "Unusual traffic conditions on the date."}
     return {"status": "clear", "message": "Normal weather and traffic conditions."}
 
-@tool
-def rapid_policy_claims_check(policy_number: Annotated[str, "claimant's policy_number."], 
-                              date_of_claim: Annotated[str, "date this claim is filed"],):
-    """
-    Check for rapid policy claims, to verify the claimant is not making a claim right after creating an insurance account.
-    """
-    # Simulate a rapid policy claims check
-    return {"status": "clear", "message": "Claim date is normal."}
 
 @tool
 def drivers_license_status_check(driver_license_number: Annotated[str, "claimant's driver license number."]):

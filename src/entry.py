@@ -57,14 +57,14 @@ init_vertexai()
 #     "resourceUrls": [],
 # }
 data = get_claim_from_database({'claim_id':85})
+data['dateClaimFiled'] = data['createdAt']
 data.pop('user', None)
 data.pop('updatedAt', None)
 data.pop('deletedAt', None)
-data.pop('createdAt', None)
 data.pop('claimReport', None)
-
+data.pop('createdAt', None)
 # print(data)
-for s in policy_review_graph.stream(
+for s in fraud_detection_graph.stream(
     {
         "messages": [
             HumanMessage(

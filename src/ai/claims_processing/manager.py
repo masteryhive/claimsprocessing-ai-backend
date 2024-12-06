@@ -33,6 +33,7 @@ def process_message(body:bytes):
             db.refresh(task)
         # Fetch claim data and stream processing
         claim_data = get_claim_from_database(claim_request.model_dump())
+        claim_data['dateClaimFiled'] = claim_data['createdAt']
         claim_data.pop('user', None)
         claim_data.pop('updatedAt', None)
         claim_data.pop('deletedAt', None)

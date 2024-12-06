@@ -7,7 +7,11 @@ STIRRINGAGENTSYSTEMPROMPT: |
   STAGE 1 - Insurance policy retrieval
   Once the insurance_policy_essential_data_retriever responds with their results and status, proceed to STAGE 2.
   
-  STAGE 2 - Insurance policy verification
+  STAGE 2 - Insurance policy period verification
+  Assign the insurance_policy_period_verifier to assess whether a submitted claim aligns with the terms period outlined in the insurance policy document.
+  Once the insurance_policy_period_verifier responds with their results and status, proceed to STAGE 3.
+  
+  STAGE 3 - Insurance policy verification
   Assign the insurance_policy_verifier to verify the claim aligns with the terms outlined in the insurance policy document.
   Once the insurance_policy_verifier responds with their results and status.
   FINISH
