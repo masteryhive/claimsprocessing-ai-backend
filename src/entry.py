@@ -57,19 +57,18 @@ init_vertexai()
 #     "resourceUrls": [],
 # }
 data = get_claim_from_database({'claim_id':85})
-print(data)
 data.pop('user', None)
 data.pop('updatedAt', None)
 data.pop('deletedAt', None)
 data.pop('createdAt', None)
 data.pop('claimReport', None)
 
-print(data)
-for s in document_check_graph.stream(
+# print(data)
+for s in policy_review_graph.stream(
     {
         "messages": [
             HumanMessage(
-                content=f"begin this claim processing:\n{data}\n. YOU MUST USE THE SUMMARY TEAM TO PRESENT THE RESULT OF THIS TASK."
+                content=f"begin this claim processing:\n{data}"
             )
         ]
     }
