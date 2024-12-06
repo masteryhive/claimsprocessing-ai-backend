@@ -49,13 +49,13 @@ def control_workflow(db: Session,claim_id:int,claim_request: ProcessClaimTask,ta
         # print_section("Current State", str(s))
         agent = list(process_call.keys())[0]
         if agent == "summary_team":
-            time.sleep(2)
+            time.sleep(0.4)
             update_claim_status_database(claim_id=claim_id,status="Creating Report Summary")
             messages = process_call[agent]['messages']
             print(messages)
             content = [m.content for m in messages if isinstance(m, HumanMessage)]
             print_header(f"{agent} Response")
-            time.sleep(2)
+            time.sleep(0.3)
             update_claim_status_database(claim_id=claim_id,status="Preparing Report Summary")
             result = extract_claim_summary(content[0])
             save_claim_report_database({
@@ -100,7 +100,7 @@ def control_workflow(db: Session,claim_id:int,claim_request: ProcessClaimTask,ta
             messages = process_call[agent]['messages']
             content = [m.content for m in messages if isinstance(m, HumanMessage)]
             update_claim_status_database(claim_id=claim_id,status="Claim Form Examination Complete!")
-            time.sleep(0.6)
+            time.sleep(0.5)
             update_claim_status_database(claim_id=claim_id,status="Reviewing claim policy")
             # Print AI Message content
             ai_message_content = content[0]
@@ -108,11 +108,11 @@ def control_workflow(db: Session,claim_id:int,claim_request: ProcessClaimTask,ta
             print_section(ai_message_content,"")
             print(f"{Fore.CYAN}{'─'*80}{Style.RESET_ALL}\n")
         elif agent == members[2]:
+            update_claim_status_database(claim_id=claim_id,status="Policy checked!")
+            time.sleep(0.3)
+            update_claim_status_database(claim_id=claim_id,status="Running fraud checks")
             messages = process_call[agent]['messages']
             content = [m.content for m in messages if isinstance(m, HumanMessage)]
-            update_claim_status_database(claim_id=claim_id,status="Policy checked!")
-            time.sleep(1)
-            update_claim_status_database(claim_id=claim_id,status="Running fraud checks")
             ai_message_content = content[0]
             print_header(f"{agent} Response")
             print_section(ai_message_content,"")

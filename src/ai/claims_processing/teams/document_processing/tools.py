@@ -10,7 +10,7 @@ def verify_claim_supporting_documents_in_image_format(
     resource_url: Annotated[str, "URL of the supporting evidence(resourceUrls) in image format to be reviewed (e.g https://storage.googleapis.com/masteryhive-insurance-claims/f1b2f49b-6fe8-453e-bdb4-7e22b166c092/supporting_documents/download.jpeg)"],
 ):
     """
-    This tool reviews the provided supporting documents in image formats and extracts key details to verify the claim.
+    use this tool for images ONLY. This tool reviews the provided supporting documents in image formats and extracts key details to verify the claim.
     It processes the document from the provided URL and performs necessary validation and extraction.
     """
     return claims_image_evidence_recognizer(resource_url)

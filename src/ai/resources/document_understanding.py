@@ -2,6 +2,7 @@
 import os,httpx,base64,io,fitz,uuid
 from langchain_google_vertexai import ChatVertexAI
 from PIL import Image
+from src.ai.llm import llm
 
 def download_pdf(pdf_url: str, temp_folder: str = "temp", filename: str = str(uuid.uuid4())) -> str:
     # Define the path to save the PDF file temporarily
@@ -50,7 +51,6 @@ if it is not respond with 'not a claim form"""
     )
     from langchain_core.messages import HumanMessage
     # Initialize the model
-    model = ChatVertexAI(model="gemini-1.5-flash")
     message = HumanMessage(
     content=[
         {"type": "text", "text": prompt},
@@ -60,7 +60,7 @@ if it is not respond with 'not a claim form"""
     },
     ],
     )
-    response = model.invoke([message])
+    response = llm.invoke([message])
     return response.content
 
 
@@ -75,8 +75,7 @@ def document_understanding(doc_url:str)->str:
     "Ensure your response is structured clearly with separate sections for items, total price, narration, and purpose."
     )
     from langchain_core.messages import HumanMessage
-    # Initialize the model
-    model = ChatVertexAI(model="gemini-1.5-flash")
+
     message = HumanMessage(
     content=[
         {"type": "text", "text": prompt},
@@ -86,5 +85,5 @@ def document_understanding(doc_url:str)->str:
     },
     ],
     )
-    response = model.invoke([message])
+    response = llm.invoke([message])
     return response.content

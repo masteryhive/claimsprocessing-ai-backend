@@ -4,7 +4,7 @@ from src.config.appconfig import env_config
 
 llm = ChatVertexAI(
     project_id = env_config.project_id,
-    model="gemini-1.5-pro-001",
+    model="gemini-1.5-pro-002",
     temperature=0.2,
     max_tokens=8192,
     max_retries=6,

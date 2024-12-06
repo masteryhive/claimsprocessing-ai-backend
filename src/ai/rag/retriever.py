@@ -6,7 +6,7 @@ from typing import Any
 from langchain_core.messages import BaseMessage
 from src.config.appconfig import env_config
 from langchain.retrievers.contextual_compression import ContextualCompressionRetriever
-from src.ai.claims_processing.llm import llm
+from src.ai.llm import llm
 
 def retrieve_from_bigquery(bq_store: BigQueryVectorStore)-> RunnableSerializable[Any, BaseMessage]:
     # Instantiate the VertexAIReranker with the SDK manager

@@ -8,8 +8,8 @@ from src.ai.claims_processing.teams.fraud_detection.agents import fraud_detectio
 from langchain_core.messages import HumanMessage
 
 init_vertexai()
-# if __name__ == "__main__":
-#     process_message(b'83')
+if __name__ == "__main__":
+    process_message(b'85')
 
 # claim_data = {
 #     "id": 67,
@@ -56,32 +56,32 @@ init_vertexai()
 #     "suspectDetails": "not provided",
 #     "resourceUrls": [],
 # }
-data = get_claim_from_database({'claim_id':85})
-data['dateClaimFiled'] = data['createdAt']
-data.pop('user', None)
-data.pop('updatedAt', None)
-data.pop('deletedAt', None)
-data.pop('claimReport', None)
-data.pop('createdAt', None)
-# print(data)
-for s in fraud_detection_graph.stream(
-    {
-        "messages": [
-            HumanMessage(
-                content=f"begin this claim processing:\n{data}"
-            )
-        ]
-    }
-):
-    if "__end__" not in s:
-        # Extract content values from the dictionary
-        for key, value in s.items():
-            print(key)
-            print()
-            if isinstance(value, dict) and "agent_history" in value:
-                for message in value["agent_history"]:
-                    print(message.content)
-            elif isinstance(value, dict) and "messages" in value:
-                for message in value["messages"]:
-                    print(message.content)
+# data = get_claim_from_database({'claim_id':85})
+# data['dateClaimFiled'] = data['createdAt']
+# data.pop('user', None)
+# data.pop('updatedAt', None)
+# data.pop('deletedAt', None)
+# data.pop('claimReport', None)
+# data.pop('createdAt', None)
+# # print(data)
+# for s in fraud_detection_graph.stream(
+#     {
+#         "messages": [
+#             HumanMessage(
+#                 content=f"begin this claim processing:\n{data}"
+#             )
+#         ]
+#     }
+# ):
+#     if "__end__" not in s:
+#         # Extract content values from the dictionary
+#         for key, value in s.items():
+#             print(key)
+#             print()
+#             if isinstance(value, dict) and "agent_history" in value:
+#                 for message in value["agent_history"]:
+#                     print(message.content)
+#             elif isinstance(value, dict) and "messages" in value:
+#                 for message in value["messages"]:
+#                     print(message.content)
 

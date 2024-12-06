@@ -10,3 +10,7 @@ check if annual premium is paid or owe.
 check if policy is expired.
 
 check the image similarity between two images.
+fraud check does the policy doc match NIID
+Key majors:
+- Implement SSIM for two images
+- Fraud scenario

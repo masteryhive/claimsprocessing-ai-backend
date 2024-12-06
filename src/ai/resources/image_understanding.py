@@ -1,6 +1,7 @@
 # import libraries
 import httpx, base64
 from langchain_google_vertexai import ChatVertexAI
+from src.ai.llm import llm
 
 
 def claims_image_evidence_recognizer(image_url: str) -> str:
@@ -11,8 +12,6 @@ if it is not respond with 'not a valid image evidence for claims'.
 Always provide your response as <answer> //your response </answer>"""
     from langchain_core.messages import HumanMessage
 
-    # Initialize the model
-    model = ChatVertexAI(model="gemini-1.5-flash")
     message = HumanMessage(
         content=[
             {"type": "text", "text": prompt},
@@ -22,5 +21,5 @@ Always provide your response as <answer> //your response </answer>"""
             },
         ],
     )
-    response = model.invoke([message])
+    response = llm.invoke([message])
     return response.content

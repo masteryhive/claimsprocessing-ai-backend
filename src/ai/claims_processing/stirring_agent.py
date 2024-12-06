@@ -1,6 +1,6 @@
 
 from pydantic import BaseModel
-from src.ai.claims_processing.llm import llm
+from src.ai.llm import llm
 from src.ai.resources.gen_mermaid import save_graph_mermaid
 from src.ai.claims_processing.teams.document_processing.agents import (
     document_check_graph,
