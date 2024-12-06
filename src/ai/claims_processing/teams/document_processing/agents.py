@@ -51,7 +51,7 @@ claims_document_verifier_agent = create_tool_agent(
 
 supporting_document_verifier_agent = create_tool_agent(
     llm,
-    tools=[review_supporting_documents],
+    tools=[verify_claim_supporting_documents_in_image_format,verify_claim_supporting_documents_in_pdf],
     system_prompt=_load_prompt_template()[
         "SUPPORTING_DOCUMENT_VERIFIER_AGENT_SYSTEM_PROMPT"
     ],

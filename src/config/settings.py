@@ -26,10 +26,6 @@ class Settings(BaseSettings):
     
     PROJECT_NAME: str = "MasteryHive Claims Processing Backend AI Server"
 
-    os.environ["LANGCHAIN_PROJECT"] = PROJECT_NAME
-
-    print("API Keys loaded and tracing set with project name: ", PROJECT_NAME)
-
   
 
 def get_setting():

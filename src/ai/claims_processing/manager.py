@@ -33,6 +33,11 @@ def process_message(body:bytes):
             db.refresh(task)
         # Fetch claim data and stream processing
         claim_data = get_claim_from_database(claim_request.model_dump())
+        claim_data.pop('user', None)
+        claim_data.pop('updatedAt', None)
+        claim_data.pop('deletedAt', None)
+        claim_data.pop('createdAt', None)
+        claim_data.pop('claimReport', None)
         update_claim_status_database(claim_data["id"],status=TaskStatus.PENDING)
         time.sleep(1)
         # Update task record
