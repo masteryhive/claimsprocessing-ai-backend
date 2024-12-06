@@ -307,6 +307,27 @@ PROCESS_CLERK_PROMPT: |
    - Then a summary of the claims_form_fraud_investigator,vehicle_fraud_investigator agent and fraud_risk_analyst agent results.
    - Finally, use the fraud_risk_analyst report to headline the final report.
   </instruction>
+
+  [TEMPLATE]
+  Fraud Detection Report - ID: {{claim_id}}
+  {{review_summary}}
+
+  Fraud Investigation Details:
+  - Fraud Threshold score: {{fraud_score_from_the_fraud_risk_analyst}}
+  - Key Concerns Identified: {{a_detailed_list_of_leading_indicators_from_which_the_fraud_is_suspected}}
+
+  Fraud Risk Assessment:
+  {{fraud_risk_assessment}}
+
+  Investigative Findings:
+  {{investigative_findings}}
+
+  Overall Fraud Risk Level: {{overall_fraud_risk_level}}
+  - Fraud Score: {{fraud_risk_score}}
+
+  Recommendations:
+  {{recommended_actions}}
+
   Do not provide summary of the claim form data as that does not concern your department.
 
   The agent history is as follows:

@@ -69,6 +69,16 @@ PROCESS_CLERK_PROMPT: |
    - First, gather the result of insurance_policy_essential_data_retriever agent and insurance_policy_verifier agent.
    - Then a summary of the insurance_policy_essential_data_retriever agent and insurance_policy_verifier result
   </instruction>
+
+  [TEMPLATE]
+  Policy Review Summary - ID: {{claim_id}}
+  {{review_summary}}
+
+  Policy Details Summary:
+   - Coverage Status: {{type_of_policy}}
+   - Policy Terms: {{how_deductibles_apply}}
+   - Policy Status: {{is_policy_active_or_expired}}
+
   Do not provide summary of the claim form data as that does not concern your department.
 
   The agent history is as follows:

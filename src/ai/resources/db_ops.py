@@ -31,7 +31,7 @@ def get_claim_from_database(claim_request:dict) -> dict:
                 del resp_data['claims_report']
             return resp_data
         else:
-            return f"Failed to send claim details: {response.status_code} - {response.text}"
+            return f"Failed to get claim details: {response.status_code} - {response.text}"
 
 def update_claim_status_database(claim_id: int, status:str) -> str:
     """

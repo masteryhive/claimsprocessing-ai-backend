@@ -3,7 +3,7 @@ import os,httpx,base64,io,fitz,uuid
 from langchain_google_vertexai import ChatVertexAI
 from PIL import Image
 
-def download_pdf(pdf_url: str, temp_folder: str = "temp", filename: str = uuid.uuid4()) -> str:
+def download_pdf(pdf_url: str, temp_folder: str = "temp", filename: str = str(uuid.uuid4())) -> str:
     # Define the path to save the PDF file temporarily
     os.makedirs(temp_folder, exist_ok=True)
     tempFile = os.path.join(temp_folder, filename)
@@ -32,7 +32,7 @@ def pdf_page_to_base64(pdf_path: str, page_number: int):
 
 
 def claims_form_recognizer(doc_url:str)->str:
-    temp_file = download_pdf(doc_url)
+    temp_file = download_pdf(pdf_url=doc_url)
     base64_image = pdf_page_to_base64(temp_file, 2)
     prompt = (
 """Identify if this document is a motor insurance claims form.
@@ -47,6 +47,32 @@ locationAtTimeOfTheft, dateOfDiscovery, discoverdBy, howTheftOccurred, vehicleLi
 dateReported, policeStationName, wasVehicleUnlocked, wasNightWatchmanInAttendance, suspect, 
 suspectDetails.
 if it is not respond with 'not a claim form"""
+    )
+    from langchain_core.messages import HumanMessage
+    # Initialize the model
+    model = ChatVertexAI(model="gemini-1.5-flash")
+    message = HumanMessage(
+    content=[
+        {"type": "text", "text": prompt},
+                {
+        "type": "image_url",
+        "image_url": {"url": f"data:image/jpeg;base64,{base64_image}"},
+    },
+    ],
+    )
+    response = model.invoke([message])
+    return response.content
+
+
+def document_understanding(doc_url:str)->str:
+    temp_file = download_pdf(pdf_url=doc_url)
+    base64_image = pdf_page_to_base64(temp_file, 2)
+    prompt = (
+"Identify what this document is and extract relevant information from it like invoice total cost and items, invoice narration and purpose."
+    "- List all items mentioned in the invoice along with their individual prices. "
+    "- Calculate and provide the total price for all items. "
+    "- Extract the invoice narration, if available, and specify its purpose. "
+    "Ensure your response is structured clearly with separate sections for items, total price, narration, and purpose."
     )
     from langchain_core.messages import HumanMessage
     # Initialize the model

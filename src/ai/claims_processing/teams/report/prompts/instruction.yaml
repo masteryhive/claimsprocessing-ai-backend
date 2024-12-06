@@ -54,11 +54,12 @@ CLAIM_ADJUSTER_SUMMARY_PROMPT: |
   TEMPLATE STRUCTURE DATA SOURCE:
   Data sources for the template structure should be derived from the following:
   - Claim ID: Extracted from the claim submission data.
-  - Discoveries: Insights identified through discrepancies in submitted documents, previous claim history, and policy review, excluding fraud-specific information.
+  - Discoveries: 
+    - Insights identified through discrepancies in submitted documents, previous claim history, and policy review, excluding fraud-specific information.
+    - Claim Validation Factors, this means information gathered from the claims processing team, including document checks, market analysis, and policyholder history.
   - Fraud Score: Calculated using the fraud detection model based on historical claim data and current claim details.
   - Fraud Indicators: Identified through discrepancies in submitted documents, previous claim history, and any flags raised by the fraud detection system.
-  - Claim Validation Factors: Gathered from the claims processing team, including document checks, market analysis, and policyholder history.
-  - Policy Review: Conducted by the policy review team, assessing the policy terms, status, and any special conditions.
+  - Policy Review: Conducted by the policy review team, information gthered from assessing the policy terms, status, and any special conditions.
   - Type of Incident: Categorized based on the initial claim report and verified by the incident investigation team.
   - Coverage Status: Verified by the policy review team, ensuring the claim falls within the policy's coverage terms.
   - Details: Compiled from the claim submission, including all relevant information about the incident and claim.
@@ -72,11 +73,6 @@ CLAIM_ADJUSTER_SUMMARY_PROMPT: |
   <id>
   <!-- The ID of the claim -->
   </id>
-  <claim_validation_factors>
-  <factor>
-  <!-- Example: Repair invoice amount 38% higher than market average -->
-  </factor>
-  </claim_validation_factors>
   <policy_review>
   <!-- Detailed assessment of policy status and terms -->
   </policy_review>
@@ -112,6 +108,9 @@ CLAIM_ADJUSTER_SUMMARY_PROMPT: |
   </fraud_indicators>
   <discoveries>
   <discovery>
+  <!-- Example: Repair invoice amount 38% higher than market average -->
+  </discovery>
+  <discovery>
   <!-- Example: Policy document is expired -->
   </discovery>
   <discovery>
@@ -128,32 +127,30 @@ CLAIM_ADJUSTER_SUMMARY_PROMPT: |
   </id>
   <discoveries>
   <discovery>
+  No supporting photos or evidence provided
+  </discovery>
+  <discovery>
+  Incident description lacks key details (e.g., time, location)
+  </discovery>
+  <discovery>
+  Incomplete policy information submitted
+  </discovery>
+  <discovery>
+  Discrepancies in reported and actual damage
+  </discovery>
+  <discovery>
+  Lack of witness statements or third-party reports
+  </discovery>
+  <discovery>
+  Missing repair invoice details
+  </discovery>
+  <discovery>
   Policy document is expired by 3 months
   </discovery>
   <discovery>
   Vehicle identification number (VIN) mismatched between the repair invoice and policy
   </discovery>
   </discoveries>
-  <claim_validation_factors>
-  <factor>
-  Missing repair invoice details
-  </factor>
-  <factor>
-  No supporting photos or evidence provided
-  </factor>
-  <factor>
-  Incident description lacks key details (e.g., time, location)
-  </factor>
-  <factor>
-  Incomplete policy information submitted
-  </factor>
-  <factor>
-  Discrepancies in reported and actual damage
-  </factor>
-  <factor>
-  Lack of witness statements or third-party reports
-  </factor>
-  </claim_validation_factors>
   <policy_review>
   Policy information is incomplete, verification not possible at this stage.
   </policy_review>
@@ -199,6 +196,15 @@ CLAIM_ADJUSTER_SUMMARY_PROMPT: |
   </id>
   <discoveries>
   <discovery>
+  Police report shows discrepancies in the incident timeline
+  </discovery>
+  <discovery>
+  Repair garage flagged in previous fraud investigations
+  </discovery>
+  <discovery>
+  Claimant has a history of multiple claims within the last 12 months
+  </discovery>
+  <discovery>
   Mismatched policyholder name between submitted documents and claim record
   </discovery>
   <discovery>
@@ -219,17 +225,6 @@ CLAIM_ADJUSTER_SUMMARY_PROMPT: |
   Policyholder flagged for prior fraudulent activities in the NIB database
   </indicator>
   </fraud_indicators>
-  <claim_validation_factors>
-  <factor>
-  Police report shows discrepancies in the incident timeline
-  </factor>
-  <factor>
-  Repair garage flagged in previous fraud investigations
-  </factor>
-  <factor>
-  Claimant has a history of multiple claims within the last 12 months
-  </factor>
-  </claim_validation_factors>
   <policy_review>
   Comprehensive policy verified. Terms deductible of ₦100,000 applies. Policy status is active but under investigation.
   </policy_review>
@@ -278,18 +273,16 @@ CLAIM_ADJUSTER_SUMMARY_PROMPT: |
   <discovery>
   No significant discrepancies found in policy or history
   </discovery>
-  </discoveries>
-  <claim_validation_factors>
-  <factor>
+  <discovery>
   Repair invoice aligns with market averages
-  </factor>
-  <factor>
+  </discovery>
+  <discovery>
   Incident description matches provided evidence
-  </factor>
-  <factor>
+  </discovery>
+  <discovery>
   Policyholder has no prior claims or fraud flags
-  </factor>
-  </claim_validation_factors>
+  </discovery>
+  </discoveries>
   <policy_review>
   Comprehensive policy verified. Terms deductible of ₦25,000 applies. Policy status is active.
   </policy_review>

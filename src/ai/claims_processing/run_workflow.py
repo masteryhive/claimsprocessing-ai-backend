@@ -62,8 +62,7 @@ def control_workflow(db: Session,claim_id:int,claim_request: ProcessClaimTask,ta
                 "claimId": claim_id,
                 "fraudScore": result['fraud_score'],
                 "discoveries":result["discoveries"],
-               # "fraudIndicators": result['fraud_indicators'],
-                 "fraudIndicators": result['claim_validation_factors'],
+               "fraudIndicators": result['fraud_indicators'],
                 "aiRecommendation": result['ai_recommendation'],
                 "policyReview": result['policy_review'],
                 "evidenceProvided": result['evidence_provided'],
@@ -108,30 +107,14 @@ def control_workflow(db: Session,claim_id:int,claim_request: ProcessClaimTask,ta
             print_header(f"{agent} Response")
             print_section(ai_message_content,"")
             print(f"{Fore.CYAN}{'─'*80}{Style.RESET_ALL}\n")
-
-        # elif agent == members[2]:
-        #     update_claim_status_database(claim_id=claim_id,status="Evaluation Complete!")
-        #     time.sleep(1)
-        #     update_claim_status_database(claim_id=claim_id,status="Running document fraud checks")
-        #     for entry in agent_history:
-        #         intermediate_steps = entry.additional_kwargs.get('intermediate_steps', [])
-                
-        #         if intermediate_steps:
-        #             print_header("Tool Executions")
-        #             for step in intermediate_steps:
-        #                 print_tool_info(
-        #                     step[0].tool,
-        #                     step[0].tool_input,
-        #                     step[0].log
-        #                 )
-                
-        #         # Print AI Message content
-        #         ai_message_content = entry.content
-        #         print_header(f"{agent} Response")
-        #         print_section(ai_message_content,"")
-                
-        #         print(f"{Fore.CYAN}{'─'*80}{Style.RESET_ALL}\n")
-        #         return
+        elif agent == members[2]:
+            update_claim_status_database(claim_id=claim_id,status="Policy checked!")
+            time.sleep(1)
+            update_claim_status_database(claim_id=claim_id,status="Running fraud checks")
+            ai_message_content = content[0]
+            print_header(f"{agent} Response")
+            print_section(ai_message_content,"")
+            print(f"{Fore.CYAN}{'─'*80}{Style.RESET_ALL}\n")
         # elif agent == members[3]:
         #     update_claim_status_database(claim_id=claim_id,status="Document fraud checks Done!")
         #     time.sleep(1)
