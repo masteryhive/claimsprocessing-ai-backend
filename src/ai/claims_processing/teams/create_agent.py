@@ -92,7 +92,7 @@ def create_tool_agent(llm: ChatVertexAI, tools: list, system_prompt: str):
     )
     agent = create_tool_calling_agent(llm, tools, prompt)
     executor = AgentExecutor(
-        agent=agent, tools=tools, return_intermediate_steps=True, verbose=False
+        agent=agent, tools=tools, return_intermediate_steps=False, verbose=False
     )
     return executor
 
@@ -131,7 +131,7 @@ def create_tool_analyst_agent(llm: ChatVertexAI, tools: list, system_prompt: str
     )
     agent = create_tool_calling_agent(llm, tools, prompt)
     executor = AgentExecutor(
-        agent=agent, tools=tools, return_intermediate_steps=True, verbose=False
+        agent=agent, tools=tools, return_intermediate_steps=False, verbose=False
     )
     return executor
 

@@ -1,6 +1,7 @@
 
 from pydantic import BaseModel
 from src.ai.llm import llm
+from src.config.appconfig import env_config
 from src.ai.resources.gen_mermaid import save_graph_mermaid
 from src.ai.claims_processing.teams.document_processing.agents import (
     document_check_graph,
@@ -246,4 +247,5 @@ super_builder.add_edge(members[3], END)
 # )
 
 super_graph = super_builder.compile()
-# save_graph_mermaid(super_graph, output_file="display/super_langgraph.png")
+if env_config.env == "local":
+    save_graph_mermaid(super_graph, output_file="display/super_langgraph.png")

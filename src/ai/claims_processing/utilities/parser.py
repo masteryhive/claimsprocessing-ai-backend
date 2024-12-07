@@ -1,9 +1,49 @@
 from bs4 import BeautifulSoup
-import re
+import re,json
 from src.datamodels.co_ai import AIClaimsReport
 
+def extract_from_claim_processing(text):
+    # Extract Type of Incident
+    type_match = re.search(r"Type of incident:\s*(.+)", text)
+    type_of_incident = type_match.group(1).strip() if type_match else ""
 
-def extract_claim_summary(data) -> AIClaimsReport:
+    # Extract Evidence Provided
+    evidence_start = text.find("Evidence Provided:")
+    evidence_content = ""
+    if evidence_start != -1:
+        evidence_lines = re.findall(r"- (.+?)(?=(\n\s*- |\Z))", text[evidence_start:], re.DOTALL)
+        evidence_content = "<ul>\n" + "\n".join(f"<li>{line[0].strip()}</li>" for line in evidence_lines) + "\n</ul>"
+
+    # Extract Summary of Findings
+    findings_match = re.search(r"Summary of Findings:\s*(.+?)(?=Recommendations:)", text, re.DOTALL)
+    summary_of_findings = findings_match.group(1).strip() if findings_match else ""
+    return {
+        "typeOfIncident": type_of_incident,
+        "evidenceProvided": [evidence_content],
+        "details": summary_of_findings
+    }
+
+
+def extract_from_policy_details(text:str,details:str):
+    # Extract Coverage Status
+    coverage_match = re.search(r"Coverage Status:\s*(.+)", text)
+    coverage_status = coverage_match.group(1).strip() if coverage_match else ""
+
+    # Extract Details under Policy Details Summary
+    details_match = re.search(r"Policy Details Summary:(.+?)\n\s+- Policy Status:", text, re.DOTALL)
+    details_content = details_match.group(1).strip() if details_match else ""
+    
+    # Clean the details content and format as HTML list
+    details_lines = re.split(r"\n", details_content)
+    details_html = "<ul>\n" + "\n".join(f"<li>{line.strip()}</li>" for line in details_lines if line.strip()) + "\n</ul>"
+
+    return {
+        "coverageStatus": coverage_status,
+        "policyReview":[details_html],
+        "details": details + "\n\n" +details_html
+    }
+
+def extract_claim_summary(data:str,team_summaries:dict) -> AIClaimsReport:
     data = data.strip("xml\n").strip("```")
     fraud_score = re.search(
         r"<fraud_score>\s*(?:\/\/)?(.*?)\s*</fraud_score>", data, re.DOTALL
@@ -41,33 +81,19 @@ def extract_claim_summary(data) -> AIClaimsReport:
         if fraud_score_data == 'Information Not Available':
             fraud_score_data = 0
 
-        return {
+        team_summaries["doc"].update( {
             "fraud_score": float(fraud_score_data),
             "fraud_indicators": [indicator.strip() for indicator in fraud_indicators],
-            "claim_validation_factors":[factor.strip() for factor in claim_validation_factors],
-            "policy_review": policy_review.group(1).strip() if policy_review else None,
+            # "claim_validation_factors":[factor.strip() for factor in claim_validation_factors],
+            # "policy_review": policy_review.group(1).strip() if policy_review else None,
             "ai_recommendation": [
                 recommendation.strip() for recommendation in ai_recommendation
             ],
             "discoveries": [discovery.strip() for discovery in discoveries],
-            "type_of_incident": (
-                type_of_incident.group(1).strip()
-                if type_of_incident
-                else "Information Not Available"
-            ),
-            "coverage_status": (
-                coverage_status.group(1).strip()
-                if coverage_status
-                else "Information Not Available"
-            ),
-            "details": details.group(1).strip() if details else "Information Not Available",
-            "evidence_provided": (
-                [evidence.strip() for evidence in evidence_provided]
-                if evidence_provided
-                else ["Information Not Available"]
-            ),
+            "details": team_summaries["details"] +"\n\n"+details.group(1).strip() if details else team_summaries["details"],
             "operationStatus":operationStatus.group(1).strip() if operationStatus else "Information Not Available",
-        }
+        })
+        return team_summaries["doc"]
     except Exception as e:
         print(e)
 
