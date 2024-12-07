@@ -1,9 +1,9 @@
 from bs4 import BeautifulSoup
 import re
-from src.datamodels.co_ai import AIClaimsReport
+from datamodels.claim_processing import CreateClaimsReport
 
 
-def extract_claim_summary(data) -> AIClaimsReport:
+def extract_claim_summary(data) -> CreateClaimsReport:
     id = re.search(r"<id>\s*(?:\/\/)?(.*?)\s*</id>", data, re.DOTALL)
     fraud_score = re.search(
         r"<fraud_score>\s*(?:\/\/)?(.*?)\s*</fraud_score>", data, re.DOTALL
@@ -55,7 +55,7 @@ def extract_claim_summary(data) -> AIClaimsReport:
     }
 
 
-def extract_claim_data(html_content) -> AIClaimsReport:
+def extract_claim_data(html_content) -> CreateClaimsReport:
     """
     Extracts data from the provided AI Claim Memo HTML template.
 

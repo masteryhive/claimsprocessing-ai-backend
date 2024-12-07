@@ -10,7 +10,7 @@ from src.ai.resources.db_ops import (
     update_claim_report_database,
     update_claim_status_database,
 )
-from src.datamodels.co_ai import AIClaimsReport, ProcessClaimTask
+from src.datamodels.claim_processing import CreateClaimsReport, ProcessClaimTask
 from src.database.pd_db import create_claim_report
 from src.ai.claims_processing.utilities.parser import (
     extract_claim_data,
@@ -18,9 +18,8 @@ from src.ai.claims_processing.utilities.parser import (
     extract_from_claim_processing,
     extract_from_policy_details,
 )
-from src.config.db_setup import SessionLocal
 from src.ai.claims_processing.stirring_agent import members
-from langchain_core.messages import HumanMessage, AIMessage, BaseMessage, trim_messages
+from langchain_core.messages import HumanMessage
 
 # Initialize colorama for cross-platform color support
 init()
@@ -55,6 +54,7 @@ def print_tool_info(tool: str, tool_input: str, log: str) -> None:
 
 def control_workflow(
     db: Session,
+    claim: dict,
     claim_id: int,
     claim_request: ProcessClaimTask,
     task: Task,
@@ -113,10 +113,11 @@ def control_workflow(
             print_header(f"{agent} Response")
             print_section(ai_message_content, "")
             doc_data = extract_from_claim_processing(ai_message_content)
-            details = doc_data.pop("details", None)
+            discoveries = doc_data.get("discoveries")
             doc_data["claimId"] = claim_id
+            doc_data["incidentDetails"] = claim["incidentDetails"]
             save_claim_report_database(doc_data)
-            team_summaries["details"] = details
+            team_summaries["discoveries"] = discoveries
             team_summaries["doc"] = doc_data
             print(f"{Fore.CYAN}{'─'*80}{Style.RESET_ALL}\n")
         elif agent == members[1]:
@@ -135,9 +136,8 @@ def control_workflow(
             print_section(policy_review_team_ai_message_content, "")
             policy_data = extract_from_policy_details(
                 policy_review_team_ai_message_content,
-                team_summaries["details"]
+                team_summaries["discoveries"]
             )
-            team_summaries["doc"].pop("claimId", None)
             team_summaries["doc"].update(policy_data)
             update_claim_report_database(claim_id,team_summaries["doc"])
             print(f"{Fore.CYAN}{'─'*80}{Style.RESET_ALL}\n")

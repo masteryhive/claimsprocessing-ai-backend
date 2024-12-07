@@ -16,12 +16,12 @@ class ProcessClaimTask(BaseModel):
             }
         }
 
-class AIClaimsReport(BaseModel):
+class CreateClaimsReport(BaseModel):
     claimId: int = Field(..., description="The unique identifier for the claim.")
     fraudScore: float = Field(default=0.0, description="The calculated fraud score as a percentage.")
     fraudIndicators: list = Field(default=[], description="A list of indicators suggesting potential fraud.")
     aiRecommendation: list = Field(default=[], description="A list of AI-generated recommendations for claim processing.")
-    policyReview: list = Field(default=[], description="A list of policy review items related to the claim.")
+    policyReview: str = Field(default="", description="A list of policy review items related to the claim.")
     evidenceProvided: list = Field(default=[], description="A list of evidence items provided for the claim.")
     coverageStatus: str = Field(default="", description="The status of the coverage for the claim.")
     typeOfIncident: str = Field(default="", description="The type of incident related to the claim.")
@@ -32,7 +32,7 @@ class UpdateClaimsReportModel(BaseModel):
     fraudScore: float = Field(default=0.0, description="The calculated fraud score as a percentage.")
     fraudIndicators: list = Field(default=[], description="A list of indicators suggesting potential fraud.")
     aiRecommendation: list = Field(default=[], description="A list of AI-generated recommendations for claim processing.")
-    policyReview: list = Field(default=[], description="A list of policy review items related to the claim.")
+    policyReview: str = Field(default="", description="A list of policy review items related to the claim.")
     evidenceProvided: list = Field(default=[], description="A list of evidence items provided for the claim.")
     coverageStatus: str = Field(default="", description="The status of the coverage for the claim.")
     typeOfIncident: str = Field(default="", description="The type of incident related to the claim.")

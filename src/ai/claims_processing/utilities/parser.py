@@ -1,6 +1,6 @@
 from bs4 import BeautifulSoup
-import re,json
-from src.datamodels.co_ai import AIClaimsReport
+import re
+from src.datamodels.claim_processing import CreateClaimsReport
 
 def extract_from_claim_processing(text):
     # Extract Type of Incident
@@ -9,22 +9,25 @@ def extract_from_claim_processing(text):
 
     # Extract Evidence Provided
     evidence_start = text.find("Evidence Provided:")
+    evidence_end = text.find("Summary of Findings:")
     evidence_content = ""
-    if evidence_start != -1:
-        evidence_lines = re.findall(r"- (.+?)(?=(\n\s*- |\Z))", text[evidence_start:], re.DOTALL)
-        evidence_content = "<ul>\n" + "\n".join(f"<li>{line[0].strip()}</li>" for line in evidence_lines) + "\n</ul>"
+    if evidence_start != -1 and evidence_end != -1:
+        evidence_text = text[evidence_start + len("Evidence Provided:"):evidence_end].strip()
+        evidence_lines = re.findall(r"- (.+)", evidence_text)
+        evidence_content = "<ul>\n" + "\n".join(f"<li>{line.strip()}</li>" for line in evidence_lines) + "\n</ul>"
 
     # Extract Summary of Findings
     findings_match = re.search(r"Summary of Findings:\s*(.+?)(?=Recommendations:)", text, re.DOTALL)
     summary_of_findings = findings_match.group(1).strip() if findings_match else ""
+    
     return {
         "typeOfIncident": type_of_incident,
-        "evidenceProvided": [evidence_content],
-        "details": summary_of_findings
+        "evidenceProvided": evidence_content,
+        "discoveries": summary_of_findings
     }
 
 
-def extract_from_policy_details(text:str,details:str):
+def extract_from_policy_details(text:str,discoveries:str):
     # Extract Coverage Status
     coverage_match = re.search(r"Coverage Status:\s*(.+)", text)
     coverage_status = coverage_match.group(1).strip() if coverage_match else ""
@@ -39,11 +42,11 @@ def extract_from_policy_details(text:str,details:str):
 
     return {
         "coverageStatus": coverage_status,
-        "policyReview":[details_html],
-        "details": details + "\n\n" +details_html
+        "policyReview": details_html,
+        "discoveries": discoveries + "\n\n" +details_html
     }
 
-def extract_claim_summary(data:str,team_summaries:dict) -> AIClaimsReport:
+def extract_claim_summary(data:str,team_summaries:dict) -> CreateClaimsReport:
     data = data.strip("xml\n").strip("```")
     fraud_score = re.search(
         r"<fraud_score>\s*(?:\/\/)?(.*?)\s*</fraud_score>", data, re.DOTALL
@@ -56,19 +59,6 @@ def extract_claim_summary(data:str,team_summaries:dict) -> AIClaimsReport:
     )
     claim_validation_factors = re.findall(
         r"<factor>\s*(?:\/\/)?(.*?)\s*</factor>", data, re.DOTALL
-    )
-    policy_review = re.search(
-        r"<policy_review>\s*(?:\/\/)?(.*?)\s*</policy_review>", data, re.DOTALL
-    )
-    type_of_incident = re.search(
-        r"<type_of_incident>\s*(?:\/\/)?(.*?)\s*</type_of_incident>", data, re.DOTALL
-    )
-    coverage_status = re.search(
-        r"<coverage_status>\s*(?:\/\/)?(.*?)\s*</coverage_status>", data, re.DOTALL
-    )
-    details = re.search(r"<details>\s*(?:\/\/)?(.*?)\s*</details>", data, re.DOTALL)
-    evidence_provided = re.findall(
-        r"<evidence>\s*(?:\/\/)?(.*?)\s*</evidence>", data, re.DOTALL
     )
     ai_recommendation = re.findall(
         r"<recommendation>\s*(?:\/\/)?(.*?)\s*</recommendation>", data, re.DOTALL
@@ -84,13 +74,10 @@ def extract_claim_summary(data:str,team_summaries:dict) -> AIClaimsReport:
         team_summaries["doc"].update( {
             "fraud_score": float(fraud_score_data),
             "fraud_indicators": [indicator.strip() for indicator in fraud_indicators],
-            # "claim_validation_factors":[factor.strip() for factor in claim_validation_factors],
-            # "policy_review": policy_review.group(1).strip() if policy_review else None,
             "ai_recommendation": [
                 recommendation.strip() for recommendation in ai_recommendation
             ],
             "discoveries": [discovery.strip() for discovery in discoveries],
-            "details": team_summaries["details"] +"\n\n"+details.group(1).strip() if details else team_summaries["details"],
             "operationStatus":operationStatus.group(1).strip() if operationStatus else "Information Not Available",
         })
         return team_summaries["doc"]
@@ -98,7 +85,7 @@ def extract_claim_summary(data:str,team_summaries:dict) -> AIClaimsReport:
         print(e)
 
 
-def extract_claim_data(html_content) -> AIClaimsReport:
+def extract_claim_data(html_content) -> CreateClaimsReport:
     """
     Extracts data from the provided AI Claim Memo HTML template.
 

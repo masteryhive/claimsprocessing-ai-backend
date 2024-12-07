@@ -54,68 +54,37 @@ CLAIM_ADJUSTER_SUMMARY_PROMPT: |
 
   TEMPLATE STRUCTURE DATA SOURCE:
   Data sources for the template structure should be derived from the following:
-  - Claim ID: Extracted from the claim submission data.
   - Discoveries: 
     - Insights identified through discrepancies in submitted documents, previous claim history, and policy review, excluding fraud-specific information.
     - Claim Validation Factors, this means information gathered from the claims processing team, including document checks, market analysis, and policyholder history.
   - Fraud Score: Calculated using the fraud detection model based on historical claim data and current claim details.
   - Fraud Indicators: Identified through discrepancies in submitted documents, previous claim history, and any flags raised by the fraud detection system.
-  - Policy Review: All the summary report conducted by the policy review team, information gathered from assessing the policy terms, status, and any special conditions.
-  - Type of Incident: The claimType from the claim form JSON.
-  - Coverage Status: The policy coverage status provided by the policy review team.
   - Details: Compiled from the claim submission, including all relevant information about the incident and claim.
-  - Evidence Provided: Check the summary of the claim_form_screening_team.
   - Claims Action Recommendation: Formulated by you, based on the analysis of all gathered data.
   - Claims Operation Status: Determined by you, reflecting the current status of document verification and fraud assessment.
   
   TEMPLATE STRUCTURE:
   You must respond in this XML Markdown format:
   <claim_summary>
-  <id>
-  {{claim_id}}
-  </id>
-  <policy_review>
-  {{all_the_detailed_summary_from_the_policy_review_team_in_html_markdown}}
-  </policy_review>
-  <type_of_incident>
-  {{the_claim_type}}
-  </type_of_incident>
-  <coverage_status>
-  {{the_coverage_status_in_the_summary_from_the_policy_review_team}}
-  </coverage_status>
-  <details>
-  <!-- Comprehensive details of the claim -->
-  </details>
-  <evidence_provided>
-  <evidence>
-  <!-- Evidence submitted (e.g., photos, invoices, reports) -->
-  </evidence>
-  </evidence_provided>
   <claims_action_recommendation>
   <recommendation>
-  <!-- Example: Request additional documents or escalate for investigation -->
+  {{actionable_steps_that_needs_to_be_taken_regarding_this_claim_operations_result}} <!-- Example: Request additional documents or escalate for investigation -->
   </recommendation>
   </claims_action_recommendation>
   <claims_operation_status>
   {{the_status_from_reviewing_all_the teams_summary}} <!-- Choose one: [Documents Unverified, Documents Fraud Suspected, Vehicle Information Fraud Suspected, Done! Waiting for claims officer.] -->
   </claims_operation_status>
   <fraud_score>
-  <!-- The fraud risk score (e.g., 0.45) -->
+  {{the_fraud_score_from_the_fraud_team}}  yiop[<!-- The fraud risk score (e.g., 0.45) -->
   </fraud_score>
   <fraud_indicators>
   <indicator>
-  <!-- Example: Suspicious claim amount -->
+  {{the_key_factors_that_led_to_the_fraud_risk_score}} <!-- Example: Suspicious claim amount -->
   </indicator>
   </fraud_indicators>
   <discoveries>
   <discovery>
-  <!-- Example: Repair invoice amount 38% higher than market average -->
-  </discovery>
-  <discovery>
-  <!-- Example: Policy document is expired -->
-  </discovery>
-  <discovery>
-  <!-- Example: Vehicle identification number mismatch -->
+  {{series_of_your_observations_from_the_summary_of_all_the_teams_for_this_claim}}
   </discovery>
   </discoveries>
   </claim_summary>
@@ -123,204 +92,164 @@ CLAIM_ADJUSTER_SUMMARY_PROMPT: |
   EXAMPLES:
   Fewshot 1: Incomplete Claim Form
   <claim_summary>
-  <id>
-  77
-  </id>
-  <discoveries>
-  <discovery>
-  No supporting photos or evidence provided
-  </discovery>
-  <discovery>
-  Incident description lacks key details (e.g., time, location)
-  </discovery>
-  <discovery>
-  Incomplete policy information submitted
-  </discovery>
-  <discovery>
-  Discrepancies in reported and actual damage
-  </discovery>
-  <discovery>
-  Lack of witness statements or third-party reports
-  </discovery>
-  <discovery>
-  Missing repair invoice details
-  </discovery>
-  <discovery>
-  Policy document is expired by 3 months
-  </discovery>
-  <discovery>
-  Vehicle identification number (VIN) mismatched between the repair invoice and policy
-  </discovery>
-  </discoveries>
-  <policy_review>
-  Policy information is incomplete, verification not possible at this stage.
-  </policy_review>
-  <type_of_incident>
-  Information Not Available
-  </type_of_incident>
-  <coverage_status>
-  Information Not Available
-  </coverage_status>
-  <details>
-  Claim submission is incomplete. The claimant has not provided sufficient information, including required documents and evidence, to process the claim.
-  </details>
-  <evidence_provided>
-  <evidence>
-  No evidence provided
-  </evidence>
-  </evidence_provided>
   <claims_action_recommendation>
   <recommendation>
-  Request missing documents, including repair invoices, photos of damage, and a detailed incident description
+  Contact the claimant immediately to obtain a fully completed claim form with all mandatory sections filled out
   </recommendation>
   <recommendation>
-  Put claim on hold until all necessary documentation is submitted
+  Provide a detailed checklist of missing information to the claimant
+  </recommendation>
+  <recommendation>
+  Set a 5-business-day deadline for submitting the complete claim form
   </recommendation>
   </claims_action_recommendation>
   <claims_operation_status>
   Documents Unverified
   </claims_operation_status>
   <fraud_score>
-  Information Not Available
+  0.15
   </fraud_score>
   <fraud_indicators>
   <indicator>
-  Information Not Available
+  Incomplete claim form submission
   </indicator>
   </fraud_indicators>
-  </claim_summary>
-
-  Fewshot 2: High-Risk Fraud
-  <claim_summary>
-  <id>
-  24
-  </id>
   <discoveries>
   <discovery>
-  Police report shows discrepancies in the incident timeline
+  Multiple mandatory form sections left blank
   </discovery>
   <discovery>
-  Repair garage flagged in previous fraud investigations
+  Contact information incomplete or missing
   </discovery>
   <discovery>
-  Claimant has a history of multiple claims within the last 12 months
+  Incident description lacks fundamental details
   </discovery>
   <discovery>
-  Mismatched policyholder name between submitted documents and claim record
-  </discovery>
-  <discovery>
-  Coverage terms do not include repair costs for non-collision damage
+  No signature or date provided on the claim form
   </discovery>
   </discoveries>
+  </claim_summary>
+
+  Fewshot 2: Inconsistent Evidence Provided
+  <claim_summary>
+  <claims_action_recommendation>
+  <recommendation>
+  Request immediate submission of comprehensive vehicle damage photographs from multiple angles
+  </recommendation>
+  <recommendation>
+  Require professional repair shop damage assessment and detailed repair estimate
+  </recommendation>
+  <recommendation>
+  Inform claimant that claim processing cannot proceed without supporting visual evidence
+  </recommendation>
+  </claims_action_recommendation>
+  <claims_operation_status>
+  Documents Unverified
+  </claims_operation_status>
+  <fraud_score>
+  0.35
+  </fraud_score>
+  <fraud_indicators>
+  <indicator>
+  Lack of substantiating photographic evidence
+  </indicator>
+  </fraud_indicators>
+  <discoveries>
+  <discovery>
+  No photographic documentation of claimed vehicle damage
+  </discovery>
+  <discovery>
+  No independent damage assessment provided
+  </discovery>
+  <discovery>
+  Repair cost claims cannot be verified without visual evidence
+  </discovery>
+  <discovery>
+  Potential attempt to file claim without verifiable damage
+  </discovery>
+  </discoveries>
+  </claim_summary> 
+
+  Fewshot 3: Vehicle Fraud Detected
+  <claim_summary>
+  <claims_action_recommendation>
+  <recommendation>
+  Immediately escalate to fraud investigation unit for comprehensive review
+  </recommendation>
+  <recommendation>
+  Suspend all claim processing pending thorough verification
+  </recommendation>
+  <recommendation>
+  Notify relevant law enforcement agencies about potential vehicle fraud
+  </recommendation>
+  </claims_action_recommendation>
+  <claims_operation_status>
+  Vehicle Information Fraud Suspected
+  </claims_operation_status>
   <fraud_score>
   0.85
   </fraud_score>
   <fraud_indicators>
   <indicator>
-  Repair invoice includes costs significantly higher than market averages
+  Vehicle identification number (VIN) does not match registration records
   </indicator>
   <indicator>
-  Photos submitted do not match the reported damages
-  </indicator>
-  <indicator>
-  Policyholder flagged for prior fraudulent activities in the NIB database
+  Ownership documents show signs of manipulation
   </indicator>
   </fraud_indicators>
-  <policy_review>
-  Comprehensive policy verified. Terms deductible of ₦100,000 applies. Policy status is active but under investigation.
-  </policy_review>
-  <type_of_incident>
-  Major Collision
-  </type_of_incident>
-  <coverage_status>
-  Verified
-  </coverage_status>
-  <details>
-  The claimant reported a major collision involving another vehicle. Evidence includes photos, an invoice totaling ₦500,000, and a police report. Discrepancies in evidence have been identified.
-  </details>
-  <evidence_provided>
-  <evidence>
-  Photos of the damage (discrepancies noted)
-  </evidence>
-  <evidence>
-  Repair invoice totaling ₦500,000
-  </evidence>
-  <evidence>
-  Police report (timeline discrepancy)
-  </evidence>
-  </evidence_provided>
+  <discoveries>
+  <discovery>
+  VIN mismatch between claim documents and official records
+  </discovery>
+  <discovery>
+  Evidence of altered vehicle registration documents
+  </discovery>
+  <discovery>
+  Inconsistent vehicle ownership history
+  </discovery>
+  <discovery>
+  Multiple claims filed with similar fraudulent patterns
+  </discovery>
+  </discoveries>
+  </claim_summary>
+  
+  Fewshot 4: Policy Fraud Detected
+  <claim_summary>
   <claims_action_recommendation>
   <recommendation>
-  Escalate to Fraud Investigation Team for further review
+  Immediately terminate the current claim application
   </recommendation>
   <recommendation>
-  Conduct site visits to verify repair garage and damages
+  Initiate a comprehensive review of the claimant's insurance history
   </recommendation>
   <recommendation>
-  Flag the claimant for additional fraud checks before approving future claims
+  Refer case to legal department for potential insurance fraud investigation
   </recommendation>
   </claims_action_recommendation>
   <claims_operation_status>
   Documents Fraud Suspected
   </claims_operation_status>
-  </claim_summary>
-  
-  Fewshot 3: Low-Risk Valid Claim
-  <claim_summary>
-  <id>
-   39
-  </id>
-  <discoveries>
-  <discovery>
-  No significant discrepancies found in policy or history
-  </discovery>
-  <discovery>
-  Repair invoice aligns with market averages
-  </discovery>
-  <discovery>
-  Incident description matches provided evidence
-  </discovery>
-  <discovery>
-  Policyholder has no prior claims or fraud flags
-  </discovery>
-  </discoveries>
-  <policy_review>
-  Comprehensive policy verified. Terms deductible of ₦25,000 applies. Policy status is active.
-  </policy_review>
-  <type_of_incident>
-  Theft
-  </type_of_incident>
-  <coverage_status>
-  Verified
-  </coverage_status>
-  <details>
-  Claimant reported theft of vehicle parts. Evidence includes a police report, photos of the missing parts, and a replacement invoice for ₦40,000.
-  </details>
-  <evidence_provided>
-  <evidence>
-  Police report confirming theft
-  </evidence>
-  <evidence>
-  Photos of missing parts
-  </evidence>
-  <evidence>
-  Replacement invoice for ₦40,000
-  </evidence>
-  </evidence_provided>
-  <claims_action_recommendation>
-  <recommendation>
-  Approve the claim and process the payout
-  </recommendation>
-  </claims_action_recommendation>
-  <claims_operation_status>
-  Done! Waiting for claims officer.
-  </claims_operation_status>
   <fraud_score>
-  0.15
+  0.92
   </fraud_score>
   <fraud_indicators>
   <indicator>
-  No inconsistencies or flags identified
+  Policy expired more than 30 days prior to claim submission
   </indicator>
+  <indicator>
+  Multiple concurrent insurance policies covering same risk</indicator>
   </fraud_indicators>
+  <discoveries>
+  <discovery>
+  Policy expired 45 days before claim submission
+  </discovery>
+  <discovery>
+  Evidence of active policies with two different insurance providers
+  </discovery>
+  <discovery>
+  Inconsistent premium payment history
+  </discovery>
+  <discovery>
+  Repeated pattern of policy manipulation detected</discovery>
+  </discoveries>
   </claim_summary>

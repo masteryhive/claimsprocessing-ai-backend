@@ -9,7 +9,7 @@ from src.ai.claims_processing.run_workflow import  control_workflow
 from src.ai.resources.db_ops import get_claim_from_database, update_claim_status_database
 from src.database.schemas import Task, TaskStatus
 from src.config.db_setup import SessionLocal
-from src.datamodels.co_ai import ProcessClaimTask
+from src.datamodels.claim_processing import ProcessClaimTask
 from src.distsys.rabbitmq import RabbitMQ
 from src.ai.claims_processing.stirring_agent import super_graph
 
@@ -64,7 +64,7 @@ def process_message(body:bytes):
             }
         ):
             if "__end__" not in s:
-                control_workflow(db,claim_data["id"],claim_request,task,s,team_summaries)
+                control_workflow(db,claim_data,claim_data["id"],claim_request,task,s,team_summaries)
                 # Break the loop when 'summary_team' processes the claim
                 if "summary_team" in s:
                     print("Summary team has completed processing. Exiting the loop.")

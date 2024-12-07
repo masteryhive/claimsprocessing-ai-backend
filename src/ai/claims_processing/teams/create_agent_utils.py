@@ -13,7 +13,7 @@ def crew_nodes(state, crew_member, name):
         "agent_history": [
             AIMessage(
                 content=result["output"],
-                additional_kwargs={"intermediate_steps": result["intermediate_steps"]},
+                # additional_kwargs={"intermediate_steps": result["intermediate_steps"]},
                 name=name,
             )
         ]
