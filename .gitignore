@@ -166,3 +166,7 @@ langgraph.png
 /display
 src/entry.py
 /temp
+*.ini
+*.json
+/docs
+docs/selenium_scraper.py

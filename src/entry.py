@@ -11,7 +11,7 @@ from langchain_core.messages import HumanMessage
 
 init_vertexai()
 if __name__ == "__main__":
-    process_message(b"85")
+    process_message(b"86")
 
 
 # {

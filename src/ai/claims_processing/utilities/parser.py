@@ -10,11 +10,12 @@ def extract_from_claim_processing(text):
     # Extract Evidence Provided
     evidence_start = text.find("Evidence Provided:")
     evidence_end = text.find("Summary of Findings:")
-    evidence_content = ""
+    evidence_content = []
     if evidence_start != -1 and evidence_end != -1:
         evidence_text = text[evidence_start + len("Evidence Provided:"):evidence_end].strip()
         evidence_lines = re.findall(r"- (.+)", evidence_text)
-        evidence_content = "<ul>\n" + "\n".join(f"<li>{line.strip()}</li>" for line in evidence_lines) + "\n</ul>"
+        #evidence_content = "<ul>\n" + "\n".join(f"<li>{line.strip()}</li>" for line in evidence_lines) + "\n</ul>"
+        evidence_content = [line.strip() for line in evidence_lines]
 
     # Extract Summary of Findings
     findings_match = re.search(r"Summary of Findings:\s*(.+?)(?=Recommendations:)", text, re.DOTALL)
@@ -23,11 +24,11 @@ def extract_from_claim_processing(text):
     return {
         "typeOfIncident": type_of_incident,
         "evidenceProvided": evidence_content,
-        "discoveries": summary_of_findings
+        "discoveries": [summary_of_findings]
     }
 
 
-def extract_from_policy_details(text:str,discoveries:str):
+def extract_from_policy_details(text:str,discoveries:list):
     # Extract Coverage Status
     coverage_match = re.search(r"Coverage Status:\s*(.+)", text)
     coverage_status = coverage_match.group(1).strip() if coverage_match else ""
@@ -43,7 +44,7 @@ def extract_from_policy_details(text:str,discoveries:str):
     return {
         "coverageStatus": coverage_status,
         "policyReview": details_html,
-        "discoveries": discoveries + "\n\n" +details_html
+        "discoveries": discoveries + ["\n\n" +details_html]
     }
 
 def extract_claim_summary(data:str,team_summaries:dict) -> CreateClaimsReport:
@@ -71,16 +72,26 @@ def extract_claim_summary(data:str,team_summaries:dict) -> CreateClaimsReport:
         if fraud_score_data == 'Information Not Available':
             fraud_score_data = 0
 
-        team_summaries["doc"].update( {
-            "fraud_score": float(fraud_score_data),
-            "fraud_indicators": [indicator.strip() for indicator in fraud_indicators],
-            "ai_recommendation": [
-                recommendation.strip() for recommendation in ai_recommendation
-            ],
-            "discoveries": [discovery.strip() for discovery in discoveries],
-            "operationStatus":operationStatus.group(1).strip() if operationStatus else "Information Not Available",
-        })
-        return team_summaries["doc"]
+        
+        team_summaries["pre_report"].update(
+            {
+                "fraudScore": float(fraud_score_data),
+                "fraudIndicators": [
+                    indicator.strip() for indicator in fraud_indicators
+                ],
+                "aiRecommendation": [
+                    recommendation.strip() for recommendation in ai_recommendation
+                ],
+                "discoveries": team_summaries["pre_report"]["discoveries"]
+                + [discovery.strip() for discovery in discoveries],
+                "operationStatus": (
+                    operationStatus.group(1).strip()
+                    if operationStatus
+                    else "Information Not Available"
+                ),
+            }
+        )
+        return team_summaries["pre_report"]
     except Exception as e:
         print(e)
 

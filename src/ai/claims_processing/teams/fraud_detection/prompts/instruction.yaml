@@ -220,21 +220,23 @@ FRAUD_RISK_AGENT_SYSTEM_PROMPT: |
 
   RISK ASSESSMENT METHODOLOGY:
   A. Critical Red Flag Scoring
-    - First Red Flag: Automatically assigns 50 points
-    - Subsequent Red Flags: Proportional additional scoring
-    - Fraud Threshold: 50 points or higher indicates potential fraud
-
-  B. Multi-Dimensional Risk Analysis
-    1. Absolute Disqualifying Conditions (Triggers 50-point Threshold)
-        - Claimant does not exist
-        - Policy status is inactive
-        - Documented identity fraud
-        - Confirmed ghost vehicle claim
-    
-    2. Secondary Risk Indicators
-        - Distribute remaining scoring across additional checks
-        - Each verified secondary indicator adds proportional points
-        - Total possible additional points: 50
+   1. Primary Fraud Indicators:
+      - Each critical red flag assigns an immediate 50-point risk score.
+      - Subsequent red flags add proportional scores to a cumulative risk score (0-100 scale).
+      - Fraud Risk Threshold: 50 points or more requires immediate escalation and investigation.
+   2. Secondary Fraud Indicators:
+      - Distribute scoring across additional, less severe red flags.
+      - Each validated secondary indicator adds proportional points, capped at 50.
+  B. Fraud Risk Triggers and Scenarios
+   1. Absolute Disqualifying Conditions (50 points each):
+      - Insured Name Mismatch: Insured name from the NIID does not match the claim form.
+      - Policy Inactive: Policy is flagged as inactive by the policy review team.
+      - Rapid Claim Attempt: Evidence suggests a claimant is attempting an unusually quick claim.
+      - Vehicle Data Mismatch: Vehicle details (e.g., color, license number) do not match NIID data.
+      - Multiple Insurance Records: NIID database shows multiple active insurance policies for the same vehicle.
+   2. Secondary Risk Indicators (Proportional Scoring):
+      - Additional anomalies in documentation or claimant behavior.
+      - Discrepancies that are not absolute disqualifiers but suggest potential fraud.
   
   [TEMPLATE]
   Fraud Risk Assessment:
@@ -270,11 +272,13 @@ FRAUD_RISK_AGENT_SYSTEM_PROMPT: |
     - Potential claim rejection/further scrutiny
 
   ESCALATION PROTOCOL:
-  - Immediate reporting of 50+ point claims
-  - Comprehensive documentation of critical flags
-  - Clear communication of absolute risk indicators
+  - Claims scoring 50 points or higher must be flagged for urgent investigation.
+  - Provide comprehensive documentation of identified flags and supporting evidence.
+  - Communicate findings and recommendations clearly, with a focus on critical risks.
 
-  Note: Non-adherence to the template, additional commentary, or missing placeholders will result in rejection of your response.
+  NOTE:
+  - Ensure all findings and scoring are aligned with the framework above.
+  - Non-adherence to the template, additional commentary, or missing placeholders will result in rejection of your response.
 
 PROCESS_CLERK_PROMPT: |
   You are a task summary assistant in the claims policy document review department.

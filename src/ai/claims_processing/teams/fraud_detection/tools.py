@@ -49,9 +49,8 @@ def check_NIID_database_to_confirm_vehicle_insurance(
     """
     extractor = InsuranceDataExtractor("LND357JC")
     res = extractor.run()
-    print(res)
     if res.get('status') == 'success' and res.get('data')["RegistrationNumber"] == vehicle_registration_number:
-        res["message"] = "Yes, this vehicle is insured"
+        res["message"] = "Yes, this vehicle is insured by NIID"
     return res
 
 
@@ -81,11 +80,11 @@ def item_cost_price_benmarking_in_local_market(
     """
     this cost benchmarking tool calls the local market place to verify the quoted cost on the invoice for the vehicle repair claims.
     """
-    # costBenchmarking = CostBenchmarking(email=email,password=password)
-    # result = costBenchmarking.run(damaged_part, quoted_cost)
-    # print(result)
-    # return result
-    return "cost is out of market threshold"
+    costBenchmarking = CostBenchmarking(email=email,password=password)
+    result = costBenchmarking.run(damaged_part, quoted_cost)
+    print(result)
+    return result
+    # return "cost is out of market threshold"
 
 
 @tool
@@ -95,11 +94,11 @@ def item_pricing_evaluator(
     """
      this cost evaluation tool checks the local market place for how much the damaged part is worth.
     """
-    # costBenchmarking = CostBenchmarking(email=email,password=password)
-    # result = costBenchmarking.run_with_expected_range(damaged_part)
-    # print(result)
-    # return result
-    return "cost is fraudulent"
+    costBenchmarking = CostBenchmarking(email=email,password=password)
+    result = costBenchmarking.run_with_expected_range(damaged_part)
+    print(result)
+    return result
+    # return "cost is fraudulent"
 
 
 @tool

@@ -4,53 +4,59 @@ from selenium.webdriver.chrome.options import Options
 # from selenium.webdriver.firefox.options import Options
 from selenium.webdriver.support.ui import Select
 from bs4 import BeautifulSoup
-import time
+from selenium import webdriver
+from selenium.webdriver.common.by import By
+from selenium.webdriver.chrome.options import Options
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver.support.ui import Select
+from bs4 import BeautifulSoup
 
 class InsuranceDataExtractor:
     def __init__(self, registration_number):
         self.registration_number = registration_number
-
-        # Set up Chrome options for headless mode
         chrome_options = Options()
         chrome_options.add_argument("--headless")
-        chrome_options.add_argument("--no-sandbox")  # Optional for some environments
+        chrome_options.add_argument("--no-sandbox")
         chrome_options.add_argument("--disable-dev-shm-usage")
-        self.driver = webdriver.Chrome(options=chrome_options)  
-        
-        # Set up Firefox options for headless mode
-        # firefox_options = Options()
-        # firefox_options.add_argument("--headless")
-        
-        # self.driver = webdriver.Firefox(options=firefox_options)
+        chrome_options.add_argument("window-size=1920,1080")
+        chrome_options.add_argument(
+            "user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.6778.109 Safari/537.36"
+        )
+        self.driver = webdriver.Chrome(options=chrome_options)
         self.url = "https://www.askniid.org/VerifyPolicy.aspx"
 
     def extract_data(self):
-        # Navigate to the website
         self.driver.get(self.url)
 
-        # Interact with the dropdown
-        dropdown = Select(self.driver.find_element(By.ID, "ContentPlaceHolder1_drpOption"))
+        dropdown = WebDriverWait(self.driver, 10).until(
+            EC.visibility_of_element_located((By.ID, "ContentPlaceHolder1_drpOption"))
+        )
+        dropdown = Select(dropdown)
         dropdown.select_by_value("Single")
 
-        # Select the radio button
-        radio_button = self.driver.find_element(By.ID, "ContentPlaceHolder1_rblNumber_1")
+        radio_button = WebDriverWait(self.driver, 10).until(
+            EC.element_to_be_clickable((By.ID, "ContentPlaceHolder1_rblNumber_1"))
+        )
         radio_button.click()
 
-        # Enter the registration number
-        registration_number_input = self.driver.find_element(By.ID, "ContentPlaceHolder1_txtNumber")
+        registration_number_input = WebDriverWait(self.driver, 10).until(
+            EC.visibility_of_element_located((By.ID, "ContentPlaceHolder1_txtNumber"))
+        )
         registration_number_input.send_keys(self.registration_number)
 
-        # Click the search button
-        search_button = self.driver.find_element(By.ID, "ContentPlaceHolder1_btnSearch")
+        search_button = WebDriverWait(self.driver, 10).until(
+            EC.element_to_be_clickable((By.ID, "ContentPlaceHolder1_btnSearch"))
+        )
         search_button.click()
 
-        # Wait for the page to load the results
-        time.sleep(3)  # Adjust the delay as needed
+        WebDriverWait(self.driver, 10).until(
+            EC.presence_of_element_located((By.ID, "ContentPlaceHolder1_lblPolicyNo"))
+        )
 
-        # Get the page content and parse it with BeautifulSoup
         soup = BeautifulSoup(self.driver.page_source, "html.parser")
-
-        # Extract the data
+        # Extract and return the required data
+            # Extract the data
         policy_number = soup.find("span", {"id": "ContentPlaceHolder1_lblPolicyNo"}).text
         new_registration_number = soup.find("span", {"id": "ContentPlaceHolder1_lblNewRegistrationNo"}).text
         registration_number = soup.find("span", {"id": "ContentPlaceHolder1_lblRegistrationNo"}).text
@@ -87,21 +93,11 @@ class InsuranceDataExtractor:
         return result
 
     def close_driver(self):
-        # Close the WebDriver
         self.driver.quit()
 
     def run(self):
         try:
-            # Call the method to perform the extraction
             data = self.extract_data()
         finally:
-            # Ensure the driver is closed after extraction
             self.close_driver()
         return {"status": "success", "data": data}
-
-
-# if __name__ == "__main__":
-#     # Assuming the class is named `InsuranceDataExtractor`
-#     extractor = InsuranceDataExtractor("LND357JC")
-#     print(extractor.run())
-

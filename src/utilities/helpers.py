@@ -27,6 +27,7 @@ def _new_get_datetime(date_string):
         formats = [
             "%Y/%m/%d", "%d/%m/%Y", "%m-%d-%Y", "%d-%m-%Y",
             "%Y-%m-%d", "%b %d, %Y", "%B %d, %Y",
+            "%Y-%m-%dT%H:%M:%S.%fZ",
         ]
         
         date_obj = None

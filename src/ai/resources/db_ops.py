@@ -2,6 +2,7 @@ import json
 from typing import Union
 
 import requests
+from src.error_trace.errorlogger import log_error
 from src.datamodels.claim_processing import CreateClaimsReport, UpdateClaimsReportModel
 from src.config.appconfig import env_config
 
@@ -22,6 +23,7 @@ async def save_claim_database(data_to_send: dict) -> bool:
         if response.status_code == 201:
             return True
         else:
+            log_error(f"Failed to send claim details: {response.status_code} - {response.text}")
             return f"Failed to send claim details: {response.status_code} - {response.text}"
 
 def get_claim_from_database(claim_request:dict) -> dict:
@@ -32,8 +34,9 @@ def get_claim_from_database(claim_request:dict) -> dict:
         # Check if the request was successful
         if response.status_code == 200:
             resp_data = response.json()
-            if 'claims_report' in resp_data:
-                del resp_data['claims_report']
+            print(resp_data)
+            # if 'claims_report' in resp_data:
+            #     del resp_data['claims_report']
             return resp_data
         else:
             return f"Failed to get claim details: {response.status_code} - {response.text}"
@@ -57,6 +60,7 @@ def update_claim_status_database(claim_id: int, status:str) -> Union[str,bool]:
         if response.status_code == 200:
             return True
         else:
+            log_error(f"Failed to send claim details: {response.status_code} - {response.text}")
             return f"Failed to send claim details: {response.status_code} - {response.text}"
     except Exception as e:
         return f"An error occurred while updating the claim: {str(e)}"
@@ -112,7 +116,7 @@ def update_claim_report_database(claim_id:int,claim_report: dict) -> bool:
         response = requests.patch(env_config.backend_api + f"/claim-report/by-claim/{claim_id}", json=model_result)
         
         # Check if the request was successful
-        if response.status_code == 201:
+        if response.status_code == 200:
             return True
         else:
             print(f"Failed to send claim details: {response.status_code} - {response.text}")

@@ -1,4 +1,7 @@
 from pydantic import BaseModel, Field
+from typing import Any, List, Optional, Dict, Union
+from datetime import datetime
+
 
 # Data model for input validation
 class MessageRequest(BaseModel):
@@ -15,6 +18,58 @@ class ProcessClaimTask(BaseModel):
                 "task_id": "TASK123_12:08:34"
             }
         }
+
+
+
+class ClaimData(BaseModel):
+    id: int
+    nameOfInsured: str
+    policyNumber: str
+    addressOfInsured: str
+    phoneNumberOfInsured: str
+    declaration: bool
+    signature: str
+    status: str
+    signatureDate: str
+    extentOfLossOrDamage: List[Union[dict,str]]
+    particularsAddress: str
+    particularsPhoneNo: str
+    personInCharge: str
+    addressOfPersonInCharge: str
+    permissionConfirmation: str
+    otherInsuranceConfirmation: str
+    purposeOfUse: str
+    durationOfOwnership: str
+    incidentDetails: str
+    previousOwner: str
+    servicedBy: str
+    lastServiceDate: str
+    totalMileage: str
+    vehicleMake: str
+    claimType: str
+    registrationNumber: str
+    claimantName: str
+    vehicleCC: str
+    vehicleColor: str
+    typeOfBody: str
+    yearOfManufacture: str
+    chassisNumber: str
+    engineNumber: str
+    locationAtTimeOfTheft: str
+    dateOfDiscovery: Union[str,None]
+    discoveredBy: str
+    howTheftOccurred: str
+    vehicleLicenseNumber: str
+    dateReported: Union[str,None]
+    policeStationName: str
+    wasVehicleLocked: str
+    wasNightWatchmanInAttendance: str
+    suspect: str
+    suspectDetails: str
+    roomId: str
+    evidenceProvided: List[Any]
+    dateClaimFiled: str
+
 
 class CreateClaimsReport(BaseModel):
     claimId: int = Field(..., description="The unique identifier for the claim.")

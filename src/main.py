@@ -1,8 +1,9 @@
 from fastapi import FastAPI, BackgroundTasks, HTTPException, status
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, PlainTextResponse
 import uvicorn,os
 from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
+from src.error_trace.errorlogger import LOG_FILE, log_error
 from src.ai.model import init_vertexai
 from src.config.db_setup import SessionLocal
 from src.ai.claims_processing.manager import rabbitmq_worker
@@ -99,6 +100,22 @@ def health_check():
     """Health check endpoint."""
     return {"status": "healthy"}
 
+@app.get("/view-logs/", response_class=PlainTextResponse)
+async def view_logs():
+    """
+    Read and return the contents of systems.log in plain text.
+    """
+    try:
+        if not os.path.exists(LOG_FILE):
+            raise HTTPException(status_code=404, detail="Log file not found.")
+
+        with open(LOG_FILE, "r") as log_file:
+            logs = log_file.read()
+        return logs or "Log file is empty."
+    except Exception as e:
+        log_error(f"Error reading log file: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to read log file: {e}")
+    
 @app.post("/start-worker",status_code=status.HTTP_202_ACCEPTED)
 def start_worker(background_tasks: BackgroundTasks,):
     """HTTP endpoint to start the RabbitMQ worker."""
