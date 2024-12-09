@@ -14,11 +14,18 @@ password = "JLg8m4aQ8n46nhC"
 
 
 class CostBenchmarking:
-    def __init__(self, email, password):
+    def __init__(self, email=email, password=password):
         self.email = email
         self.password = password
 
         chrome_options = Options()
+        chrome_options.add_argument("--headless")
+        chrome_options.add_argument("--no-sandbox")  # Optional for some environments
+        chrome_options.add_argument("--disable-dev-shm-usage")
+        chrome_options.add_argument("window-size=1920,1080")
+        chrome_options.add_argument(
+            "user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.6778.109 Safari/537.36"
+        )
         self.driver = webdriver.Chrome(options=chrome_options)
         self.url = "https://www.jiji.ng/login.html"
 
@@ -31,10 +38,18 @@ class CostBenchmarking:
             modal_container = WebDriverWait(self.driver, 10).until(
                 EC.presence_of_element_located((By.CLASS_NAME, "fw-popup__container"))
             )
-
+            
+            # Use JavaScript to scroll the element into view
+            self.driver.execute_script("arguments[0].scrollIntoView(true);", modal_container)
+            
             # Find the "E-mail or phone" button within the modal
             email_phone_button = modal_container.find_element(
                 By.XPATH, ".//button[contains(span, 'E-mail or phone')]"
+            )
+
+            # Ensure the button is visible and interactable
+            WebDriverWait(self.driver, 10).until(
+                EC.element_to_be_clickable((By.XPATH, ".//button[contains(span, 'E-mail or phone')]"))
             )
 
             # Click the button
@@ -83,6 +98,10 @@ class CostBenchmarking:
             # Direct navigation to the filtered search URL
             search_url = f"https://jiji.ng/lagos/search?query={search_term}&filter_id_verify=Verified%20sellers&sort=new"
             self.driver.get(search_url)
+
+            WebDriverWait(self.driver, 10).until(
+                EC.presence_of_element_located((By.CLASS_NAME, "qa-advert-price"))
+            )
             # Get the page content and parse it with BeautifulSoup
             soup = BeautifulSoup(self.driver.page_source, "html.parser")
 
@@ -215,16 +234,22 @@ class CostBenchmarking:
             print("❌ This price appears UNREALISTIC based on market data")
 
         analysis = result["analysis"]
-        print(f"\nMarket Statistics (after removing outliers):")
-        print(f"- Median price: {analysis['median_price']:,.0f}")
-        print(
-            f"- Realistic price range: {analysis['price_range']['lower_bound']:,.0f} to {analysis['price_range']['upper_bound']:,.0f}"
-        )
-        print(
-            f"- Your price is in the {analysis['quoted_price_percentile']:.1f}th percentile"
-        )
+        # print(f"\nMarket Statistics (after removing outliers):")
+        # print(f"- Median price: {analysis['median_price']:,.0f}")
+        # print(
+        #     f"- Realistic price range: {analysis['price_range']['lower_bound']:,.0f} to {analysis['price_range']['upper_bound']:,.0f}"
+        # )
+        # print(
+        #     f"- Your price is in the {analysis['quoted_price_percentile']:.1f}th percentile"
+        # )
         # print(f"- Difference from median: {analysis['percent_difference_from_median']:+.1f}%")
-
+        market_statistics = {
+            "median_price": analysis['median_price'],
+            "realistic_price_range": f"{analysis['price_range']['lower_bound']:,.0f} to {analysis['price_range']['upper_bound']:,.0f}",
+            "quoted_price_percentile": f"- Your price is in the {analysis['quoted_price_percentile']:.1f}th percentile"
+        }
+        return market_statistics
+    
     def run(self, search_term: str, quoted_price: str):
         try:
             market_prices = self.extract_data(search_term)
@@ -232,6 +257,56 @@ class CostBenchmarking:
             self.close_driver()
         quoted_price = float(quoted_price.replace(",", ""))
         return self.analyze_price(market_prices, quoted_price)
+
+    def get_expected_price_range(
+        self, prices: List[float], threshold: float = 1.5
+    ) -> str:
+        """
+        Calculates the expected price range based on the list of prices.
+
+        Parameters:
+        prices (List[float]): List of market prices.
+        threshold (float): Number of IQR ranges to consider for defining the range.
+
+        Returns:
+        str: The expected price range in a formatted string.
+        """
+        # Remove outliers to clean the data
+        cleaned_prices = self.remove_outliers(prices, threshold)
+
+        if not cleaned_prices:
+            return "Not enough valid data to determine the price range."
+
+        # Convert to numpy array for statistical calculations
+        prices_array = np.array(cleaned_prices)
+
+        # Calculate Q1 and Q3
+        q1 = np.percentile(prices_array, 25)
+        q3 = np.percentile(prices_array, 75)
+
+        # Return the expected price range as a formatted string
+        return f"{int(q1):,} - {int(q3):,}"
+
+    def run_with_expected_range(self, search_term: str):
+        """
+        Extends the `run` method to include the expected price range in the output.
+
+        Parameters:
+        search_term (str): The search term to query.
+        quoted_price (str): The quoted price to analyze.
+
+        Returns:
+        dict: The analysis results and the expected price range.
+        """
+        try:
+            market_prices = self.extract_data(search_term)
+        finally:
+            self.close_driver()
+
+        expected_range = self.get_expected_price_range(market_prices)
+        return f"Expected price range for '{search_term}': {expected_range}"
+
+
 
 
 if __name__ == "__main__":
