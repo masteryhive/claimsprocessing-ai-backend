@@ -7,7 +7,7 @@ from src.ai.claims_processing.run_workflow import  control_workflow
 from src.ai.resources.db_ops import get_claim_from_database, update_claim_status_database
 from src.database.schemas import Task, TaskStatus
 from src.config.db_setup import SessionLocal
-from src.datamodels.claim_processing import ClaimData, ProcessClaimTask
+from src.datamodels.claim_processing import AccidentClaimData, ProcessClaimTask, TheftClaimData
 from src.distsys.rabbitmq import RabbitMQ
 from src.ai.claims_processing.stirring_agent import super_graph
 from src.utilities.helpers import _new_get_datetime
@@ -40,7 +40,10 @@ def process_message(body:bytes):
             result = loop.run_until_complete(classify_urls(claim_data))
             claim_data.pop('resourceUrls', None)
             claim_data["evidenceProvided"] = result
-        claim_data = ClaimData(**claim_data)
+        if claim_data["claimType"] in ["Accident","accident"]:
+            claim_data = AccidentClaimData(**claim_data)
+        else:
+            claim_data = TheftClaimData(**claim_data)
         
         print(claim_data)
         update_claim_status_database(claim_data.id,status=TaskStatus.PENDING)
@@ -65,7 +68,7 @@ def process_message(body:bytes):
                     print("Summary team has completed processing. Exiting the loop.")
                     break
     except Exception as e:
-        log_error(e)
+        log_error(f"An error occurred during claim processing: {e}")
     finally:
         db.close()
 

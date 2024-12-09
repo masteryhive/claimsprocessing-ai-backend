@@ -19,9 +19,49 @@ class ProcessClaimTask(BaseModel):
             }
         }
 
+class AccidentClaimData(BaseModel):
+    id: int
+    nameOfInsured: str
+    policyNumber: str
+    addressOfInsured: str
+    phoneNumberOfInsured: str
+    declaration: bool
+    signature: str
+    status: str
+    signatureDate: str
+    extentOfLossOrDamage: List[Union[dict,str]]
+    particularsAddress: str
+    particularsPhoneNo: str
+    personInCharge: str
+    addressOfPersonInCharge: str
+    permissionConfirmation: str
+    otherInsuranceConfirmation: str
+    purposeOfUse: str
+    durationOfOwnership: str
+    incidentDetails: str
+    previousOwner: str
+    servicedBy: str
+    lastServiceDate: str
+    totalMileage: str
+    vehicleMake: str
+    claimType: str
+    registrationNumber: str
+    claimantName: str
+    vehicleColor: str
+    typeOfBody: str
+    yearOfManufacture: str
+    chassisNumber: str
+    engineNumber: str
+    locationAtTimeOfTheft: str
+    dateOfDiscovery: Union[str,None]
+    discoveredBy: str
+    vehicleLicenseNumber: str
+    dateReported: Union[str,None]
+    policeStationName: str
+    evidenceProvided: List[Any]
+    dateClaimFiled: str
 
-
-class ClaimData(BaseModel):
+class TheftClaimData(BaseModel):
     id: int
     nameOfInsured: str
     policyNumber: str
