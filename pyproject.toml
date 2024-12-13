@@ -17,7 +17,7 @@ psycopg2-binary = "^2.9.10"
 sqlalchemy = "2.0.35"
 vertexai = "^1.71.1"
 selenium = "^4.26.1"
-pillow = "^11.0.0"
+pillow = "^10.2.0"
 beautifulsoup4 = "^4.12.3"
 celery = {extras = ["redis"], version = "^5.4.0"}
 pydantic = "2.9.2"
@@ -34,6 +34,9 @@ google-cloud-bigquery = "^3.27.0"
 pypdf = "^5.1.0"
 spacy = "^3.8.2"
 en_core_web_sm = {url = "https://github.com/explosion/spacy-models/releases/download/en_core_web_sm-3.8.0/en_core_web_sm-3.8.0.tar.gz"}
+llama-index-multi-modal-llms-gemini = "^0.4.1"
+llama-index-llms-gemini = "^0.4.1"
+llama-index-llms-vertex = "^0.4.2"
 
 
 [build-system]

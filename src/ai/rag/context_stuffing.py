@@ -1,6 +1,9 @@
 
 from datetime import datetime
+import os
 from typing import Iterable
+
+import requests
 from src.config.appconfig import env_config
 import time
 
@@ -111,7 +114,27 @@ def generate(
 
     return responses
 
+def download_pdf(reference):
+    base_url = "https://storage.googleapis.com/masteryhive-insurance-claims/rawtest/policy_document"
+    modified_reference = reference.replace("/", "-")
+    file_url = f"{base_url}/{modified_reference}.pdf"
+    print(file_url)
+    download_path = "src/ai/rag/doc"
 
+    # Ensure the download directory exists
+    os.makedirs(download_path, exist_ok=True)
+
+    # Download the file
+    response = requests.get(file_url, stream=True)
+    if response.status_code == 200:
+        file_path = os.path.join(download_path, f"{modified_reference}.pdf")
+        with open(file_path, 'wb') as f:
+            for chunk in response.iter_content(chunk_size=1024):
+                f.write(chunk)
+        return "File downloaded successfully"
+    else:
+        return f"Failed to download the file. HTTP status code: {response.status_code}"
+        
 def retry_generate(pdf_document: Part, prompt: str, question: str):
     predicted = False
     while not predicted:

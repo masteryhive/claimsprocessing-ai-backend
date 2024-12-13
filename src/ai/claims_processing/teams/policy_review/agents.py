@@ -46,7 +46,7 @@ def _load_prompt_template() -> str:
 
 insurance_policy_essential_data_agent = create_tool_agent(
     llm=llm,
-    tools=[retrieve_all_essential_details_from_policy],
+    tools=[download_policy_document_from_storage,retrieve_all_essential_details_from_policy],
     system_prompt=_load_prompt_template()["INSURANCE_CLAIM_POLICY_DATA"],
 )
 

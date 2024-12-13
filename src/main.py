@@ -95,10 +95,12 @@ def home():
         "ApplicationStatus": "running...",
     }
 
-@app.get("/health")
-def health_check():
-    """Health check endpoint."""
-    return {"status": "healthy"}
+@app.get("/health", status_code=status.HTTP_200_OK)
+def APIHealth():
+    """
+    Returns a dictionary containing information about the application.
+    """
+    return "healthy"
 
 @app.get("/view-logs/", response_class=PlainTextResponse)
 async def view_logs():
@@ -115,7 +117,7 @@ async def view_logs():
     except Exception as e:
         log_error(f"Error reading log file: {e}")
         raise HTTPException(status_code=500, detail=f"Failed to read log file: {e}")
-    
+
 @app.post("/start-worker",status_code=status.HTTP_202_ACCEPTED)
 def start_worker(background_tasks: BackgroundTasks,):
     """HTTP endpoint to start the RabbitMQ worker."""

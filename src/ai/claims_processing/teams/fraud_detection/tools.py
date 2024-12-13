@@ -2,15 +2,18 @@
 from langchain_core.tools import tool
 from typing import Annotated, Dict, Union
 
+from src.ai.resources.image_understanding import SSIM
 from src.ai.rag.context_stuffing import process_query
 from src.ai.resources.cost_benchmarking import CostBenchmarking
 from src.ai.resources.retrieve_vehicle_policy import InsuranceDataExtractor
 
 
-############## Fraud checks tool ##############
-
 email = "sam@masteryhive.ai"
 password = "JLg8m4aQ8n46nhC"
+costBenchmarking = CostBenchmarking(email=email,password=password)
+
+############## Fraud checks tool ##############
+
 
 @tool
 def verify_this_claimant_exists_as_a_customer(
@@ -26,6 +29,7 @@ def verify_this_claimant_exists_as_a_customer(
         "message": "Backend verification successful. Claimant is a valid customer",
     }
 
+
 @tool
 def investigate_if_this_claimant_is_attempting_a_rapid_policy_claim(date_claim_filed: Annotated[str, "date this claim was filed"]):
     """
@@ -36,6 +40,33 @@ def investigate_if_this_claimant_is_attempting_a_rapid_policy_claim(date_claim_f
     resp = process_query(query=query)
     return resp
 
+############## vehicle fraud ##################
+niid_data = {}
+
+@tool
+def verify_vehicle_matches_preloss(
+    evidence_url: Annotated[str, "URL of the supporting evidence(evidenceUrl) of the damaged vehicle to be reviewed"],
+):
+    """
+    This tool reviews the provided supporting documents in pdf format and extracts key details to verify the claim.
+    It processes the document from the provided URL and performs necessary validation and extraction.
+    """
+    image_urls = [
+        {
+            "pre_loss":"",
+            "claim": evidence_url
+        }
+    ]
+    resp = SSIM(image_urls)
+    return resp
+
+@tool
+def validate_if_this_is_a_real_vehicle(vehicle_information: Annotated[str, "vehicle make and brand. e.g toyota corolla 2012"]):
+    """
+    Check if the provided vehicle information corresponds to a real vehicle to mitigate ghost vehicle claims.
+    """
+    # Simulate a check for ghost claims
+    return {"status": "clear", "message": "This vehicle is valid."}
 
 
 @tool
@@ -47,31 +78,31 @@ def check_NIID_database_to_confirm_vehicle_insurance(
     """
     calls the NIID database to see if the vehicle has been insured using the vehicle registration number.
     """
-    extractor = InsuranceDataExtractor("LND357JC")
-    res = extractor.run()
-    if res.get('status') == 'success' and res.get('data')["RegistrationNumber"] == vehicle_registration_number:
-        res["message"] = "Yes, this vehicle is insured by NIID"
-    return res
+    global niid_data
+    extractor = InsuranceDataExtractor(vehicle_registration_number)
+    niid_data = extractor.run()
+    if niid_data.get('status') == 'success' and niid_data.get('data')["RegistrationNumber"] == vehicle_registration_number.replace(" ", ""):
+        niid_data["insured_message"] = "Yes, this vehicle is insured by NIID"
+    else:
+        niid_data["insured_message"] = "No, this vehicle is not insured by NIID"
+    return niid_data["insured_message"]
 
 
 @tool
-def validate_if_this_is_a_real_vehicle(vehicle_information: Annotated[str, "vehicle make and brand. e.g toyota corolla 2012"]):
+def vehicle_registration_number_match(vehicle_registration_number: Annotated[str, "vehicle registration number"]):
     """
-    Check if the provided vehicle information corresponds to a real vehicle to mitigate ghost vehicle claims.
-    """
-    # Simulate a check for ghost claims
-    return {"status": "clear", "message": "This vehicle is valid."}
-
-@tool
-def vehicle_registration_number_match(policy_number: Annotated[str, "claimant's policy_number."],
-                               vehicle_registration_number: Annotated[str, "vehicle registration number"]):
-    """
-    Verify vehicle registration matches internal database records.
+    Verify vehicle registration matches NIID internal database records.
     """
     # Simulate a registration match check
-    return {"status": "success", "message": "Registration number matches records."}
+    if niid_data.get('status') == 'success' and niid_data.get('data')["RegistrationNumber"] == vehicle_registration_number:
+        niid_data["message"] = "Yes, this vehicle registration number matches NIID internal database records"
+    else:
+        niid_data["message"] = "No, this vehicle registration number does not match NIID internal database records"
+    return niid_data["message"]
 
+############## damage cost fraud ##################
 
+market_price = {}
 @tool
 def item_cost_price_benmarking_in_local_market(
     damaged_part: Annotated[str, "Identify the damaged parts from the supporting evidence picture. e.g Honda civic side mirror"],
@@ -80,11 +111,31 @@ def item_cost_price_benmarking_in_local_market(
     """
     this cost benchmarking tool calls the local market place to verify the quoted cost on the invoice for the vehicle repair claims.
     """
-    costBenchmarking = CostBenchmarking(email=email,password=password)
-    result = costBenchmarking.run(damaged_part, quoted_cost)
-    print(result)
-    return result
-    # return "cost is out of market threshold"
+    try:
+        global market_price
+        import concurrent.futures
+
+        with concurrent.futures.ThreadPoolExecutor() as executor:
+            future_tokunbo = executor.submit(costBenchmarking.fetch_market_data, f"{damaged_part} tokunbo")
+            future_brand_new = executor.submit(costBenchmarking.fetch_market_data, f"{damaged_part} brand new")
+            
+            tokunbo_market_price = future_tokunbo.result()
+            brand_new_market_price = future_brand_new.result()
+
+        market_price = {
+            "tokunbo": tokunbo_market_price,
+            "brand_new": brand_new_market_price
+        }
+
+        with concurrent.futures.ThreadPoolExecutor() as executor:
+            future_result1 = executor.submit(costBenchmarking.item_cost_analysis, tokunbo_market_price, quoted_cost)
+            future_result2 = executor.submit(costBenchmarking.item_cost_analysis, brand_new_market_price, quoted_cost)
+            
+            result1 = future_result1.result()
+            result2 = future_result2.result()
+        return f"FAIRLY USED\n{result1}\n\nBRAND NEW\n{result2}"
+    except Exception as e:
+        return "sorry, this tool can not be used at the moment"
 
 
 @tool
@@ -94,11 +145,11 @@ def item_pricing_evaluator(
     """
      this cost evaluation tool checks the local market place for how much the damaged part is worth.
     """
-    costBenchmarking = CostBenchmarking(email=email,password=password)
-    result = costBenchmarking.run_with_expected_range(damaged_part)
-    print(result)
-    return result
-    # return "cost is fraudulent"
+    try:
+        result = costBenchmarking.run_with_expected_range(damaged_part,market_price)
+        return result
+    except Exception as e:
+        return "sorry, this tool can not be used at the moment"
 
 
 @tool
@@ -131,62 +182,64 @@ def drivers_license_status_check(driver_license_number: Annotated[str, "claimant
     return {"status": "clear", "message": "Driver's license is valid."}
 
 
-@tool
-#def fraud_detection_tool(risk_indicators: Annotated[str, "the weights from each tool used in a list. e.g [0.12,0.15,0.13,0.18,0.12,0.05,0.10,0.15]"]) -> str:
-def fraud_detection_tool(risk_indicators: Annotated[dict, 'A JSON string of risk indicators from fraud detection tools e.g {"claimant_exists": 0.12, "policy_status_check": 0.15, "vehicle_insurance_check": 0.13, "item_pricing_benchmarking": 0.18, "ghost_claims_vehicle_check": 0.12, "vehicle_registration_match": 0.05, "rapid_policy_claims_check": 0.10, "drivers_license_status_check": 0.15}']) -> Dict[str, Union[Dict[str, float], float, Dict[str, bool]]]:
-    """
-    This tool is used to calculate the fraud risk score from the weights of the investigator checks.
-    """
-    # Predefined weights for each fraud detection tool
-    weights = {
-        "claimant_exists": 0.12,
-        "policy_status_check": 0.15,
-        "vehicle_insurance_check": 0.13,
-        "item_pricing_benchmarking": 0.18,
-        "ghost_claims_vehicle_check": 0.12,
-        "vehicle_registration_match": 0.05,
-        "rapid_policy_claims_check": 0.10,
-        "drivers_license_status_check": 0.15,
-    }
+
+
+# @tool
+# #def fraud_detection_tool(risk_indicators: Annotated[str, "the weights from each tool used in a list. e.g [0.12,0.15,0.13,0.18,0.12,0.05,0.10,0.15]"]) -> str:
+# def fraud_detection_tool(risk_indicators: Annotated[dict, 'A JSON string of risk indicators from fraud detection tools e.g {"claimant_exists": 0.12, "policy_status_check": 0.15, "vehicle_insurance_check": 0.13, "item_pricing_benchmarking": 0.18, "ghost_claims_vehicle_check": 0.12, "vehicle_registration_match": 0.05, "rapid_policy_claims_check": 0.10, "drivers_license_status_check": 0.15}']) -> Dict[str, Union[Dict[str, float], float, Dict[str, bool]]]:
+#     """
+#     This tool is used to calculate the fraud risk score from the weights of the investigator checks.
+#     """
+#     # Predefined weights for each fraud detection tool
+#     weights = {
+#         "claimant_exists": 0.12,
+#         "policy_status_check": 0.15,
+#         "vehicle_insurance_check": 0.13,
+#         "item_pricing_benchmarking": 0.18,
+#         "ghost_claims_vehicle_check": 0.12,
+#         "vehicle_registration_match": 0.05,
+#         "rapid_policy_claims_check": 0.10,
+#         "drivers_license_status_check": 0.15,
+#     }
     
-    # Validate input matches expected tools
-    if set(risk_indicators.keys()) != set(weights.keys()):
-        return "Mismatch between input indicators and expected fraud risk indicators. Please check your input!"
+#     # Validate input matches expected tools
+#     if set(risk_indicators.keys()) != set(weights.keys()):
+#         return "Mismatch between input indicators and expected fraud risk indicators. Please check your input!"
     
-    # Risk scoring
-    risk_scores = {}
-    total_risk_score = 0
-    results = {}
+#     # Risk scoring
+#     risk_scores = {}
+#     total_risk_score = 0
+#     results = {}
     
-    # Calculate risk for each tool
-    for tool, result in risk_indicators.items():
-        # Determine if the tool indicates potential fraud
-        is_fraud_indicator = result < weights[tool]
+#     # Calculate risk for each tool
+#     for tool, result in risk_indicators.items():
+#         # Determine if the tool indicates potential fraud
+#         is_fraud_indicator = result < weights[tool]
         
-        # Calculate risk score based on tool result and weight
-        if is_fraud_indicator:
-            tool_risk_score = weights[tool]
-            total_risk_score += tool_risk_score
-            risk_scores[tool] = tool_risk_score
-            results[tool] = False
-        else:
-            risk_scores[tool] = result
-            results[tool] = True
+#         # Calculate risk score based on tool result and weight
+#         if is_fraud_indicator:
+#             tool_risk_score = weights[tool]
+#             total_risk_score += tool_risk_score
+#             risk_scores[tool] = tool_risk_score
+#             results[tool] = False
+#         else:
+#             risk_scores[tool] = result
+#             results[tool] = True
     
-    # Final risk score as a percentage
-    final_risk_score = f"{total_risk_score:.0%}"  # Cap at 100%
-    if total_risk_score <=15:
-        fraud_level = "LOW"
-    elif total_risk_score <= 50:
-        fraud_level = "MEDIUM"
-    else:
-        fraud_level = "HIGH"
-    res = {
-        "indicator_risk_scores": risk_scores,
-        "fraud_risk_score": final_risk_score,
-        "indicators_used": results,
-        "fraud_risk_level": fraud_level,
-    }
-    return res
+#     # Final risk score as a percentage
+#     final_risk_score = f"{total_risk_score:.0%}"  # Cap at 100%
+#     if total_risk_score <=15:
+#         fraud_level = "LOW"
+#     elif total_risk_score <= 50:
+#         fraud_level = "MEDIUM"
+#     else:
+#         fraud_level = "HIGH"
+#     res = {
+#         "indicator_risk_scores": risk_scores,
+#         "fraud_risk_score": final_risk_score,
+#         "indicators_used": results,
+#         "fraud_risk_level": fraud_level,
+#     }
+#     return res
 
 # implement SSIM

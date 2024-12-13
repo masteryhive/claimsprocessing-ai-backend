@@ -4,6 +4,7 @@ from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.common.by import By
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.support.ui import WebDriverWait
+from selenium.common.exceptions import NoSuchElementException,TimeoutException
 from selenium.webdriver.support import expected_conditions as EC
 import time
 import numpy as np
@@ -20,17 +21,20 @@ class CostBenchmarking:
         self.password = password
 
         chrome_options = Options()
-        # chrome_options.add_argument("--headless")
-        # chrome_options.add_argument("--no-sandbox")  # Optional for some environments
-        # chrome_options.add_argument("--disable-dev-shm-usage")
-        # chrome_options.add_argument("window-size=1920,1080")
-        # chrome_options.add_argument(
-        #     "user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.6778.109 Safari/537.36"
-        # )
+        chrome_options.add_argument("--headless")
+        chrome_options.add_argument("--no-sandbox")  # Optional for some environments
+        chrome_options.add_argument("--disable-dev-shm-usage")
+        chrome_options.add_argument("--start-maximized")
+        chrome_options.add_argument("--disable-extensions")
+        chrome_options.add_argument("--disable-infobars")
+        chrome_options.add_argument("window-size=1920,1080")
+        chrome_options.add_argument(
+            "user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.6778.109 Safari/537.36"
+        )
         self.driver = webdriver.Chrome(options=chrome_options)
         self.url = "https://www.jiji.ng/login.html"
 
-    def extract_data(self, search_term: str):
+    def fetch_market_data(self, search_term: str):
         # Navigate to the website
         self.driver.get(self.url)
 
@@ -43,15 +47,11 @@ class CostBenchmarking:
             # Use JavaScript to scroll the element into view
             self.driver.execute_script("arguments[0].scrollIntoView(true);", modal_container)
             
-            # Find the "E-mail or phone" button within the modal
-            email_phone_button = modal_container.find_element(
-                By.XPATH, ".//button[contains(span, 'E-mail or phone')]"
-            )
+            time.sleep(2)
 
             # Ensure the button is visible and interactable
-            WebDriverWait(self.driver, 10).until(
-                EC.element_to_be_clickable((By.XPATH, ".//button[contains(span, 'E-mail or phone')]"))
-            )
+            email_phone_button = WebDriverWait(self.driver, 10).until(
+                EC.presence_of_element_located((By.CLASS_NAME, "fw-button.qa-fw-button.fw-button--type-success.fw-button--size-large.h-width-100p.h-bold")))
 
             # Click the button
             email_phone_button.click()
@@ -66,13 +66,14 @@ class CostBenchmarking:
                 By.CLASS_NAME, "qa-password-field"
             )
 
-            # Find the login submit button
-            login_button = self.driver.find_element(By.CLASS_NAME, "qa-login-submit")
-
             # Enter email and password
             email_input.send_keys(self.email)
             password_input.send_keys(self.password)
 
+            # Find the login submit button
+            login_button = self.driver.find_element(By.CLASS_NAME, "qa-login-submit")
+
+ 
             # Wait for the button to become enabled
             WebDriverWait(self.driver, 10).until(
                 EC.element_to_be_clickable((By.CLASS_NAME, "qa-login-submit"))
@@ -81,17 +82,7 @@ class CostBenchmarking:
             # Click login button
             login_button.click()
 
-            time.sleep(2)
-            # # Wait for multiselect input to be present
-            # multiselect_input = WebDriverWait(self.driver, 10).until(
-            #     EC.presence_of_element_located((By.CLASS_NAME, "multiselect__input"))
-            # )
-
-            # # Clear any existing text and type the search query
-            # multiselect_input.clear()
-            # multiselect_input.send_keys("toyota corolla bumper")
-
-            time.sleep(2)
+            time.sleep(5)
 
             # # Send ENTER key to select first suggestion or submit search
             # multiselect_input.send_keys(Keys.ENTER)
@@ -99,6 +90,8 @@ class CostBenchmarking:
             # Direct navigation to the filtered search URL
             search_url = f"https://jiji.ng/lagos/search?query={search_term}&filter_id_verify=Verified%20sellers&sort=new"
             self.driver.get(search_url)
+
+            time.sleep(5)
 
             WebDriverWait(self.driver, 10).until(
                 EC.presence_of_element_located((By.CLASS_NAME, "qa-advert-price"))
@@ -129,8 +122,9 @@ class CostBenchmarking:
                     print(f"Could not convert price: {price_text}")
             time.sleep(2)
             return prices
-        except Exception as e:
-            print(f"Error locating or clicking 'E-mail or phone' button: {e}")
+
+        except TimeoutException as e:
+            print(f"Error: {e}")
 
     def close_driver(self):
         # Close the WebDriver
@@ -225,45 +219,23 @@ class CostBenchmarking:
         # print(f"Number of prices after removing outliers: {len(cleaned_prices)}")
 
         result = self.analyze_price_realism(cleaned_prices, quoted_price)
-
-        print(f"\nAnalysis for quoted price: {quoted_price:,.0f}")
-        print("-" * 50)
         status = ""
         if result["is_realistic"]:
-            print("✅ This price appears REALISTIC based on market data")
             status = "✅ This price appears REALISTIC based on market data"
         else:
-            print("❌ This price appears UNREALISTIC based on market data")
             status = "❌ This price appears UNREALISTIC based on market data"
 
         analysis = result["analysis"]
-        # print(f"\nMarket Statistics (after removing outliers):")
-        # print(f"- Median price: {analysis['median_price']:,.0f}")
-        # print(
-        #     f"- Realistic price range: {analysis['price_range']['lower_bound']:,.0f} to {analysis['price_range']['upper_bound']:,.0f}"
-        # )
-        # print(
-        #     f"- Your price is in the {analysis['quoted_price_percentile']:.1f}th percentile"
-        # )
-        # print(f"- Difference from median: {analysis['percent_difference_from_median']:+.1f}%")
-        market_statistics = {
-            "median_price": analysis['median_price'],
-            "realistic_price_range": f"{analysis['price_range']['lower_bound']:,.0f} to {analysis['price_range']['upper_bound']:,.0f}",
-            "quoted_price_percentile": f"- Your price is in the {analysis['quoted_price_percentile']:.1f}th percentile",
-            "status":status
-        }
+        market_statistics = (
+            f"\nAnalysis for quoted price: {quoted_price:,.0f}"
+            "\n--------------------------------------------------------------\n"
+            f"median_price: {analysis['median_price']}\n"
+            f"realistic_price_range: {analysis['price_range']['lower_bound']:,.0f} to {analysis['price_range']['upper_bound']:,.0f}\n"
+            f"quoted_price_percentile: - Your price is in the {analysis['quoted_price_percentile']:.1f}th percentile\n"
+            f"status: {status}"
+        )
         return market_statistics
     
-    def run(self, search_term: str, quoted_price: str):
-        try:
-            market_prices = self.extract_data(search_term)
-            quoted_price = float(quoted_price.replace(",", ""))
-            return self.analyze_price(market_prices, quoted_price)
-        except Exception as e:
-            log_error(e)
-        finally:
-            self.close_driver()
-
     def get_expected_price_range(
         self, prices: List[float], threshold: float = 1.5
     ) -> str:
@@ -292,8 +264,18 @@ class CostBenchmarking:
 
         # Return the expected price range as a formatted string
         return f"{int(q1):,} - {int(q3):,}"
+    
 
-    def run_with_expected_range(self, search_term: str):
+    def item_cost_analysis(self, market_prices: list, quoted_price: str):
+        try:
+            quoted_price = float(quoted_price.replace(",", ""))
+            return self.analyze_price(market_prices, quoted_price)
+        except Exception as e:
+            log_error(e)
+        finally:
+            self.close_driver()
+
+    def run_with_expected_range(self, search_term:str,market_prices: list):
         """
         Extends the `run` method to include the expected price range in the output.
 
@@ -305,7 +287,6 @@ class CostBenchmarking:
         dict: The analysis results and the expected price range.
         """
         try:
-            market_prices = self.extract_data(search_term)
             expected_range = self.get_expected_price_range(market_prices)
             return f"Expected price range for '{search_term}': {expected_range}"
         except Exception as e:

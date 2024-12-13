@@ -68,7 +68,7 @@ if it is not respond with 'not a claim form"""
     return response.content
 
 
-def document_understanding(doc_url: str) -> str:
+def invoice_entity_extraction(doc_url: str) -> str:
     temp_file = download_pdf(pdf_url=doc_url)
     base64_image = pdf_page_to_base64(temp_file, 2)
     prompt = (
@@ -76,6 +76,9 @@ def document_understanding(doc_url: str) -> str:
         "- List all items mentioned in the invoice along with their individual prices. "
         "- Calculate and provide the total price for all items. "
         "- Extract the invoice narration, if available, and specify its purpose. "
+        "- The values must only include text found in the document"
+        "- Do not normalize any entity value."
+        "- If an entity is not found in the document, set the entity value to null."
         "Ensure your response is structured clearly with separate sections for items, total price, narration, and purpose."
     )
     from langchain_core.messages import HumanMessage
@@ -93,7 +96,6 @@ def document_understanding(doc_url: str) -> str:
     return response.content
 
 
-
 async def fetch_content_type(session, url):
     """Fetch the content type of a given URL."""
     try:
@@ -103,25 +105,26 @@ async def fetch_content_type(session, url):
     except Exception as e:
         return url, f"Error: {e}"
 
-async def classify_urls(resource_dict):
+
+async def classify_supporting_documents(resource_dict):
     """Classify URLs as PDFs or images based on content type."""
     supporting_documents = []
-    images = []
-    others = []
+    result = []
 
     async with aiohttp.ClientSession() as session:
         tasks = []
         for url in resource_dict["resourceUrls"]:
             tasks.append(fetch_content_type(session, url))
-        
+
         results = await asyncio.gather(*tasks)
-        
+
         for url, content_type in results:
             if "application/pdf" in content_type:
-                supporting_documents.append(document_understanding(url))
+                supporting_documents.append(f"{invoice_entity_extraction(url)} - evidenceUrl: {url}")
             elif "image/" in content_type:
-                supporting_documents.append(await claims_image_evidence_recognizer(url))
+                supporting_documents.append(f"{await claims_image_evidence_recognizer(url)} - evidenceUrl: {url}")
             else:
-                others.append(url)
+                result.append(url)
 
     return supporting_documents
+

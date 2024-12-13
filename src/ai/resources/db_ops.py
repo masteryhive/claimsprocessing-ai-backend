@@ -34,9 +34,6 @@ def get_claim_from_database(claim_request:dict) -> dict:
         # Check if the request was successful
         if response.status_code == 200:
             resp_data = response.json()
-            print(resp_data)
-            # if 'claims_report' in resp_data:
-            #     del resp_data['claims_report']
             return resp_data
         else:
             return f"Failed to get claim details: {response.status_code} - {response.text}"

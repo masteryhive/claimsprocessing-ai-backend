@@ -109,7 +109,6 @@ def handle_summary_team(
     print_header("summary_team Response")
     update_claim_status_database(claim_id=claim_id, status="Preparing Report Summary")
     result = extract_claim_summary(content[0], team_summaries)
-    print(">>> sumary team: ",result)
     update_claim_report_database(claim_id, result)
     # Update task record
     task.status = TaskStatus.COMPLETED

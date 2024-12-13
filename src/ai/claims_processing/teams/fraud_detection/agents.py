@@ -57,7 +57,7 @@ claim_form_fraud_investigator_agent = create_tool_agent(
 
 vehicle_fraud_investigator_agent  = create_tool_agent(
     llm=llm,
-    tools=[validate_if_this_is_a_real_vehicle,check_NIID_database_to_confirm_vehicle_insurance],
+    tools=[verify_vehicle_matches_preloss,validate_if_this_is_a_real_vehicle,check_NIID_database_to_confirm_vehicle_insurance],
     system_prompt=_load_prompt_template()["VEHICLE_FRAUD_INVESTIGATOR_AGENT_SYSTEM_PROMPT"],
 )
 

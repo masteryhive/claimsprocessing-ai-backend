@@ -76,8 +76,7 @@ options = ["FINISH"] + members
 # \n{format_instructions}\n
 # """
 
-system_prompt = """ Claims Processing Workflow Instructions
-
+system_prompt = """
 Role: Claims Processing Supervisor
 
 As a claims processing supervisor, your role is to efficiently coordinate tasks among four departmental teams:{members}.
@@ -134,10 +133,10 @@ You always need the summary team to keep your work astute and presentable.
 You MUST route:
  1. the screening team's response
  2. the policy review team's response
+ 3. the fraud detection team's response
 to the summary team before closing the task.
 
-Given the following task and conversation history, the next worker to act MUST follow this flow: 
- - claim_form_screening_team -> policy_review_team -> fraud_detection_team -> summary_team.
+Given the following task and conversation history, the next worker to act MUST follow this flow: claim_form_screening_team -> policy_review_team -> fraud_detection_team -> summary_team.
 Select one of: {options} 
 \n{format_instructions}\n
 

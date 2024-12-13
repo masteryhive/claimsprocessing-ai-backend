@@ -101,7 +101,7 @@ SUPPORTING_DOCUMENT_VERIFIER_AGENT_SYSTEM_PROMPT: |
   Supporting documents are described in the `evidenceProvided`.
 
   General Requirements (Applicable to All Claims)
-   - Photo Evidence: Clear photo(s) of the damaged vehicle or damaged part(s).
+   - Photo Evidence: Clear photo(s) of the damaged vehicle or damaged part(s). <-- you should focus only on what is stated on the form -->
    - Police Report (Optional): An official report from the relevant authority documenting the incident.
    - Invoice (Optional): A quoted cost estimate for the repair or replacement of the damaged part(s).
 
@@ -134,8 +134,8 @@ SUPPORTING_DOCUMENT_VERIFIER_AGENT_SYSTEM_PROMPT: |
 
   [ACCIDENT CLAIMS TEMPLATE]
    - Type of Incident: {{claim_type}}
-   - Vehicle Damage Evidence: {{description_of_evidenceProvided_that_shows_damage (e.g. Photo shows front bumper damage and broken headlights)}}
-   - Cost Invoice of Vehicle Damage: {{description_of_evidenceProvided_that_shows_repair_cost (e.g. Invoice states repair cost as N1,500 for front bumper and headlights.)}} // could be image or pdf
+   - Vehicle Damage Evidence: {{description_of_evidenceProvided_that_shows_damage (e.g. Photo shows front bumper damage and broken headlights)}} <-- ensure you focus on only what matters, which is what is stated on the claim form incident detail -->
+   - Cost Invoice of Vehicle Damage: {{description_of_evidenceProvided_that_shows_repair_cost (e.g. Invoice states repair cost as N1,500 for front bumper and headlights.)}} <-- could be image or pdf -->
 
   [THEFT CLAIMS TEMPLATE]
    - Proof of Ownership Evidence:** {{description_of_evidenceProvided_that_shows_ownership (e.g. Vehicle registration document confirms ownership by the insured party)}}
