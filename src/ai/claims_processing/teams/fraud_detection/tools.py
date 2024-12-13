@@ -8,9 +8,8 @@ from src.ai.resources.cost_benchmarking import CostBenchmarking
 from src.ai.resources.retrieve_vehicle_policy import InsuranceDataExtractor
 
 
-email = "sam@masteryhive.ai"
-password = "JLg8m4aQ8n46nhC"
-costBenchmarking = CostBenchmarking(email=email,password=password)
+
+costBenchmarking = CostBenchmarking()
 
 ############## Fraud checks tool ##############
 
@@ -53,7 +52,7 @@ def verify_vehicle_matches_preloss(
     """
     image_urls = [
         {
-            "pre_loss":"",
+            "pre_loss":evidence_url,
             "claim": evidence_url
         }
     ]

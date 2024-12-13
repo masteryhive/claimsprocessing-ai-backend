@@ -15,7 +15,7 @@ from selenium.webdriver.support.ui import Select
 from bs4 import BeautifulSoup
 
 class InsuranceDataExtractor:
-    def __init__(self, registration_number):
+    def __init__(self, registration_number:str):
         self.registration_number = registration_number
         chrome_options = Options()
         chrome_options.add_argument("--headless")
@@ -123,7 +123,4 @@ class InsuranceDataExtractor:
             return {"status": "failure", "data": data}
         return {"status": "success", "data": data}
 
-extractor = InsuranceDataExtractor("MUS 456 JF")
-result = extractor.run()
-print(result)
 
