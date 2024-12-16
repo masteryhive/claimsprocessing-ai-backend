@@ -10,3 +10,7 @@ llm = ChatVertexAI(
     max_retries=6,
     stop=None,
 )
+
+llm_flash = ChatVertexAI(
+    model="gemini-1.5-flash-002",
+)

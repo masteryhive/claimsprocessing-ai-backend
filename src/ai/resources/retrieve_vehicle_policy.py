@@ -119,7 +119,7 @@ class InsuranceDataExtractor:
             data = self.extract_data()
         finally:
             self.close_driver()
-        if data is not isinstance(data, dict):
+        if data == "Your Policy has expired !!!!":
             return {"status": "failure", "data": data}
         return {"status": "success", "data": data}
 

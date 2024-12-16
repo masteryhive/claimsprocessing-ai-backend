@@ -59,7 +59,8 @@ def check_if_the_incident_occurred_within_the_geographical_coverage(location_of_
 
 
 @tool
-def check_if_the_premium_page_covers_damage_cost(cost_of_damage: Annotated[str, "total cost of the damage"]):
+def check_if_the_premium_page_covers_damage_cost(cost_of_damage: Annotated[str, "total cost of the damage"],
+                                                 policy_number: Annotated[str, "claimant's policy number."]):
     """
     Check if the premium paid covers the specified cost of damage in the policy.
     """

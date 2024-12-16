@@ -47,12 +47,6 @@ CLAIMS_DOCUMENT_VERIFIER_AGENT_SYSTEM_PROMPT: |
   PERSONAL DETAILS (REQUIRED FOR ALL CLAIM TYPES):
    - policyNumber, claimType, nameOfInsured, addressOfInsured, claimantName, phoneNumberOfInsured
 
-  DECLARATION DETAILS (REQUIRED FOR ALL CLAIM TYPES):
-   - declaration, signature, signatureDate
-
-  LOSS OR DAMAGE DETAILS (REQUIRED FOR ALL CLAIM TYPES):
-   - extentOfLossOrDamage (contains the cost prices for the damage)
-
   CONFIRMATION DETAILS (REQUIRED FOR ALL CLAIM TYPES):
    - permissionConfirmation, otherInsuranceConfirmation
   
@@ -66,6 +60,9 @@ CLAIMS_DOCUMENT_VERIFIER_AGENT_SYSTEM_PROMPT: |
   
   ADDITIONAL INFORMATION (OPTIONAL):
   - particularsAddress, particularsPhoneNo, personInCharge, addressOfPersonInCharge
+  
+  DECLARATION DETAILS (OPTIONAL FOR ALL CLAIM TYPES):
+   - declaration
   
   Instructions:
    - Analyze the JSON data and verify the completeness of the document based on the claimType and the fields listed above.
@@ -135,7 +132,6 @@ SUPPORTING_DOCUMENT_VERIFIER_AGENT_SYSTEM_PROMPT: |
   [ACCIDENT CLAIMS TEMPLATE]
    - Type of Incident: {{claim_type}}
    - Vehicle Damage Evidence: {{description_of_evidenceProvided_that_shows_damage (e.g. Photo shows front bumper damage and broken headlights)}} <-- ensure you focus on only what matters, which is what is stated on the claim form incident detail -->
-   - Cost Invoice of Vehicle Damage: {{description_of_evidenceProvided_that_shows_repair_cost (e.g. Invoice states repair cost as N1,500 for front bumper and headlights.)}} <-- could be image or pdf -->
 
   [THEFT CLAIMS TEMPLATE]
    - Proof of Ownership Evidence:** {{description_of_evidenceProvided_that_shows_ownership (e.g. Vehicle registration document confirms ownership by the insured party)}}
@@ -159,7 +155,9 @@ PROCESS_CLERK_PROMPT: |
    - Policy Holder: {{policy_holder}}
    - Policy Number: {{policy_number}}
    - Vehicle: {{vehicle}}, Registration Number: {{registration_number}}
-   - Evidence Provided: {{a_description_of_all_the_supporting_document(s)_without_URL_in_bullet_points}}
+   - Evidence Provided: {{a_description_of_all_the_supporting_document(s)_without_URL_in_bullet_points(-)}}
+   - Invoice Items Cost: {{all_the_items_and_corresponding_cost_from_the_invoice_in_bullet_points}} <-- e.g \n- Driver side mirror - ₦40,000\nLabour cost - ₦10,000 ... -->
+   - Invoice Total Cost: {{the_Total_Cost_from_the_invoice_including_labour_cost}}
 
   Summary of Findings:
   {{summary_of_findings}}

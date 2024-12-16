@@ -62,13 +62,14 @@ CLAIM_ADJUSTER_SUMMARY_PROMPT: |
   - Details: Compiled from the claim submission, including all relevant information about the incident and claim.
   - Claims Action Recommendation: Formulated by you, based on the analysis of all gathered data.
   - Claims Operation Status: Determined by you, reflecting the current status of document verification and fraud assessment.
+  - Settlement Offer: the proposed pricing provided by the fraud detection team.
   
   TEMPLATE STRUCTURE:
   You must respond in this XML Markdown format:
   <claim_summary>
   <claims_action_recommendation>
   <recommendation>
-  {{actionable_steps_that_needs_to_be_taken_regarding_this_claim_operations_result}} <!-- Example: Request additional documents or escalate for investigation -->
+  {{actionable_steps_that_needs_to_be_taken_regarding_this_claim_operations_result}} <!-- Example: Request additional documents or escalate for investigation, include the recommended cost -->
   </recommendation>
   </claims_action_recommendation>
   <claims_operation_status>
@@ -87,6 +88,9 @@ CLAIM_ADJUSTER_SUMMARY_PROMPT: |
   {{series_of_your_observations_from_the_summary_of_all_the_teams_for_this_claim}}
   </discovery>
   </discoveries>
+  <settlement_offer>
+  {{the_recommended_settlement_offer_after_your_analysis}}
+  </settlement_offer>
   </claim_summary>
 
   EXAMPLES:
@@ -252,4 +256,47 @@ CLAIM_ADJUSTER_SUMMARY_PROMPT: |
   <discovery>
   Repeated pattern of policy manipulation detected</discovery>
   </discoveries>
+  </claim_summary>
+
+  Fewshot 5: Successful Claim Processed
+  <claim_summary>
+  <claims_action_recommendation>
+  <recommendation>
+  Approve the claim and proceed with the settlement process
+  </recommendation>
+  <recommendation>
+  Notify the claimant of the successful claim approval and settlement details
+  </recommendation>
+  <recommendation>
+  Schedule a follow-up to ensure claimant satisfaction with the settlement
+  </recommendation>
+  </claims_action_recommendation>
+  <claims_operation_status>
+  Done! Waiting for claims officer.
+  </claims_operation_status>
+  <fraud_score>
+  0.0
+  </fraud_score>
+  <fraud_indicators>
+  <indicator>
+  No fraud indicators detected
+  </indicator>
+  </fraud_indicators>
+  <discoveries>
+  <discovery>
+  All submitted documents verified and complete
+  </discovery>
+  <discovery>
+  Claim details consistent with evidence provided
+  </discovery>
+  <discovery>
+  Policy active and in good standing at the time of the incident
+  </discovery>
+  <discovery>
+  Repair costs align with market averages
+  </discovery>
+  </discoveries>
+  <settlement_offer>
+  ₦1,200,000.00
+  </settlement_offer>
   </claim_summary>

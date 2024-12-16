@@ -5,7 +5,7 @@ import os, httpx, base64, io, fitz, uuid
 from langchain_google_vertexai import ChatVertexAI
 from PIL import Image
 from src.ai.resources.image_understanding import claims_image_evidence_recognizer
-from src.ai.llm import llm
+from src.ai.llm import llm_flash
 
 
 def download_pdf(
@@ -64,22 +64,19 @@ if it is not respond with 'not a claim form"""
             },
         ],
     )
-    response = llm.invoke([message])
+    response = llm_flash.invoke([message])
     return response.content
 
 
 def invoice_entity_extraction(doc_url: str) -> str:
     temp_file = download_pdf(pdf_url=doc_url)
-    base64_image = pdf_page_to_base64(temp_file, 2)
-    prompt = (
-        "Identify what this document is, it is meant to serve as evidence for an vehicle insurance claim. Extract relevant information from it like invoice total cost and items, invoice narration and purpose."
-        "- List all items mentioned in the invoice along with their individual prices. "
-        "- Calculate and provide the total price for all items. "
-        "- Extract the invoice narration, if available, and specify its purpose. "
-        "- The values must only include text found in the document"
-        "- Do not normalize any entity value."
-        "- If an entity is not found in the document, set the entity value to null."
-        "Ensure your response is structured clearly with separate sections for items, total price, narration, and purpose."
+    base64_image = pdf_page_to_base64(temp_file, 1)
+    prompt = ("Identify what this document is and extract relevant information from it like invoice total cost and items, invoice narration and purpose."
+    "[TEMPLATE]"
+    " - Invoice Information:{{the_general_infomation_about_the_invoice_in_bullet_points(-)_(e.g. invoice number, date, customer name, vehicle registration and information etc.)}}"
+    " - Items and Cost: {{the_individual_items_and_their_cost_in_bullet_points(-)_(e.g.  - Driver side mirror: 1 x ₦40,000 = ₦40,000)}}"
+    " - Total Cost: {{the_total_amount_due(-)_(e.g.  - Total Amount Due: ₦50,000)}}"
+    " - Invoice Narration and Purpose:{{a_narration_of_the_invoice_and_it's_purpose}}"
     )
     from langchain_core.messages import HumanMessage
 
@@ -92,7 +89,7 @@ def invoice_entity_extraction(doc_url: str) -> str:
             },
         ],
     )
-    response = llm.invoke([message])
+    response = llm_flash.invoke([message])
     return response.content
 
 
@@ -120,11 +117,10 @@ async def classify_supporting_documents(resource_dict):
 
         for url, content_type in results:
             if "application/pdf" in content_type:
-                supporting_documents.append(f"{invoice_entity_extraction(url)} - evidenceUrl: {url}")
+                supporting_documents.append(f"{invoice_entity_extraction(url)} - evidenceSourceUrl: {url}")
             elif "image/" in content_type:
-                supporting_documents.append(f"{await claims_image_evidence_recognizer(url)} - evidenceUrl: {url}")
+                supporting_documents.append(f"{await claims_image_evidence_recognizer(url)} - evidenceSourceUrl: {url}")
             else:
                 result.append(url)
 
     return supporting_documents
-

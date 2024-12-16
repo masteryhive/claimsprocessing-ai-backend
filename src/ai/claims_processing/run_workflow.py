@@ -11,11 +11,9 @@ from src.ai.resources.db_ops import (
     update_claim_status_database,
 )
 from src.datamodels.claim_processing import ProcessClaimTask
-from src.ai.claims_processing.utilities.parser import (
-    extract_claim_summary,
-    extract_from_claim_processing,
-    extract_from_policy_details,
-)
+from src.ai.claims_processing.parsers.doc_team_parser import extract_from_claim_processing
+from src.ai.claims_processing.parsers.policy_review_team_parser import extract_from_policy_details
+from src.ai.claims_processing.parsers.parser import extract_claim_summary
 from src.ai.claims_processing.stirring_agent import members
 from langchain_core.messages import HumanMessage
 

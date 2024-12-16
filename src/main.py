@@ -64,7 +64,7 @@ def get_db():
 
 
 # Configure for development or production mode
-if env_config.env == "development":
+if env_config.env == "development" or env_config.env == "local":
     running_mode = "  👩‍💻 🛠️  Running in::development mode"
 else:
     app.add_middleware(HTTPSRedirectMiddleware)

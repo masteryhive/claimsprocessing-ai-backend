@@ -14,3 +14,10 @@ fraud check does the policy doc match NIID
 Key majors:
 - Implement SSIM for two images
 - Fraud scenario
+
+
+1. Preloss damages vs new damages >> as a table
+2. Claims damage cost per damage and have a total (viz: settlement offer)
+3. Recommended settlement offer the AI (include the labour cost)
+4. Difference in the invoice price and the AI recommended settle offer
+5. visualize the local market recommended price.

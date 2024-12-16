@@ -114,11 +114,11 @@ def generate(
 
     return responses
 
-def download_pdf(reference):
+def download_pdf(reference:str):
     base_url = "https://storage.googleapis.com/masteryhive-insurance-claims/rawtest/policy_document"
     modified_reference = reference.replace("/", "-")
     file_url = f"{base_url}/{modified_reference}.pdf"
-    print(file_url)
+
     download_path = "src/ai/rag/doc"
 
     # Ensure the download directory exists

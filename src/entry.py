@@ -16,7 +16,8 @@ from src.utilities.helpers import _new_get_datetime
 
 init_vertexai()
 if __name__ == "__main__":
-    process_message(b"90")
+    print("here")
+    process_message(b"91")
 
 
 # {

@@ -170,3 +170,5 @@ src/entry.py
 *.json
 /docs
 docs/selenium_scraper.py
+/src/ai/rag/doc
+TODO

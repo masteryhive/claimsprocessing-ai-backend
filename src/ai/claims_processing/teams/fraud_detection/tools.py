@@ -44,20 +44,25 @@ niid_data = {}
 
 @tool
 def verify_vehicle_matches_preloss(
-    evidence_url: Annotated[str, "URL of the supporting evidence(evidenceUrl) of the damaged vehicle to be reviewed"],
+    claimant_incident_detail: Annotated[str, "the claim the user is making for"],
+    evidence_url: Annotated[str, "evidenceSourceUrl of the damaged vehicle to be reviewed"]
 ):
     """
     This tool reviews the provided supporting documents in pdf format and extracts key details to verify the claim.
     It processes the document from the provided URL and performs necessary validation and extraction.
     """
-    image_urls = [
-        {
-            "pre_loss":evidence_url,
-            "claim": evidence_url
-        }
-    ]
-    resp = SSIM(image_urls)
-    return resp
+    try:
+        image_urls = [
+            {
+                "pre_loss": evidence_url,
+                "claim": evidence_url
+            }
+        ]
+        print("\n", image_urls)
+        resp = SSIM(claimant_incident_detail,image_urls)
+        return resp
+    except Exception as e:
+        return {"status": "error", "message": str(e)}
 
 @tool
 def validate_if_this_is_a_real_vehicle(vehicle_information: Annotated[str, "vehicle make and brand. e.g toyota corolla 2012"]):
@@ -80,6 +85,7 @@ def check_NIID_database_to_confirm_vehicle_insurance(
     global niid_data
     extractor = InsuranceDataExtractor(vehicle_registration_number)
     niid_data = extractor.run()
+    print(niid_data)
     if niid_data.get('status') == 'success' and niid_data.get('data')["RegistrationNumber"] == vehicle_registration_number.replace(" ", ""):
         niid_data["insured_message"] = "Yes, this vehicle is insured by NIID"
     else:

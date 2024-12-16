@@ -2,7 +2,7 @@
 from typing import Any, Dict
 import asyncio,multiprocessing,time,uuid
 from langchain_core.messages import HumanMessage
-from src.error_trace.errorlogger import log_error
+from src.error_trace.errorlogger import log_error, log_info
 from src.ai.resources.document_understanding import classify_supporting_documents
 from src.ai.claims_processing.run_workflow import  control_workflow
 from src.ai.resources.db_ops import get_claim_from_database, update_claim_status_database
@@ -26,7 +26,7 @@ def process_message(body: bytes):
         task_id=f"task_{str(uuid.uuid4())}"
     )
     
-    log_error(f"Processing claim: {claim_request.model_dump()}")
+    print(f"Processing claim: {claim_request.model_dump()}")
     
     db = SessionLocal()
     try:
@@ -68,7 +68,7 @@ def process_message(body: bytes):
         db.refresh(task)
         
         update_claim_status_database(claim_data.id, status=TaskStatus.RUNNING)
-        
+        # print("\n\n",claim_data,"\n")
         # Process claim workflow
         team_summaries: Dict[str, Any] = {}
         for s in super_graph.stream({
