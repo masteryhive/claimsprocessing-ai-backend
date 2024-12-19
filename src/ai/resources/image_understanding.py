@@ -75,12 +75,13 @@ pre_prompt = """
 This is the image of the vehicle before loss, used as a reference for comparison.
 """
 
-prompt = f"""
+prompt = """
 Objective:
 Perform a comprehensive analysis of vehicle images to evaluate pre-existing conditions and detect potential new damages for insurance claim assessment.
 
 Claimant Claim details:
 {claim_details}
+
 Image Analysis Protocol:
 Compare the "image of the vehicle before loss" with the other provided image(s) and perform the following evaluations:
 
@@ -141,12 +142,8 @@ def SSIM(claim_details:str, image_urls: List[Dict[str, Any]]):
     model = GenerativeModel("gemini-1.5-flash-002")
     
     # Combine images with prompts
-    content = image_parts + [pre_prompt, prompt]
+    content = image_parts + [pre_prompt, prompt.format(claim_details=claim_details)]
     
     response = model.generate_content(content)
     print(response.text)
     return response.text
-
-
-print(SSIM(image_urls = [{"claim":"https://storage.googleapis.com/masteryhive-insurance-claims/rawtest/Scenario3/Gemini_Generated_Image_dap8txdap8txdap8.jpeg",
-                   "pre_loss":"https://storage.googleapis.com/masteryhive-insurance-claims/rawtest/Scenario3/car.jpeg"}]))

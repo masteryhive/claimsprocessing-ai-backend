@@ -48,6 +48,3 @@ search_query = "How many miles can I drive the 2024 Google Starlight until I nee
 retrieval_qa = RetrievalQA.from_chain_type(
     llm=llm, chain_type="stuff", retriever=retriever
 )
-
-
-print(retrieval_qa.invoke(search_query))

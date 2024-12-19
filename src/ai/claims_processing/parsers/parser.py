@@ -20,6 +20,9 @@ def extract_claim_summary(data:str,team_summaries:dict) -> CreateClaimsReport:
     ai_recommendation = re.findall(
         r"<recommendation>\s*(?:\/\/)?(.*?)\s*</recommendation>", data, re.DOTALL
     )
+    settlement_offer = re.search(
+        r"<settlement_offer>\s*(?:\/\/)?(.*?)\s*</settlement_offer>", data, re.DOTALL
+    )
     operationStatus = re.search(
         r"<claims_operation_status>\s*(?:\/\/)?(.*?)\s*</claims_operation_status>", data, re.DOTALL
     )
@@ -45,6 +48,12 @@ def extract_claim_summary(data:str,team_summaries:dict) -> CreateClaimsReport:
                     if operationStatus
                     else "Information Not Available"
                 ),
+                "settlementOffer": (
+                    settlement_offer.group(1).strip()
+                    if settlement_offer
+                    else "No Offer Available"
+                ),
+                "preLossComparison":"",
             }
         )
         return team_summaries["pre_report"]

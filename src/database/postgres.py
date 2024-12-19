@@ -56,36 +56,3 @@ def get_db() -> Generator[cursor, None, None]:
         if conn:
             conn.close()
 
-
-def create_claim_report(
-    db: Session,
-    id: str,
-    fraud_score: float,
-    fraud_indicators: list,
-    discoveries: list,
-    ai_recommendation: list,
-    policy_review: str,
-    evidence_provided: list,
-    coverage_status: str,
-    type_of_incident: str,
-    details: str,
-):
-    """
-    Create a new claim record
-    """
-    claim_report = ClaimsReport(
-        id=id,
-        fraud_score=fraud_score,
-        discoveries=discoveries,
-        fraud_indicators=fraud_indicators,
-        ai_recommendation=ai_recommendation,
-        policy_review=policy_review,
-        evidence_provided=evidence_provided,
-        coverage_status=coverage_status,
-        details=details,
-        type_of_incident=type_of_incident,
-    )
-    db.add(claim_report)
-    db.commit()
-    db.refresh(claim_report)
-    db.close()

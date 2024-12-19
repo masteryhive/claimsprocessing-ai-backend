@@ -1,10 +1,14 @@
 import json
 from typing import Union
-
+from src.database.schemas import ClaimsReport
 import requests
 from src.error_trace.errorlogger import log_error
 from src.datamodels.claim_processing import CreateClaimsReport, UpdateClaimsReportModel
 from src.config.appconfig import env_config
+import logging
+from sqlalchemy.orm import Session
+
+logger = logging.getLogger(__name__)
 
 async def save_claim_database(data_to_send: dict) -> bool:
         """
@@ -120,4 +124,68 @@ def update_claim_report_database(claim_id:int,claim_report: dict) -> bool:
             return False
     except Exception as e:
         print(f"Error occurred: {e}")
+        return False
+    
+
+
+def create_claim_report(
+    db: Session,
+    id: str,
+    fraud_score: float,
+    fraud_indicators: list,
+    discoveries: list,
+    ai_recommendation: list,
+    policy_review: str,
+    evidence_provided: list,
+    coverage_status: str,
+    type_of_incident: str,
+    details: str,
+):
+    """
+    Create a new claim record
+    """
+    claim_report = ClaimsReport(
+        id=id,
+        fraud_score=fraud_score,
+        discoveries=discoveries,
+        fraud_indicators=fraud_indicators,
+        ai_recommendation=ai_recommendation,
+        policy_review=policy_review,
+        evidence_provided=evidence_provided,
+        coverage_status=coverage_status,
+        details=details,
+        type_of_incident=type_of_incident,
+    )
+    db.add(claim_report)
+    db.commit()
+    db.refresh(claim_report)
+    db.close()
+
+def delete_claim_report_by_id(db: Session, claim_id: int) -> bool:
+    """
+    Delete a claim report by its ID.
+
+    Parameters:
+    - db: Database session
+    - claim_id: ID of the claim report to be deleted
+
+    Returns:
+    - A boolean indicating whether the deletion was successful.
+    """
+    try:
+        # Query the claim report by ID
+        claim_report = db.query(ClaimsReport).filter(ClaimsReport.id == claim_id).first()
+        
+        if not claim_report:
+            logger.error(f"Claim report with ID {claim_id} not found.")
+            return False
+
+        # Delete the claim report
+        db.delete(claim_report)
+        db.commit()
+        logger.info(f"Claim report with ID {claim_id} successfully deleted.")
+        return True
+    except Exception as e:
+        db.rollback()
+        logger.error(f"Error deleting claim report with ID {claim_id}: {str(e)}")
         return False

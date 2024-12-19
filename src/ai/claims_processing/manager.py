@@ -5,7 +5,7 @@ from langchain_core.messages import HumanMessage
 from src.error_trace.errorlogger import log_error, log_info
 from src.ai.resources.document_understanding import classify_supporting_documents
 from src.ai.claims_processing.run_workflow import  control_workflow
-from src.ai.resources.db_ops import get_claim_from_database, update_claim_status_database
+from src.database.claim_processing.db_ops import get_claim_from_database, update_claim_status_database
 from src.database.schemas import Task, TaskStatus
 from src.config.db_setup import SessionLocal
 from src.datamodels.claim_processing import AccidentClaimData, ProcessClaimTask, TheftClaimData

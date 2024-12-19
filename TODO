@@ -19,5 +19,24 @@ Key majors:
 1. Preloss damages vs new damages >> as a table
 2. Claims damage cost per damage and have a total (viz: settlement offer)
 3. Recommended settlement offer the AI (include the labour cost)
+
+ ----- 16 Dec, 2024 -----
 4. Difference in the invoice price and the AI recommended settle offer
 5. visualize the local market recommended price.
+6. implement the settle offer as the minimum of the fairlyused price and the brand new.
+
+--- 18 Dec, 2024 ---
+7. 25% as proxy for repair include in the settlement offer
+8. put a range of possible payment should cover 25% on the lower interval and 75 on the higher interval, if the settle offer is
+8.1 settlement range=(1.25xmedian fairly-used cost)+(1.25xmedian of brandnew price) <-- this will be the range where the price falls in -->
+8.2 if the settlement does not fall in the range, use the mrdian of the settlement range
+
+9. change settle offer presentation to
+Settlement Offer: ₦50,000
+Settlement Range: 35,000 - 55,000
+Marginal Price for Fairly-used parts: ₦35,000
+Marginal Price for Brand New parts: ₦55,000
+
+10. Pre-loss Comparison, should itemize the dents and not summarize. itemize the errors on the damaged vehicle from the SSIM and check if what was there is true. In the AI recommendation/discoveries discount what was not fraudlent and whta was found as fraudulent to show as evidence the settlement offer was generated
+
+11. go to jiji with the damages on the evidence provided -> check on SSIM -> show red X on what we will not pay for because they are pre-existing, and what we are paying for -> the customer says they want xxxx, but from what we identified, we will pay for yyyy.

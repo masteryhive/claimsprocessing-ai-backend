@@ -30,7 +30,6 @@ def pdf_page_to_base64(pdf_path: str, page_number: int):
     page = pdf_document.load_page(page_number - 1)  # input is one-indexed
     pix = page.get_pixmap()
     img = Image.frombytes("RGB", [pix.width, pix.height], pix.samples)
-
     buffer = io.BytesIO()
     img.save(buffer, format="PNG")
 
@@ -90,6 +89,7 @@ def invoice_entity_extraction(doc_url: str) -> str:
         ],
     )
     response = llm_flash.invoke([message])
+    print(response.content)
     return response.content
 
 

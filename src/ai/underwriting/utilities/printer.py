@@ -1,10 +1,10 @@
 from typing import Dict, Any
 from colorama import init, Fore, Style, Back
 import textwrap
-from src.resources.db_ops import save_claim_report_database
+from src.database.claim_processing.db_ops import save_claim_report_database
 from datamodels.claim_processing import CreateClaimsReport
-from src.database.pd_db import create_claim_report
-from src.claims_processing.utilities.parser import extract_claim_data, extract_claim_summary
+from src.database.postgres import create_claim_report
+from src.claims_processing.parser.parser import extract_claim_data, extract_claim_summary
 from src.config.db_setup import SessionLocal
 
 # Initialize colorama for cross-platform color support

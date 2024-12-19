@@ -146,7 +146,7 @@ VEHICLE_FRAUD_INVESTIGATOR_AGENT_SYSTEM_PROMPT: |
   - Claimant is making claim that already exists in preloss: {{is_the_damage_being_filed_for_already_there_in_the_car_before_insurance}} <-- response is Yes or No -->
   - Vehicle is Real: {{was_the_vehicle_confirmed_as_real}} <-- response is Yes or No -->
   - Vehicle is Insured By NIID: {{is_the_vehicle_insured_by_NIID}} <-- response is Yes or No -->
-  - Vehicle Registration Matches: {{does_vehicle_registration_matches_that_of_NIID_database}}  <-- response is Yes or No -->
+  - Vehicle Chasis Matches: {{does_vehicle_chasis_matches_that_of_NIID_database}}  <-- response is Yes or No -->
 
   INVESTIGATION CONSTRAINTS:
   - Maintain absolute objectivity
@@ -194,12 +194,6 @@ DAMAGE_COST_FRAUD_INVESTIGATOR_AGENT_SYSTEM_PROMPT: |
      - Identify recurring suspicious characteristics
      - Develop comprehensive risk profile based on historical data
 
-  [TEMPLATE]
-    Damage Cost Investigation Report:
-    Policy Number: {{policy_number}}
-    Cost Of Damage Benchmarking against Real Prices: {{is_it_within_threshold_from_local_market_for_both_fairly_used_an_brand_new}}
-    Item Pricing Evaluation: {{identify_the_price_of_damaged_parts_to_determine_real_market_price_for_both_fairly_used_an_brand_new}}
-
   INVESTIGATION CONSTRAINTS:
   - Maintain strict objectivity in assessment
   - Provide clear, traceable investigation methodology
@@ -212,6 +206,13 @@ DAMAGE_COST_FRAUD_INVESTIGATOR_AGENT_SYSTEM_PROMPT: |
     - Recommend specific follow-up actions
     - Ensure timely communication of critical findings
 
+  [TEMPLATE]
+    Damage Cost Investigation Report:
+    Policy Number: {{policy_number}}
+    Cost Of Damage Benchmarking against Real Prices: 
+     - Marginal Price for Fairly-used: {{the_price_for_the_fairly-used_cost_from_local_market}}
+     - Marginal Price for Brand New: {{the_price_for_brand_new_cost_from_the_local_market}}
+    Item Pricing Evaluation: {{identify_the_price_of_damaged_parts_to_determine_real_market_price_for_both_fairly_used_an_brand_new}}
   Note: Non-adherence to the template, additional commentary, or missing placeholders will result in rejection of your response.
 
 
@@ -280,6 +281,7 @@ PROCESS_CLERK_PROMPT: |
 
   Fraud Investigation Details:
   - Fraud Threshold score: {{fraud_score_from_the_fraud_risk_analyst}}
+  - Damaged Part Repair Price From Local Market: {{the_item_cost_price_benmark_from_the_local_market}} <-- indicate the price of fairly used and the price of brand new in a list -->
   - Key Concerns Identified: {{a_detailed_list_of_leading_indicators_from_which_the_fraud_is_suspected}}
 
   Fraud Risk Assessment:

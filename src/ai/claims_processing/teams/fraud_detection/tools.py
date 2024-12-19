@@ -9,7 +9,7 @@ from src.ai.resources.retrieve_vehicle_policy import InsuranceDataExtractor
 
 
 
-costBenchmarking = CostBenchmarking()
+
 
 ############## Fraud checks tool ##############
 
@@ -44,7 +44,7 @@ niid_data = {}
 
 @tool
 def verify_vehicle_matches_preloss(
-    claimant_incident_detail: Annotated[str, "the claim the user is making for"],
+    claimant_incident_detail: Annotated[str, "the description of the incident that happened to the user e.g. A reckless driver hit my car from behind and broke breaking my rear lights."],
     evidence_url: Annotated[str, "evidenceSourceUrl of the damaged vehicle to be reviewed"]
 ):
     """
@@ -58,6 +58,7 @@ def verify_vehicle_matches_preloss(
                 "claim": evidence_url
             }
         ]
+        print(claimant_incident_detail)
         print("\n", image_urls)
         resp = SSIM(claimant_incident_detail,image_urls)
         return resp
@@ -85,7 +86,6 @@ def check_NIID_database_to_confirm_vehicle_insurance(
     global niid_data
     extractor = InsuranceDataExtractor(vehicle_registration_number)
     niid_data = extractor.run()
-    print(niid_data)
     if niid_data.get('status') == 'success' and niid_data.get('data')["RegistrationNumber"] == vehicle_registration_number.replace(" ", ""):
         niid_data["insured_message"] = "Yes, this vehicle is insured by NIID"
     else:
@@ -94,15 +94,15 @@ def check_NIID_database_to_confirm_vehicle_insurance(
 
 
 @tool
-def vehicle_registration_number_match(vehicle_registration_number: Annotated[str, "vehicle registration number"]):
+def vehicle_chasis_number_matches_NIID_records(vehicle_chasis_number: Annotated[str, "vehicle chasis number"]):
     """
-    Verify vehicle registration matches NIID internal database records.
+    Verify vehicle chasis matches NIID internal database records.
     """
     # Simulate a registration match check
-    if niid_data.get('status') == 'success' and niid_data.get('data')["RegistrationNumber"] == vehicle_registration_number:
-        niid_data["message"] = "Yes, this vehicle registration number matches NIID internal database records"
+    if niid_data.get('status') == 'success' and niid_data.get('data')["ChassisNumber"] == vehicle_chasis_number:
+        niid_data["message"] = "Yes, this vehicle chasis number matches NIID internal database records"
     else:
-        niid_data["message"] = "No, this vehicle registration number does not match NIID internal database records"
+        niid_data["message"] = "No, this vehicle chasis number does not match NIID internal database records"
     return niid_data["message"]
 
 ############## damage cost fraud ##################
@@ -119,7 +119,7 @@ def item_cost_price_benmarking_in_local_market(
     try:
         global market_price
         import concurrent.futures
-
+        costBenchmarking = CostBenchmarking()
         with concurrent.futures.ThreadPoolExecutor() as executor:
             future_tokunbo = executor.submit(costBenchmarking.fetch_market_data, f"{damaged_part} tokunbo")
             future_brand_new = executor.submit(costBenchmarking.fetch_market_data, f"{damaged_part} brand new")
@@ -151,6 +151,7 @@ def item_pricing_evaluator(
      this cost evaluation tool checks the local market place for how much the damaged part is worth.
     """
     try:
+        costBenchmarking = CostBenchmarking()
         result = costBenchmarking.run_with_expected_range(damaged_part,market_price)
         return result
     except Exception as e:

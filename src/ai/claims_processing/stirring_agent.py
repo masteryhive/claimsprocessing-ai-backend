@@ -208,7 +208,6 @@ def call_summary_team(state: AgentState) -> AgentState:
 
 
 def router(state) -> Literal[*options]:
-    print(state)
     # if state.get("summary_team"):
     #     if HumanMessage.content in state.get("summary_team")["messages"]:
     #         return "__end__"
@@ -246,5 +245,5 @@ super_builder.add_edge(members[3], END)
 # )
 
 super_graph = super_builder.compile()
-if env_config.env == "local":
-    save_graph_mermaid(super_graph, output_file="display/super_langgraph.png")
+# if env_config.env == "local":
+#     save_graph_mermaid(super_graph, output_file="display/super_langgraph.png")

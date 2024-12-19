@@ -57,13 +57,19 @@ claim_form_fraud_investigator_agent = create_tool_agent(
 
 vehicle_fraud_investigator_agent  = create_tool_agent(
     llm=llm,
-    tools=[verify_vehicle_matches_preloss,validate_if_this_is_a_real_vehicle,check_NIID_database_to_confirm_vehicle_insurance],
+    tools=[
+        # verify_vehicle_matches_preloss,
+           validate_if_this_is_a_real_vehicle,
+           # vehicle_chasis_number_matches_NIID_records,
+           #check_NIID_database_to_confirm_vehicle_insurance
+           ],
     system_prompt=_load_prompt_template()["VEHICLE_FRAUD_INVESTIGATOR_AGENT_SYSTEM_PROMPT"],
 )
 
 damage_cost_fraud_investigator_agent = create_tool_agent(
     llm=llm,
-    tools=[item_cost_price_benmarking_in_local_market,item_pricing_evaluator],
+    # tools=[item_cost_price_benmarking_in_local_market,item_pricing_evaluator],
+    tools=[],
     system_prompt=_load_prompt_template()["DAMAGE_COST_FRAUD_INVESTIGATOR_AGENT_SYSTEM_PROMPT"],
 )
 
@@ -144,5 +150,5 @@ fraud_detection_builder.add_edge(agent4, agentX)
 fraud_detection_builder.add_edge(agentX, END)
 
 fraud_detection_graph = fraud_detection_builder.compile()
-if env_config.env == "local":
-    save_graph_mermaid(fraud_detection_graph, output_file="display/fraud_langgraph.png")
+# if env_config.env == "local":
+#     save_graph_mermaid(fraud_detection_graph, output_file="display/fraud_langgraph.png")

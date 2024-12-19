@@ -33,6 +33,22 @@ CLAIM_ADJUSTER_SUMMARY_PROMPT: |
    - Use clear rationale, drawing on historical patterns and data insights.
    - Anticipate potential follow-up questions from the senior adjuster.
 
+  FRAUD TRIGGERS:
+  - NIID shows multiple insurance records
+  - NIID does not have record of insurance
+  - Claim was filed three days after policy was provided
+  - claimant is not an authentic customer
+  - vehicle chasis number does not match data from NIID
+  - vehicle is not real vehicle. -- serperdev|car45 -- use a VIN check
+  - vehicle is being claimed for preloss damage
+  - Policy is nolonger active
+  - Claim was not reported within the policy notification period
+  - the incident did not occur within the covered policy geolocation
+
+  AMBER FLAG (not fraudulent but should be noticed by the human claim officer)
+  - The cost of repair or replacement should not exceed the AUTHORIZED REPAIR LIMIT amount  <-- (prepare settlement offer based on invoice/market place) tell the claim officer to contact the claimant to complete payment -->
+  - Item cost does not match the margin from local market place
+
   CLAIM VALIDATION FACTORS:
    - Identify any potential issues or inconsistencies with the claim that warrant further investigation, such as:
    - Mismatches between submitted evidence (photos, videos, invoices) and reported damage
@@ -51,6 +67,7 @@ CLAIM_ADJUSTER_SUMMARY_PROMPT: |
    - Monetary Values: Include currency symbols and use the format ₦1,234.56.
    - Risk Levels: Always state the percentage and corresponding risk category (e.g., Low (0-30%), Medium (31-70%), High (71-100%)).
    - Action Items: List actionable recommendations in priority order.
+
 
   TEMPLATE STRUCTURE DATA SOURCE:
   Data sources for the template structure should be derived from the following:
@@ -88,8 +105,19 @@ CLAIM_ADJUSTER_SUMMARY_PROMPT: |
   {{series_of_your_observations_from_the_summary_of_all_the_teams_for_this_claim}}
   </discovery>
   </discoveries>
+  <preloss_comparison>
+  <preloss_analysis>
+  {{item_all_the_damage_in_the_preloss_vehicle}} <!-- Example: The vehicle preloss state has \n- Minor scratches on front bumper\n- Small dent on passenger side door\n- Faded paint on hood-->
+  </preloss_analysis>
+  <incident_damage_analysis>
+  {{detailed_analysis_of_current_damage_from_incident}} <!-- Example: The vehicle has sustained:\n- Major impact damage to front bumper\n- Cracked windshield\n- Deployed airbags\n- Structural damage to passenger side -->
+  </incident_damage_analysis>
+  <fraudulent_claim_detection>
+  Fraudulent Claim Detection: {{analysis_of_whether_claim_is_fraudulent_based_on_preloss_and_current_damage_comparison}} <!-- Example: Based on the comparison between preloss condition and current damage, this claim appears legitimate as the reported damage is consistent with the incident and there is no evidence of pre-existing damage being claimed. -->
+  </fraudulent_claim_detection>
+  </preloss_comparison>
   <settlement_offer>
-  {{the_recommended_settlement_offer_after_your_analysis}}
+  {{the_recommended_settlement_offer_to_the_claimant_after_your_analysis_by_comparing_the_marginal_price_of_the_brand_new_and_fairly-used}} <!-- Example: Settlement Offer: ₦50,000<br/>Settlement Range: 35,000 - 55,000<br/>Marginal Price for Fairly-used parts: ₦35,000<br/>Marginal Price for Brand New parts: ₦55,000 -->
   </settlement_offer>
   </claim_summary>
 
@@ -258,7 +286,7 @@ CLAIM_ADJUSTER_SUMMARY_PROMPT: |
   </discoveries>
   </claim_summary>
 
-  Fewshot 5: Successful Claim Processed
+  Fewshot 5: Done! Waiting for claim officer
   <claim_summary>
   <claims_action_recommendation>
   <recommendation>
@@ -298,5 +326,9 @@ CLAIM_ADJUSTER_SUMMARY_PROMPT: |
   </discoveries>
   <settlement_offer>
   ₦1,200,000.00
+
+  <br/>Marginal Price for Fairly-used: ₦1,150,000
+  <br/>
+  Marginal Price for Brand New: ₦2,050,000
   </settlement_offer>
   </claim_summary>
