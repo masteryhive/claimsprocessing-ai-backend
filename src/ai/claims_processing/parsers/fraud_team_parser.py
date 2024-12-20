@@ -1,27 +1,30 @@
 import re
 
 
-def extract_from_claim_processing(text):
-    # Extract Type of Incident
-    type_match = re.search(r"Type of incident:\s*(.+)", text)
-    type_of_incident = type_match.group(1).strip() if type_match else ""
-
-    # Extract Evidence Provided
-    evidence_start = text.find("Evidence Provided:")
-    evidence_end = text.find("Summary of Findings:")
-    evidence_content = []
-    if evidence_start != -1 and evidence_end != -1:
-        evidence_text = text[evidence_start + len("Evidence Provided:"):evidence_end].strip()
-        evidence_lines = re.findall(r"- (.+)", evidence_text)
-        #evidence_content = "<ul>\n" + "\n".join(f"<li>{line.strip()}</li>" for line in evidence_lines) + "\n</ul>"
-        evidence_content = [line.strip() for line in evidence_lines]
-
-    # Extract Summary of Findings
-    findings_match = re.search(r"Summary of Findings:\s*(.+?)(?=Recommendations:)", text, re.DOTALL)
-    summary_of_findings = findings_match.group(1).strip() if findings_match else ""
+def extract_from_fraud_checks(text, discoveries: list):
+    # Extract pre-loss comparison section
+    pre_loss_match = re.search(r'PreLoss Comparison:(.*?)(?=\n\nFraud Risk Assessment:|$)', text, re.DOTALL)
+    pre_loss_data = pre_loss_match.group(1).strip() if pre_loss_match else ""
+    
+    # Extract key sections for fraud report summary
+    fraud_score = re.search(r'Fraud Threshold score: (\d+)', text)
+    fraud_score = fraud_score.group(1) if fraud_score else "N/A"
+    
+    risk_level = re.search(r'Overall Fraud Risk Level: (\w+)', text)
+    risk_level = risk_level.group(1) if risk_level else "N/A"
+    
+    recommendations = re.search(r'Recommendations:\n(.*?)$', text, re.DOTALL)
+    recommendations = recommendations.group(1).strip() if recommendations else ""
+    
+    # Create fraud report summary
+    fraud_report_summary = (
+        f"Fraud Assessment Summary:\n"
+        # f"- Fraud Score: {fraud_score}\n"
+        f"- Risk Level: {risk_level}\n"
+        f"- Recommendations: {recommendations}"
+    )
     
     return {
-        "typeOfIncident": type_of_incident,
-        "evidenceProvided": evidence_content,
-        "discoveries": [summary_of_findings]
+        "preLossComparison": pre_loss_data,
+        "discoveries": discoveries + ["\n\n" + fraud_report_summary]
     }

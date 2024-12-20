@@ -67,14 +67,21 @@ def investigate_if_this_claimant_is_attempting_a_rapid_policy_claim(date_claim_f
 niid_data = {}
 
 @tool
-def verify_vehicle_matches_preloss(
+def verify_vehicle_matches_preloss_using_SSIM(
     policy_id: Annotated[str, "claimant's policy_id."],
     claimant_incident_detail: Annotated[str, "the description of the incident that happened to the user e.g. A reckless driver hit my car from behind and broke breaking my rear lights."],
     evidence_url: Annotated[str, "evidenceSourceUrl of the damaged vehicle to be reviewed"]
 ):
     """
-    This tool reviews the provided supporting documents in pdf format and extracts key details to verify the claim.
-    It processes the document from the provided URL and performs necessary validation and extraction.
+    Use this tool to verify if the damages in the claim being filed for this vehicle matches its pre-loss condition using Structural Similarity Index (SSIM).
+    
+    Args:
+    policy_id (str): The claimant's policy ID.
+    claimant_incident_detail (str): A description of the incident that happened to the user, e.g., "A reckless driver hit my car from behind and broke my rear lights."
+    evidence_url (str): The URL of the evidence source of the damaged vehicle to be reviewed.
+    
+    Returns:
+    dict: A response indicating the result of the SSIM analysis, or an error message if the process fails.
     """
     try:
         image_urls = [

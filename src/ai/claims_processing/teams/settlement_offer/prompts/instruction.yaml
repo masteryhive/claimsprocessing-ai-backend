@@ -72,20 +72,12 @@ PROCESS_CLERK_PROMPT: |
   </instruction>
 
   [TEMPLATE]
-  Policy Number: {{policy_number}}
   Settlement Offer: {{settlement_offer}}  <-- e.g ₦50,000 -->
-  Settlement Range: {{upper_interval}} - {{lower_interval}}  <-- e.g 35,000 - 55,000 -->
-  Marginal Price for Fairly-used parts: {{fairly_used_median_price}}
-  Marginal Price for Brand New parts: {{brand_new_median_price}}
-    - Reason: {{reason_for_settlement_range}} 
-    <-- Example reasons:
-        - "❌ Pre-existing damage to rear bumper will not be covered
-            ✓ Front bumper damage from recent collision: ₦45,000
-            Note: While customer claimed ₦75,000 for both bumpers, we will only cover the front bumper damage"
-        - "❌ Windshield crack pre-dates policy coverage
-            ✓ Side mirror replacement from vandalism: ₦25,000
-            Note: Customer requested ₦60,000 for both repairs, but only side mirror damage falls within policy coverage" -->
-
+  Settlement Offer Reason: {{a_list_of_reasons_with_❌_and_✓_symbols_explaining_the_damaging_from_the_vehicle_preloss_and_current_damage_considered_for_this_settlement_offer}} <-- e.g <br/> - "❌ Pre-existing damage to rear bumper will not be covered <br/> ✓ Front bumper damage from recent collision: ₦45,000 <br/> Note: While customer claimed ₦75,000 for both bumpers, we will only cover the front bumper damage" <br/> - "❌ Windshield crack pre-dates policy coverage <br/> ✓ Side mirror replacement from vandalism: ₦25,000 <br/> Note: Customer requested ₦60,000 for both repairs, but only side mirror damage falls within policy coverage" -->
+  Settlement Range: {{upper_interval}} - {{lower_interval}}  <-- e.g ₦35,000 - ₦55,000 -->
+  Marginal Price for Fairly-used parts: {{fairly_used_median_price_as_integer}} <-- e.g ₦45,000 -->
+  Marginal Price for Brand New parts: {{brand_new_median_price}}  <-- e.g ₦65,000 -->
+  
   Do not provide summary of the claim form data as that does not concern your department.
 
   The agent history is as follows:

@@ -283,6 +283,18 @@ PROCESS_CLERK_PROMPT: |
     - Marginal Price for Brand Ne partsw: {{the_brand_new_item_cost_price_benmark_from_the_local_market}} 
   - Key Concerns Identified: {{a_detailed_list_of_leading_indicators_from_which_the_fraud_is_suspected}}
 
+  PreLoss Comparison:
+  - Vehicle Damage Analysis:
+    - Pre-existing Damages:
+      {{itemized_list_of_preloss_damages_from_SSIM_if_there_are_no_damages_say_so}} 
+    - New Damages Claimed:
+      {{itemized_list_of_new_damages_claimed_if_there_are_no_damages_say_so}}
+    - Overlap Analysis:
+      - Verified Pre-existing Damages: {{list_of_damages_confirmed_as_preexisting_if_there_are_no_damages_say_so}}
+      - Legitimate New Damages: {{list_of_verified_new_damages_if_there_are_no_damages_say_so}}
+      - Damages That will be considered for this claim: {{list_of_damages_that_will_be_considered_for_this_claim}}
+  
+
   Fraud Risk Assessment:
   {{fraud_risk_assessment}}
 

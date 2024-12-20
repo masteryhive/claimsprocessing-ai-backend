@@ -17,10 +17,10 @@ from langchain_core.messages import HumanMessage
 from src.utilities.helpers import _new_get_datetime
 
 init_vertexai()
-# if __name__ == "__main__":
-#     print("here")
-#     # delete_claim_report_by_id(SessionLocal(),90)
-#     process_message(b"91")
+if __name__ == "__main__":
+    print("here")
+    # delete_claim_report_by_id(SessionLocal(),90)
+    process_message(b"91")
 
 
 # {
@@ -141,32 +141,32 @@ init_vertexai()
 #     "dateClaimFiled": "2024-12-06T00:56:09.381Z",
 # }
 
-if __name__ == "__main__":
-    delete_claim_report_by_id(SessionLocal(),91)
-    claim_data = get_claim_from_database({"claim_id": 91})
-    print(claim_data)
-    print()
-    claim_data['dateClaimFiled'] = _new_get_datetime(claim_data["createdAt"])
-    if len(claim_data['resourceUrls']) != 0:
-        print(claim_data['resourceUrls'])
-        result = asyncio.run(classify_supporting_documents(claim_data))
-        claim_data.pop('resourceUrls', None)
-        claim_data["evidenceProvided"] = result
-    if claim_data["claimType"] in ["Accident","accident"]:
-        claim_data = AccidentClaimData(**claim_data)
-    else:
-        claim_data = TheftClaimData(**claim_data)
+# if __name__ == "__main__":
+#     delete_claim_report_by_id(SessionLocal(),91)
+#     claim_data = get_claim_from_database({"claim_id": 91})
+#     print(claim_data)
+#     print()
+#     claim_data['dateClaimFiled'] = _new_get_datetime(claim_data["createdAt"])
+#     if len(claim_data['resourceUrls']) != 0:
+#         print(claim_data['resourceUrls'])
+#         result = asyncio.run(classify_supporting_documents(claim_data))
+#         claim_data.pop('resourceUrls', None)
+#         claim_data["evidenceProvided"] = result
+#     if claim_data["claimType"] in ["Accident","accident"]:
+#         claim_data = AccidentClaimData(**claim_data)
+#     else:
+#         claim_data = TheftClaimData(**claim_data)
 
-    print(claim_data)
-    for s in settlement_offer_graph.stream(
-        {"messages": [HumanMessage(content=f"begin this claim processing:\n{claim_data.model_dump()}")]}
-    ):
-        if "__end__" not in s:
-            # Extract content values from the dictionary
-            for key, value in s.items():
-                if isinstance(value, dict) and "agent_history" in value:
-                    for message in value["agent_history"]:
-                        print(message.content)
-                elif isinstance(value, dict) and "messages" in value:
-                    for message in value["messages"]:
-                        print(message.content)
+#     print(claim_data)
+#     for s in fraud_detection_graph.stream(
+#         {"messages": [HumanMessage(content=f"begin this claim processing:\n{claim_data.model_dump()}")]}
+#     ):
+#         if "__end__" not in s:
+#             # Extract content values from the dictionary
+#             for key, value in s.items():
+#                 if isinstance(value, dict) and "agent_history" in value:
+#                     for message in value["agent_history"]:
+#                         print(message.content)
+#                 elif isinstance(value, dict) and "messages" in value:
+#                     for message in value["messages"]:
+#                         print(message.content)
