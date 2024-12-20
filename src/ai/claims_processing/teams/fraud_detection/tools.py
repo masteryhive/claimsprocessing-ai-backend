@@ -1,15 +1,20 @@
 
+import os
 from langchain_core.tools import tool
 from typing import Annotated, Dict, Union
+
+import requests
 
 from src.ai.resources.image_understanding import SSIM
 from src.ai.rag.context_stuffing import process_query
 from src.ai.resources.cost_benchmarking import CostBenchmarking
 from src.ai.resources.retrieve_vehicle_policy import InsuranceDataExtractor
 
-
-
-
+def get_preloss(policy_id:str):
+    base_url = "https://storage.googleapis.com/masteryhive-insurance-claims/rawtest/preloss"
+    modified_reference = policy_id.replace("/", "-")
+    file_url = f"{base_url}/preloss_{modified_reference}.jpg"
+    return file_url
 
 ############## Fraud checks tool ##############
 
@@ -35,15 +40,35 @@ def investigate_if_this_claimant_is_attempting_a_rapid_policy_claim(date_claim_f
     Use this tool to check for rapid policy claims; to verify the claimant is not making a claim right after creating an insuring this vehicle.
     """
     # Retrieve
-    query = f"this claim is/was filed: {date_claim_filed}.\nCheck if this claim was filed three days after the start of the insurance period."
+    query = f"this claim is/was filed: {date_claim_filed}.\nRespond with only the date the policy start in this format November 16, 2024, and do nothing else. interprete the insurance period as DD/MM/YYYY."
     resp = process_query(query=query)
-    return resp
+  
+    from datetime import datetime
+    def calc(date_claim_filed,resp):
+        # Extract the date from the response
+        start_date_str = resp.split("<answer>")[1].split("</answer>")[0].strip()
+
+        # Convert the dates from string to datetime objects
+        date_claim_filed_dt = datetime.strptime(date_claim_filed, "%B %d %Y")
+        start_date_dt = datetime.strptime(start_date_str, "%B %d, %Y")
+
+        # Calculate the difference in days
+        days_difference = (date_claim_filed_dt - start_date_dt).days
+
+        # Determine if the claim was filed three days after the start of the insurance period
+        if days_difference == 3:
+            return "Yes, the claim was filed three days after the start of the insurance period."
+        else:
+            return "No, the claim was not filed three days after the start of the insurance period."
+    return calc(date_claim_filed,resp)
+
 
 ############## vehicle fraud ##################
 niid_data = {}
 
 @tool
 def verify_vehicle_matches_preloss(
+    policy_id: Annotated[str, "claimant's policy_id."],
     claimant_incident_detail: Annotated[str, "the description of the incident that happened to the user e.g. A reckless driver hit my car from behind and broke breaking my rear lights."],
     evidence_url: Annotated[str, "evidenceSourceUrl of the damaged vehicle to be reviewed"]
 ):
@@ -54,7 +79,7 @@ def verify_vehicle_matches_preloss(
     try:
         image_urls = [
             {
-                "pre_loss": evidence_url,
+                "pre_loss": get_preloss(policy_id),
                 "claim": evidence_url
             }
         ]
@@ -84,9 +109,10 @@ def check_NIID_database_to_confirm_vehicle_insurance(
     calls the NIID database to see if the vehicle has been insured using the vehicle registration number.
     """
     global niid_data
+
     extractor = InsuranceDataExtractor(vehicle_registration_number)
     niid_data = extractor.run()
-    if niid_data.get('status') == 'success' and niid_data.get('data')["RegistrationNumber"] == vehicle_registration_number.replace(" ", ""):
+    if niid_data.get('status') == 'success':
         niid_data["insured_message"] = "Yes, this vehicle is insured by NIID"
     else:
         niid_data["insured_message"] = "No, this vehicle is not insured by NIID"
@@ -108,39 +134,60 @@ def vehicle_chasis_number_matches_NIID_records(vehicle_chasis_number: Annotated[
 ############## damage cost fraud ##################
 
 market_price = {}
+
 @tool
-def item_cost_price_benmarking_in_local_market(
-    damaged_part: Annotated[str, "Identify the damaged parts from the supporting evidence picture. e.g Honda civic side mirror"],
+def item_cost_price_benchmarking_in_local_market(
+    vehicle_name_and_model_and_damaged_part: Annotated[str, "search for the damaged parts from the supporting evidence picture using this term `{{vehicle_name}} {{damaged_part}}. e.g Honda civic side mirror"],
     quoted_cost: Annotated[str, "the quoted cost from supporting evidence like invoice, required to fix the damage."]
-):
+) -> str:
     """
-    this cost benchmarking tool calls the local market place to verify the quoted cost on the invoice for the vehicle repair claims.
+    Benchmarks the quoted cost for vehicle repairs against local market prices.
     """
+    email = "sam@masteryhive.ai"
+    password = "JLg8m4aQ8n46nhC"
+    
+    # Create separate instances for each search to avoid sharing state
+    tokunbo_benchmarking = CostBenchmarking(email, password)
+    brand_new_benchmarking = CostBenchmarking(email, password)
+
     try:
+        import threading
         global market_price
-        import concurrent.futures
-        costBenchmarking = CostBenchmarking()
-        with concurrent.futures.ThreadPoolExecutor() as executor:
-            future_tokunbo = executor.submit(costBenchmarking.fetch_market_data, f"{damaged_part} tokunbo")
-            future_brand_new = executor.submit(costBenchmarking.fetch_market_data, f"{damaged_part} brand new")
-            
-            tokunbo_market_price = future_tokunbo.result()
-            brand_new_market_price = future_brand_new.result()
+        def fetch_tokunbo_prices():
+            nonlocal tokunbo_prices
+            tokunbo_prices = tokunbo_benchmarking.fetch_market_data(f"{vehicle_name_and_model_and_damaged_part} tokunbo")
 
+        def fetch_brand_new_prices():
+            nonlocal brand_new_prices
+            brand_new_prices = brand_new_benchmarking.fetch_market_data(f"{vehicle_name_and_model_and_damaged_part} brand new")
+
+        tokunbo_prices = []
+        brand_new_prices = []
+
+        thread_tokunbo = threading.Thread(target=fetch_tokunbo_prices)
+        thread_brand_new = threading.Thread(target=fetch_brand_new_prices)
+
+        thread_tokunbo.start()
+        thread_brand_new.start()
+
+        thread_tokunbo.join()
+        thread_brand_new.join()
         market_price = {
-            "tokunbo": tokunbo_market_price,
-            "brand_new": brand_new_market_price
+            "tokunbo": tokunbo_prices,
+            "brand_new": brand_new_prices
         }
+        # Only analyze if we got prices
+        if tokunbo_prices and brand_new_prices:
+            quoted_cost_value = float(quoted_cost.replace(",", ""))
+            tokunbo_analysis = tokunbo_benchmarking.analyze_price(tokunbo_prices, quoted_cost_value)
+            brand_new_analysis = brand_new_benchmarking.analyze_price(brand_new_prices, quoted_cost_value)
+            return f"FAIRLY USED (Tokunbo):\n{tokunbo_analysis}\n\nBRAND NEW:\n{brand_new_analysis}"
+        else:
+            return "Unable to fetch market prices. Please try again later."
 
-        with concurrent.futures.ThreadPoolExecutor() as executor:
-            future_result1 = executor.submit(costBenchmarking.item_cost_analysis, tokunbo_market_price, quoted_cost)
-            future_result2 = executor.submit(costBenchmarking.item_cost_analysis, brand_new_market_price, quoted_cost)
-            
-            result1 = future_result1.result()
-            result2 = future_result2.result()
-        return f"FAIRLY USED\n{result1}\n\nBRAND NEW\n{result2}"
     except Exception as e:
-        return "sorry, this tool can not be used at the moment"
+        print(f"Error in benchmarking: {e}")
+        return "An error occurred while benchmarking the cost. Please try again later."
 
 
 @tool
@@ -186,7 +233,6 @@ def drivers_license_status_check(driver_license_number: Annotated[str, "claimant
     """
     # Simulate a driver's license status check
     return {"status": "clear", "message": "Driver's license is valid."}
-
 
 
 

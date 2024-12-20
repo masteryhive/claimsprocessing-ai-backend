@@ -61,6 +61,10 @@ def handle_agent_response(agent: str, messages: list, claim:dict, team_summaries
         update_claim_status_database(claim_id=claim_id, status="Running fraud checks")
         print_header(f"{agent} Response")
         print_section(ai_message_content, "")
+    elif agent == members[3]:
+        update_claim_status_database(claim_id=claim_id, status="Computing likely offer")
+        print_header(f"{agent} Response")
+        print_section(ai_message_content, "")
     
     print(f"{Fore.CYAN}{'─' * HEADER_WIDTH}{Style.RESET_ALL}\n")
 

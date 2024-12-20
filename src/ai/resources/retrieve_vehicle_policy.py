@@ -117,10 +117,12 @@ class InsuranceDataExtractor:
     def run(self):
         try:
             data = self.extract_data()
+            if data == "Your Policy has expired !!!!":
+                return {"status": "failure", "data": data}
+            return {"status": "success", "data": data}
+        except Exception as e:
+            print(e)
         finally:
             self.close_driver()
-        if data == "Your Policy has expired !!!!":
-            return {"status": "failure", "data": data}
-        return {"status": "success", "data": data}
 
 

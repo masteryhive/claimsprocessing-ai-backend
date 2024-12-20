@@ -19,7 +19,7 @@ def retrieve_all_essential_details_from_policy(policy_number: Annotated[str, "cl
     Use this tool to retrieve all essential details, including terms, policy status, and coverage plan or status.
     """
     # Retrieve
-    query = "provide all the crucial information that make up, include terms, policy status and coverage plan/status except vehicle license number/registration number. Do not redact any information."
+    query = "provide all the crucial information that make up, include terms, policy status and coverage plan/status. Do not include registration number. Do not redact any information."
     resp = process_query(query=query,pdf_path=f"src/ai/rag/doc/{policy_number.replace("/", "-")}.pdf")
     return resp
 

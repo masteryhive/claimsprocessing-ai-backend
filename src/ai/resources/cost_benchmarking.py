@@ -1,4 +1,4 @@
-from typing import List
+from typing import Annotated, List
 from selenium import webdriver
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.common.by import By
@@ -11,58 +11,57 @@ import numpy as np
 from bs4 import BeautifulSoup
 from src.error_trace.errorlogger import log_error
 
-email = "sam@masteryhive.ai"
-password = "JLg8m4aQ8n46nhC"
-
-
 class CostBenchmarking:
-    def __init__(self, email=email, password=password):
+    def __init__(self, email:str, password:str):
         self.email = email
         self.password = password
 
+     
+    def create_driver(self):
         chrome_options = Options()
-        # chrome_options.add_argument("--headless")
-        # chrome_options.add_argument("--no-sandbox")  # Optional for some environments
-        # chrome_options.add_argument("--disable-dev-shm-usage")
-        # chrome_options.add_argument("--start-maximized")
-        # chrome_options.add_argument("--disable-extensions")
-        # chrome_options.add_argument("--disable-infobars")
-        # chrome_options.add_argument("window-size=1920,1080")
-        # chrome_options.add_argument(
-        #     "user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.6778.109 Safari/537.36"
-        # )
-        self.driver = webdriver.Chrome(options=chrome_options)
-        self.url = "https://www.jiji.ng/login.html"
+        chrome_options.add_argument("--headless")
+        chrome_options.add_argument("--no-sandbox")  # Optional for some environments
+        chrome_options.add_argument("--disable-dev-shm-usage")
+        chrome_options.add_argument("--start-maximized")
+        chrome_options.add_argument("--disable-extensions")
+        chrome_options.add_argument("--disable-infobars")
+        chrome_options.add_argument("window-size=1920,1080")
+        chrome_options.add_argument(
+            "user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.6778.109 Safari/537.36"
+        )
+        return webdriver.Chrome(options=chrome_options)
 
     def fetch_market_data(self, search_term: str):
-        # Navigate to the website
-        self.driver.get(self.url)
+        driver = None
 
         try:
+            # Navigate to the website
+            driver = self.create_driver()
+            driver.get("https://www.jiji.ng/login.html")
             # Wait for the modal container
-            modal_container = WebDriverWait(self.driver, 10).until(
+            modal_container = WebDriverWait(driver, 10).until(
                 EC.presence_of_element_located((By.CLASS_NAME, "fw-popup__container"))
             )
             
             # Use JavaScript to scroll the element into view
-            self.driver.execute_script("arguments[0].scrollIntoView(true);", modal_container)
+            driver.execute_script("arguments[0].scrollIntoView(true);", modal_container)
             
             time.sleep(2)
 
             # Ensure the button is visible and interactable
-            email_phone_button = WebDriverWait(self.driver, 10).until(
+            email_phone_button = WebDriverWait(driver, 10).until(
                 EC.presence_of_element_located((By.CLASS_NAME, "fw-button.qa-fw-button.fw-button--type-success.fw-button--size-large.h-width-100p.h-bold")))
 
             # Click the button
             email_phone_button.click()
 
             # Wait for the email input field
-            email_input = WebDriverWait(self.driver, 10).until(
+            email_input = WebDriverWait(driver, 10).until(
                 EC.presence_of_element_located((By.CLASS_NAME, "qa-login-field"))
             )
 
             # Find the password input field
-            password_input = self.driver.find_element(
+            password_input = driver.find_element(
                 By.CLASS_NAME, "qa-password-field"
             )
 
@@ -71,11 +70,11 @@ class CostBenchmarking:
             password_input.send_keys(self.password)
 
             # Find the login submit button
-            login_button = self.driver.find_element(By.CLASS_NAME, "qa-login-submit")
+            login_button = driver.find_element(By.CLASS_NAME, "qa-login-submit")
 
  
             # Wait for the button to become enabled
-            WebDriverWait(self.driver, 10).until(
+            WebDriverWait(driver, 10).until(
                 EC.element_to_be_clickable((By.CLASS_NAME, "qa-login-submit"))
             )
 
@@ -89,15 +88,13 @@ class CostBenchmarking:
             search_term = search_term.replace(" ", "%20")
             # Direct navigation to the filtered search URL
             search_url = f"https://jiji.ng/lagos/search?query={search_term}&filter_id_verify=Verified%20sellers&sort=new"
-            self.driver.get(search_url)
+            driver.get(search_url)
 
-            time.sleep(5)
-
-            WebDriverWait(self.driver, 10).until(
+            WebDriverWait(driver, 10).until(
                 EC.presence_of_element_located((By.CLASS_NAME, "qa-advert-price"))
             )
             # Get the page content and parse it with BeautifulSoup
-            soup = BeautifulSoup(self.driver.page_source, "html.parser")
+            soup = BeautifulSoup(driver.page_source, "html.parser")
 
             price_elements = soup.find_all("div", {"class": "qa-advert-price"})
 
@@ -120,15 +117,21 @@ class CostBenchmarking:
                     prices.append(price)
                 except ValueError:
                     print(f"Could not convert price: {price_text}")
-            time.sleep(2)
+            time.sleep(5)
             return prices
 
         except TimeoutException as e:
             print(f"Error: {e}")
-
-    def close_driver(self):
-        # Close the WebDriver
-        self.driver.quit()
+            return []  # Return empty list on error
+        except Exception as e:
+            print(f"Unexpected error: {e}")
+            return []
+        finally:
+            if driver:
+                try:
+                    driver.quit()
+                except Exception:
+                    pass  # Ignore errors during quit
 
     def remove_outliers(
         self, prices: List[float], threshold: float = 1.5
@@ -207,7 +210,69 @@ class CostBenchmarking:
                 "percent_difference_from_median": percent_diff_from_median,
             },
         }
+    def new_analyze_price_realism(self,prices, quote_price):
+        """
+        Analyze if the quoted price is realistic compared to a list of trader prices.
 
+        Args:
+            prices (list or np.ndarray): A list of prices from traders.
+            quote_price (float): The quoted price to analyze.
+
+        Returns:
+            dict: A dictionary containing analysis results.
+
+        Interpretation of Results:
+            - mean_price: The average price from the traders. A quoted price close to this value aligns with the central tendency.
+            - median_price: The middle value of the dataset. A quoted price near the median indicates alignment with typical trader prices.
+            - std_dev: The spread of the prices. A lower standard deviation indicates less variability in the data.
+            - z_score: Indicates how many standard deviations the quoted price is from the mean. Values close to 0 mean the quoted price is typical.
+            - percentile: The percentile rank of the quoted price. A value near 50% indicates the quoted price is in the middle of the distribution.
+            - is_outlier: A boolean indicating whether the quoted price is an outlier. False means the price is within the expected range.
+            - lower_bound and upper_bound: Define the range where most trader prices fall. A quoted price within this range is realistic.
+        """
+        # Ensure prices are in a numpy array
+        prices = np.array(prices)
+
+        # Calculate statistics
+        mean_price = np.mean(prices)
+        median_price = np.median(prices)
+        std_dev = np.std(prices)
+
+        # Z-score calculation
+        z_score = (quote_price - mean_price) / std_dev
+
+        # Percentile calculation
+        percentile = np.sum(prices <= quote_price) / len(prices) * 100
+
+        # IQR calculation for outlier detection
+        q1 = np.percentile(prices, 25)
+        q3 = np.percentile(prices, 75)
+        iqr = q3 - q1
+        lower_bound = q1 - 1.5 * iqr
+        upper_bound = q3 + 1.5 * iqr
+
+        # Outlier check
+        is_outlier = quote_price < lower_bound or quote_price > upper_bound
+        z_score_close_to_zero = abs(z_score) < 0.1
+        # Return analysis results
+        analysis_result = {
+            "analysis": {
+            "mean_price": mean_price,
+            "median_price": median_price,
+            "std_dev": std_dev,
+            "z_score": z_score,
+            "quoted_price_percentile": percentile,
+            "is_outlier": is_outlier,
+            "price_range": {"lower_bound": lower_bound, "upper_bound": upper_bound},
+        }
+        }
+        if z_score_close_to_zero:
+            analysis_result["is_realistic"]= True
+        else:
+            analysis_result["is_realistic"]= False
+
+        return analysis_result
+    
     def analyze_price(self, market_prices: List[float], quoted_price: float) -> None:
         """
         Helper function to print a human-readable analysis of the price.
@@ -218,7 +283,7 @@ class CostBenchmarking:
         # print(f"\nOriginal number of prices: {len(market_prices)}")
         # print(f"Number of prices after removing outliers: {len(cleaned_prices)}")
 
-        result = self.analyze_price_realism(cleaned_prices, quoted_price)
+        result = self.new_analyze_price_realism(cleaned_prices, quoted_price)
         status = ""
         if result["is_realistic"]:
             status = "✅ This price appears REALISTIC based on market data"
@@ -293,3 +358,7 @@ class CostBenchmarking:
             log_error(e)
         finally:
             self.close_driver()
+
+
+
+# print(item_cost_price_benchmarking_in_local_market("hyundai side mirror","40,000"))

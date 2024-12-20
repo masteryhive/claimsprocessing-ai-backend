@@ -58,18 +58,20 @@ claim_form_fraud_investigator_agent = create_tool_agent(
 vehicle_fraud_investigator_agent  = create_tool_agent(
     llm=llm,
     tools=[
-        # verify_vehicle_matches_preloss,
+        verify_vehicle_matches_preloss,
            validate_if_this_is_a_real_vehicle,
-           # vehicle_chasis_number_matches_NIID_records,
-           #check_NIID_database_to_confirm_vehicle_insurance
+           vehicle_chasis_number_matches_NIID_records,
+           check_NIID_database_to_confirm_vehicle_insurance
            ],
     system_prompt=_load_prompt_template()["VEHICLE_FRAUD_INVESTIGATOR_AGENT_SYSTEM_PROMPT"],
 )
 
 damage_cost_fraud_investigator_agent = create_tool_agent(
     llm=llm,
-    # tools=[item_cost_price_benmarking_in_local_market,item_pricing_evaluator],
-    tools=[],
+    tools=[item_cost_price_benchmarking_in_local_market,
+          # item_pricing_evaluator
+           ],
+    # tools=[],
     system_prompt=_load_prompt_template()["DAMAGE_COST_FRAUD_INVESTIGATOR_AGENT_SYSTEM_PROMPT"],
 )
 

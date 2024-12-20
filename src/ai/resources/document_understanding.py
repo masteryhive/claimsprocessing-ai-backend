@@ -73,8 +73,8 @@ def invoice_entity_extraction(doc_url: str) -> str:
     prompt = ("Identify what this document is and extract relevant information from it like invoice total cost and items, invoice narration and purpose."
     "[TEMPLATE]"
     " - Invoice Information:{{the_general_infomation_about_the_invoice_in_bullet_points(-)_(e.g. invoice number, date, customer name, vehicle registration and information etc.)}}"
-    " - Items and Cost: {{the_individual_items_and_their_cost_in_bullet_points(-)_(e.g.  - Driver side mirror: 1 x ₦40,000 = ₦40,000)}}"
-    " - Total Cost: {{the_total_amount_due(-)_(e.g.  - Total Amount Due: ₦50,000)}}"
+    " - Items and Cost: {{the_individual_items_and_their_cost_in_bullet_points(-)_(e.g.  - Driver side mirror: 1 x ₦40,000 = ₦40,000\n- Labour Cost: 2.5hrs x ₦2,500 = ₦10,000)}}"
+    " - Total Cost: {{the_total_amount_due(-)_(e.g.  - Total Amount Due: ₦50,000)}} <-- item cost(s) plus labour cost -->"
     " - Invoice Narration and Purpose:{{a_narration_of_the_invoice_and_it's_purpose}}"
     )
     from langchain_core.messages import HumanMessage
