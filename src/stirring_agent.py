@@ -2,20 +2,20 @@
 from pydantic import BaseModel
 from src.ai.llm import llm
 from src.config.appconfig import env_config
-from src.ai.resources.gen_mermaid import save_graph_mermaid
-from src.ai.claims_processing.teams.document_processing.agents import (
+from src.teams.resources.gen_mermaid import save_graph_mermaid
+from src.teams.document_processing.agents import (
     document_check_graph,
 )
 from src.config.settings import get_setting
-from src.ai.claims_processing.teams.create_agent import (
+from src.teams.create_agent import (
     AgentState,
     create_supervisor_node,
 )
-from src.ai.claims_processing.teams.policy_review.agents import policy_review_graph
-from src.ai.claims_processing.teams.fraud_detection.agents import fraud_detection_graph
-from src.ai.claims_processing.teams.settlement_offer.agents import settlement_offer_graph
-from src.ai.claims_processing.teams.report.agents import report_graph
-from src.ai.claims_processing.teams.document_processing.agents import (
+from src.teams.policy_review.agents import policy_review_graph
+from src.teams.fraud_detection.agents import fraud_detection_graph
+from src.teams.settlement_offer.agents import settlement_offer_graph
+from src.teams.report.agents import report_graph
+from src.teams.document_processing.agents import (
     document_check_graph,
 )
 from typing import Literal
@@ -257,18 +257,6 @@ super_builder.add_edge(members[1], members[2])
 super_builder.add_edge(members[2], members[3])
 super_builder.add_edge(members[3], members[4])
 super_builder.add_edge(members[4], END)
-
-#super_builder.add_edge("supervisor", END)
-# super_builder.add_conditional_edges(  ## sup choice to go to email, or LLM or bye based on result of function decide_next_node
-#     "supervisor",
-#     router,
-#     {
-#         members[0]: members[0],
-#         members[1]: members[1],
-#         members[2]: members[2],
-#         "__end__": END,
-#     },
-# )
 
 super_graph = super_builder.compile()
 # if env_config.env == "local":

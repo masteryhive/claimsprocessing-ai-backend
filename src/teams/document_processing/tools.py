@@ -1,7 +1,7 @@
 
 ############## document extraction and completeness check ##############
 from typing import Annotated
-from src.ai.resources.image_understanding import claims_image_evidence_recognizer
+from src.teams.resources.image_understanding import claims_image_evidence_recognizer
 from langchain_core.tools import tool
 
 # @tool

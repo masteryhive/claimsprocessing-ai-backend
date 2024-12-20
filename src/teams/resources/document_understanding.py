@@ -4,7 +4,8 @@ import aiohttp
 import os, httpx, base64, io, fitz, uuid
 from langchain_google_vertexai import ChatVertexAI
 from PIL import Image
-from src.ai.resources.image_understanding import claims_image_evidence_recognizer
+from src.teams.resources.helpers import get_preloss
+from src.teams.resources.image_understanding import claims_image_evidence_recognizer
 from src.ai.llm import llm_flash
 
 
@@ -103,11 +104,11 @@ async def fetch_content_type(session, url):
         return url, f"Error: {e}"
 
 
-async def classify_supporting_documents(resource_dict):
+async def classify_supporting_documents(resource_dict:dict)->dict:
     """Classify URLs as PDFs or images based on content type."""
     supporting_documents = []
     result = []
-
+    vehicle_url = ""
     async with aiohttp.ClientSession() as session:
         tasks = []
         for url in resource_dict["resourceUrls"]:
@@ -119,8 +120,15 @@ async def classify_supporting_documents(resource_dict):
             if "application/pdf" in content_type:
                 supporting_documents.append(f"{invoice_entity_extraction(url)} - evidenceSourceUrl: {url}")
             elif "image/" in content_type:
+                vehicle_url=url
                 supporting_documents.append(f"{await claims_image_evidence_recognizer(url)} - evidenceSourceUrl: {url}")
             else:
                 result.append(url)
-
-    return supporting_documents
+    resource_dict.pop('resourceUrls', None)
+    resource_dict["evidenceProvided"] = supporting_documents
+                
+    resource_dict["ssim"]  = {
+            "prelossUrl":get_preloss(resource_dict["policyNumber"]),
+            "claimUrl": vehicle_url
+        }
+    return resource_dict

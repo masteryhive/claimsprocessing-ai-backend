@@ -59,6 +59,7 @@ class AccidentClaimData(BaseModel):
     dateReported: Union[str,None]
     policeStationName: str
     evidenceProvided: List[Any]
+    ssim: dict
     dateClaimFiled: str
 
 class TheftClaimData(BaseModel):
@@ -133,3 +134,5 @@ class UpdateClaimsReportModel(BaseModel):
     typeOfIncident: str = Field(default="", description="The type of incident related to the claim.")
     details: str = Field(default="", description="Detailed information about the claim.")
     discoveries: list = Field(default=[], description="A list of discoveries made during the claim investigation.")
+    settlementOffer: str = Field(default="", description="The settlement offer details for the claim.")
+    preLossComparison: str = Field(default="", description="Comparison details of the vehicle's condition before the loss.")

@@ -3,8 +3,8 @@ from enum import Enum
 from pydantic import BaseModel
 from enum import Enum
 from src.ai.llm import llm
-from src.ai.resources.gen_mermaid import save_graph_mermaid
-from src.ai.claims_processing.teams.create_agent import (
+from src.teams.resources.gen_mermaid import save_graph_mermaid
+from src.teams.create_agent import (
     AgentState,
     create_ordinary_agent,
     create_supervisor_node,
@@ -22,7 +22,7 @@ def _load_prompt_template() -> str:
     """Load the instruction prompt template from YAML file."""
     try:
         prompt_path = Path(
-            "src/ai/claims_processing/teams/report/prompts/instruction.yaml"
+            "src/teams/report/prompts/instruction.yaml"
         )
         if not prompt_path.exists():
             raise FileNotFoundError(f"Prompt template not found at {prompt_path}")

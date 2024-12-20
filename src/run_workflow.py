@@ -3,8 +3,8 @@ from typing import Dict, Any
 from colorama import init, Fore, Style
 import textwrap
 from sqlalchemy.orm import Session
-from src.ai.claims_processing.parsers.settlement_team_parser import extract_from_settlement_offer
-from src.ai.claims_processing.parsers.fraud_team_parser import extract_from_fraud_checks
+from src.parsers.settlement_team_parser import extract_from_settlement_offer
+from src.parsers.fraud_team_parser import extract_from_fraud_checks
 from src.database.schemas import Task, TaskStatus
 from src.database.claim_processing.db_ops import (
     save_claim_report_database,
@@ -12,10 +12,10 @@ from src.database.claim_processing.db_ops import (
     update_claim_status_database,
 )
 from src.datamodels.claim_processing import ProcessClaimTask
-from src.ai.claims_processing.parsers.doc_team_parser import extract_from_claim_processing
-from src.ai.claims_processing.parsers.policy_review_team_parser import extract_from_policy_details
-from src.ai.claims_processing.parsers.parser import extract_claim_summary
-from src.ai.claims_processing.stirring_agent import members
+from src.parsers.doc_team_parser import extract_from_claim_processing
+from src.parsers.policy_review_team_parser import extract_from_policy_details
+from src.parsers.parser import extract_claim_summary
+from src.stirring_agent import members
 from langchain_core.messages import HumanMessage
 
 # Initialize colorama for cross-platform color support

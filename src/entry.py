@@ -1,17 +1,18 @@
 import asyncio
-from src.ai.resources.document_understanding import classify_supporting_documents
+from src.teams.resources.document_understanding import classify_supporting_documents
 from src.datamodels.claim_processing import AccidentClaimData, TheftClaimData
 from src.database.claim_processing.db_ops import get_claim_from_database,delete_claim_report_by_id
 from src.ai.model import init_vertexai
-from src.ai.claims_processing.manager import process_message
+from src.manager import process_message
 # from src.ai.claims_processing.stirring_agent import super_graph
 # from src.ai.claims_processing.teams.document_processing.agents import (
 #     document_check_graph,
 # )
+from src.parsers.settlement_team_parser import extract_from_settlement_offer
 from src.config.db_setup import SessionLocal
 # from src.ai.claims_processing.teams.policy_review.agents import policy_review_graph
-from src.ai.claims_processing.teams.fraud_detection.agents import fraud_detection_graph
-from src.ai.claims_processing.teams.settlement_offer.agents import settlement_offer_graph
+from src.teams.fraud_detection.agents import fraud_detection_graph
+from src.teams.settlement_offer.agents import settlement_offer_graph
 from langchain_core.messages import HumanMessage
 
 from src.utilities.helpers import _new_get_datetime
@@ -158,7 +159,7 @@ if __name__ == "__main__":
 #         claim_data = TheftClaimData(**claim_data)
 
 #     print(claim_data)
-#     for s in fraud_detection_graph.stream(
+#     for s in settlement_offer_graph.stream(
 #         {"messages": [HumanMessage(content=f"begin this claim processing:\n{claim_data.model_dump()}")]}
 #     ):
 #         if "__end__" not in s:
@@ -170,3 +171,4 @@ if __name__ == "__main__":
 #                 elif isinstance(value, dict) and "messages" in value:
 #                     for message in value["messages"]:
 #                         print(message.content)
+#                         print(extract_from_settlement_offer(message.content))

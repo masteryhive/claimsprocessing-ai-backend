@@ -1,20 +1,14 @@
 
 import os
 from langchain_core.tools import tool
-from typing import Annotated, Dict, Union
+from typing import Annotated, Any, Dict, List, Union
+from langchain_core.tools import StructuredTool
+from pydantic import BaseModel, Field
+from src.teams.resources.image_understanding import SSIM
+from src.rag.context_stuffing import process_query
+from src.teams.resources.cost_benchmarking import CostBenchmarking
+from src.teams.resources.retrieve_vehicle_policy import InsuranceDataExtractor
 
-import requests
-
-from src.ai.resources.image_understanding import SSIM
-from src.ai.rag.context_stuffing import process_query
-from src.ai.resources.cost_benchmarking import CostBenchmarking
-from src.ai.resources.retrieve_vehicle_policy import InsuranceDataExtractor
-
-def get_preloss(policy_id:str):
-    base_url = "https://storage.googleapis.com/masteryhive-insurance-claims/rawtest/preloss"
-    modified_reference = policy_id.replace("/", "-")
-    file_url = f"{base_url}/preloss_{modified_reference}.jpg"
-    return file_url
 
 ############## Fraud checks tool ##############
 
@@ -47,9 +41,17 @@ def investigate_if_this_claimant_is_attempting_a_rapid_policy_claim(date_claim_f
     def calc(date_claim_filed,resp):
         # Extract the date from the response
         start_date_str = resp.split("<answer>")[1].split("</answer>")[0].strip()
-
+        date_claim_filed_dt = None
         # Convert the dates from string to datetime objects
-        date_claim_filed_dt = datetime.strptime(date_claim_filed, "%B %d %Y")
+        try:
+            date_claim_filed_dt = datetime.strptime(date_claim_filed, "%B %d %Y")
+        except Exception as e:
+            try:
+                date_claim_filed_dt = datetime.strptime(date_claim_filed, "%B %d, %Y")
+            except Exception as e:
+                # Use today's date if parsing fails
+                date_claim_filed_dt = datetime.today()
+
         start_date_dt = datetime.strptime(start_date_str, "%B %d, %Y")
 
         # Calculate the difference in days
@@ -65,37 +67,69 @@ def investigate_if_this_claimant_is_attempting_a_rapid_policy_claim(date_claim_f
 
 ############## vehicle fraud ##################
 niid_data = {}
+class SSIMInput(BaseModel):
+    prelossUrl: str = Field(description="The URL of the pre-loss condition image.")
+    claimUrl: str = Field(description="The URL of the claim condition image of the vehicle.")
+    claimant_incident_detail: str = Field(description='A description of the incident that happened to the user, e.g., "A reckless driver hit my car from behind and broke my rear lights."')
 
-@tool
-def verify_vehicle_matches_preloss_using_SSIM(
-    policy_id: Annotated[str, "claimant's policy_id."],
-    claimant_incident_detail: Annotated[str, "the description of the incident that happened to the user e.g. A reckless driver hit my car from behind and broke breaking my rear lights."],
-    evidence_url: Annotated[str, "evidenceSourceUrl of the damaged vehicle to be reviewed"]
-):
+
+def verify_vehicle_matches_preloss_using_SSIM_func(prelossUrl: str, claimUrl: str, claimant_incident_detail: str) -> str:
     """
     Use this tool to verify if the damages in the claim being filed for this vehicle matches its pre-loss condition using Structural Similarity Index (SSIM).
     
     Args:
-    policy_id (str): The claimant's policy ID.
-    claimant_incident_detail (str): A description of the incident that happened to the user, e.g., "A reckless driver hit my car from behind and broke my rear lights."
-    evidence_url (str): The URL of the evidence source of the damaged vehicle to be reviewed.
+    prelossUrl (str): The URL of the pre-loss condition image.
+    claimUrl (str): The URL of the claim condition image.
+    claimant_incident_detail (str): A description of the incident that happened to the user.
     
     Returns:
-    dict: A response indicating the result of the SSIM analysis, or an error message if the process fails.
+    str: The result of the SSIM analysis.
     """
     try:
-        image_urls = [
+        ssim_data = [
             {
-                "pre_loss": get_preloss(policy_id),
-                "claim": evidence_url
-            }
+            "prelossUrl":prelossUrl,
+            "claimUrl": claimUrl
+        }
         ]
         print(claimant_incident_detail)
-        print("\n", image_urls)
-        resp = SSIM(claimant_incident_detail,image_urls)
+        print("\n", ssim_data)
+        resp = SSIM(claimant_incident_detail,ssim_data)
         return resp
     except Exception as e:
         return {"status": "error", "message": str(e)}
+
+verify_vehicle_matches_preloss_using_SSIM = StructuredTool.from_function(
+    func=verify_vehicle_matches_preloss_using_SSIM_func,
+    name="Calculator",
+    description="verify if vehicle matches preloss using structured similarity index",
+    args_schema=SSIMInput,
+    return_direct=True,
+)
+# @tool
+# def verify_vehicle_matches_preloss_using_SSIM(
+#     ssim_data: Annotated[Any, "the ssim data from the claim form json."],
+#     claimant_incident_detail: Annotated[str, "the description of the incident that happened to the user e.g. A reckless driver hit my car from behind and broke breaking my rear lights."],
+# ):
+#     """
+#     Use this tool to verify if the damages in the claim being filed for this vehicle matches its pre-loss condition using Structural Similarity Index (SSIM).
+    
+#     Args:
+#     policy_number (str): The claimant's policy number.
+#     claimant_incident_detail (str): A description of the incident that happened to the user, e.g., "A reckless driver hit my car from behind and broke my rear lights."
+#     the_url_in_evidenceSourceUrl_of_the_damaged_vehicle_from_the_evidenceProvided_json (str): The URL of the evidence source of the damaged vehicle to be reviewed.
+    
+#     Returns:
+#     dict: A response indicating the result of the SSIM analysis, or an error message if the process fails.
+#     """
+#     try:
+
+#         print(claimant_incident_detail)
+#         print("\n", ssim_data)
+#         resp = SSIM(claimant_incident_detail,ssim_data)
+#         return resp
+#     except Exception as e:
+#         return {"status": "error", "message": str(e)}
 
 @tool
 def validate_if_this_is_a_real_vehicle(vehicle_information: Annotated[str, "vehicle make and brand. e.g toyota corolla 2012"]):

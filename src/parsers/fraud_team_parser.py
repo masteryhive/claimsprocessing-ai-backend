@@ -1,7 +1,7 @@
 import re
 
 
-def extract_from_fraud_checks(text, discoveries: list):
+def extract_from_fraud_checks(text, discoveries: list)->dict:
     # Extract pre-loss comparison section
     pre_loss_match = re.search(r'PreLoss Comparison:(.*?)(?=\n\nFraud Risk Assessment:|$)', text, re.DOTALL)
     pre_loss_data = pre_loss_match.group(1).strip() if pre_loss_match else ""
@@ -23,8 +23,7 @@ def extract_from_fraud_checks(text, discoveries: list):
         f"- Risk Level: {risk_level}\n"
         f"- Recommendations: {recommendations}"
     )
-    
     return {
-        "preLossComparison": pre_loss_data,
+        "preLossComparison": pre_loss_data.replace("\n","<br/>"),
         "discoveries": discoveries + ["\n\n" + fraud_report_summary]
     }

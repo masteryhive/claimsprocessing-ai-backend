@@ -3,11 +3,11 @@ import functools
 from pydantic import BaseModel
 from langgraph.graph import StateGraph, END
 from pathlib import Path
-from src.ai.claims_processing.teams.settlement_offer.tools import *
-from src.ai.claims_processing.teams.create_agent_utils import crew_nodes
+from src.teams.settlement_offer.tools import *
+from src.teams.create_agent_utils import crew_nodes
 from src.ai.llm import llm
-from src.ai.resources.gen_mermaid import save_graph_mermaid
-from src.ai.claims_processing.teams.create_agent import *
+from src.teams.resources.gen_mermaid import save_graph_mermaid
+from src.teams.create_agent import *
 from langgraph.graph import END, StateGraph, START
 from src.utilities.helpers import load_yaml_file
 from src.config.appconfig import env_config
@@ -22,7 +22,7 @@ def _load_prompt_template() -> str:
     """Load the instruction prompt template from YAML file."""
     try:
         prompt_path = Path(
-            "src/ai/claims_processing/teams/settlement_offer/prompts/instruction.yaml"
+            "src/teams/settlement_offer/prompts/instruction.yaml"
         )
         if not prompt_path.exists():
             raise FileNotFoundError(f"Prompt template not found at {prompt_path}")
