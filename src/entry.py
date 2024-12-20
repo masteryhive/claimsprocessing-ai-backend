@@ -19,7 +19,6 @@ from src.utilities.helpers import _new_get_datetime
 
 init_vertexai()
 if __name__ == "__main__":
-    print("here")
     # delete_claim_report_by_id(SessionLocal(),90)
     process_message(b"91")
 

@@ -151,7 +151,7 @@ def retry_generate(pdf_document: Part, prompt: str, question: str):
 
     return response
 
-def process_query(query: str, prompt: str = context_prompt,  pdf_path: str= "src/ai/rag/doc/policy_document.pdf") -> None:
+def process_query(query: str,  pdf_path:str, prompt: str = context_prompt) -> None:
     with open(pdf_path, "rb") as fp:
         pdf_document = Part.from_data(data=fp.read(), mime_type="application/pdf")
 
