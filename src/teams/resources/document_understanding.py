@@ -109,6 +109,7 @@ async def classify_supporting_documents(resource_dict:dict)->dict:
     supporting_documents = []
     result = []
     vehicle_url = ""
+    invoice_data=""
     async with aiohttp.ClientSession() as session:
         tasks = []
         for url in resource_dict["resourceUrls"]:
@@ -118,7 +119,8 @@ async def classify_supporting_documents(resource_dict:dict)->dict:
 
         for url, content_type in results:
             if "application/pdf" in content_type:
-                supporting_documents.append(f"{invoice_entity_extraction(url)} - evidenceSourceUrl: {url}")
+                invoice_data = invoice_entity_extraction(url)
+                supporting_documents.append(f"{invoice_data} - evidenceSourceUrl: {url}")
             elif "image/" in content_type:
                 vehicle_url=url
                 supporting_documents.append(f"{await claims_image_evidence_recognizer(url)} - evidenceSourceUrl: {url}")
@@ -126,6 +128,7 @@ async def classify_supporting_documents(resource_dict:dict)->dict:
                 result.append(url)
     resource_dict.pop('resourceUrls', None)
     resource_dict["evidenceProvided"] = supporting_documents
+    resource_dict["repairInvoice"] = invoice_data
                 
     resource_dict["ssim"]  = {
             "prelossUrl":get_preloss(resource_dict["policyNumber"]),

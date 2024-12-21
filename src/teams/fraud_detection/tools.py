@@ -15,7 +15,7 @@ rag_path = "src/rag/doc/"
 
 @tool
 def verify_this_claimant_exists_as_a_customer(
-    policy_id: Annotated[str, "claimant's policy_id."],
+    policy_number: Annotated[str, "claimant's policy number."],
     email: Annotated[str, "claimant's email."],
 ):
     """
@@ -30,9 +30,12 @@ def verify_this_claimant_exists_as_a_customer(
 
 @tool
 def investigate_if_this_claimant_is_attempting_a_rapid_policy_claim(date_claim_filed: Annotated[str, "date this claim was filed"],
-                                                                    policy_number: Annotated[str, "claimant's policy number."]):
+                                                                    policy_number: Annotated[str, "the claimant's policy number"]):
     """
     Use this tool to check for rapid policy claims; to verify the claimant is not making a claim right after creating an insuring this vehicle.
+    Args:
+        policy_number (str): The claimant's policy number.
+        date_claim_filed: (str): The date this claim was filed.
     """
     # Retrieve
     query = f"this claim is/was filed: {date_claim_filed}.\nRespond with only the date the policy start in this format November 16, 2024, and do nothing else. interprete the insurance period as DD/MM/YYYY."
@@ -220,7 +223,7 @@ def item_cost_price_benchmarking_in_local_market(
         }
         # Only analyze if we got prices
         if tokunbo_prices and brand_new_prices:
-            quoted_cost_value = float(quoted_cost.replace(",", ""))
+            quoted_cost_value = float(quoted_cost.replace("\u20a6", "").replace(",", ""))
             tokunbo_analysis = tokunbo_benchmarking.analyze_price(tokunbo_prices, quoted_cost_value)
             brand_new_analysis = brand_new_benchmarking.analyze_price(brand_new_prices, quoted_cost_value)
             return f"FAIRLY USED (Tokunbo):\n{tokunbo_analysis}\n\nBRAND NEW:\n{brand_new_analysis}"

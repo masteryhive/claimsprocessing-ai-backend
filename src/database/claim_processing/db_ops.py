@@ -1,5 +1,7 @@
 import json
 from typing import Union
+
+import httpx
 from src.database.schemas import ClaimsReport
 import requests
 from src.error_trace.errorlogger import log_error
@@ -113,8 +115,9 @@ def update_claim_report_database(claim_id:int,claim_report: dict) -> bool:
         # Convert model instance to a dictionary or JSON-serializable format
         model_result = model_instance.model_dump()  # or json.dumps(model_instance) if it's a dict-like object
         print(json.dumps(model_result))
-        # Send a POST request to the endpoint
-        response = requests.patch(env_config.backend_api + f"/claim-report/by-claim/{claim_id}", json=model_result)
+        # Send a PATCH request to the endpoint using httpx
+        with httpx.Client() as client:
+            response = client.patch(env_config.backend_api + f"/claim-report/by-claim/{claim_id}", json=model_result)
         
         # Check if the request was successful
         if response.status_code == 200:

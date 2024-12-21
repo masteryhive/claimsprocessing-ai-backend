@@ -19,7 +19,14 @@ def retrieve_all_essential_details_from_policy(policy_number: Annotated[str, "cl
     Use this tool to retrieve all essential details, including terms, policy status, and coverage plan or status.
     """
     # Retrieve
-    query = "provide all the crucial information that make up, include terms, policy status and coverage plan/status. Do not include registration number. Do not redact any information."
+    query = ("Provide all the crucial information in this policy document, including but not limited to: insurance period, annual premium, liabilities, premium paid, terms, policy status, memo, coverage plan/status, policy exceptions, clauses, schedules, etc."
+             "Important Instructions:"
+             " - To begin, carefully look through the entire document and understand the task required."
+             " - Separate each information heading into newlines using `<br/>`"
+             " - Ensure all information are tagged using `-`. (e.g. <br/> - AUTHORIZED REPAIR LIMIT: ₦100,000 <br/> - ANNUAL PREMIUM: ₦180,000)"
+             " - No information should be tagged as MISSING, if you do not have such information, then do not display it."
+             "Do not include registration number. Do not redact any information."
+    )
     resp = process_query(query=query,pdf_path=f"{rag_path}{policy_number.replace("/", "-")}.pdf")
     return resp
 

@@ -6,7 +6,7 @@ from contextlib import asynccontextmanager
 from src.error_trace.errorlogger import LOG_FILE, log_error
 from src.ai.model import init_vertexai
 from src.config.db_setup import SessionLocal
-from src.ai.claims_processing.manager import rabbitmq_worker
+from src.manager import rabbitmq_worker
 from src.config.settings import get_setting
 from src.config.appconfig import env_config
 from src.utilities.Printer import printer

@@ -61,6 +61,7 @@ class AccidentClaimData(BaseModel):
     evidenceProvided: List[Any]
     ssim: dict
     dateClaimFiled: str
+    repairInvoice:str
 
 class TheftClaimData(BaseModel):
     id: int
