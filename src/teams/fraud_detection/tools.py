@@ -178,7 +178,7 @@ def vehicle_chasis_number_matches_NIID_records(vehicle_chasis_number: Annotated[
 
 ############## damage cost fraud ##################
 
-market_price = {}
+market_prices = {}
 
 @tool
 def item_cost_price_benchmarking_in_local_market(
@@ -217,7 +217,7 @@ def item_cost_price_benchmarking_in_local_market(
 
         thread_tokunbo.join()
         thread_brand_new.join()
-        market_price = {
+        market_prices = {
             "tokunbo": tokunbo_prices,
             "brand_new": brand_new_prices
         }
@@ -237,15 +237,24 @@ def item_cost_price_benchmarking_in_local_market(
 
 @tool
 def item_pricing_evaluator(
-    damaged_part: Annotated[str, "from the picture evidence which parts are damaged. e.g toyota corolla bumper"],
+vehicle_name_and_model_and_damaged_part: Annotated[str, "search for the damaged parts from the supporting evidence picture using this term `{{vehicle_name}} {{damaged_part}}. e.g Honda civic side mirror"],
 ):
     """
      this cost evaluation tool checks the local market place for how much the damaged part is worth.
     """
     try:
-        costBenchmarking = CostBenchmarking()
-        result = costBenchmarking.run_with_expected_range(damaged_part,market_price)
-        return result
+        email = "sam@masteryhive.ai"
+        password = "JLg8m4aQ8n46nhC"
+        
+        # Create separate instances for each search to avoid sharing state
+        tokunbo_benchmarking = CostBenchmarking(email, password)
+        brand_new_benchmarking = CostBenchmarking(email, password)
+        if market_prices != {}:
+            tokunbo_analysis = tokunbo_benchmarking.run_with_expected_range(vehicle_name_and_model_and_damaged_part,market_prices["tokunbo"])
+            brand_new_analysis = brand_new_benchmarking.run_with_expected_range(vehicle_name_and_model_and_damaged_part,market_prices["brand_new"])
+            return f"FAIRLY USED (Tokunbo):\n{tokunbo_analysis}\n\nBRAND NEW:\n{brand_new_analysis}"
+        else:
+            return "Unable to fetch market prices. Please try again later."
     except Exception as e:
         return "sorry, this tool can not be used at the moment"
 

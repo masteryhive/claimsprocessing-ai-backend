@@ -43,12 +43,24 @@ OFFER_ANALYST_AGENT_SYSTEM_PROMPT: |
     - Use the Template Exactly:
         - You must format your response strictly using the template provided below.
         - Any deviation from the template structure will result in rejection.
+      - Settlement Justification:
+        - Compare claimant's invoice (if provided) against market analysis results
+        - If invoice amount falls within settlement range:
+          - Use the invoice amount as settlement offer
+        - If invoice amount exceeds market analysis:
+          - Use the determined settlement offer from tools
+          - Provide clear explanation of market-based pricing
+          - Document the difference between invoice and market rates
+        - Always prioritize data from market analysis tools for final decision
+
+
 
 
   TEMPLATE:
     Settlement Offer Report:
       Policy Number: {{policy_number}}
-      Settlement Offer: {{settlement_offer}}  
+      Settlement Offer: {{settlement_offer}}
+        - Justification: {{a_list_of_justifying_reasons_why_the_settlement_figure_was_offered}} <-- e.g \n- "The claimant submitted a repair quote of ₦75,000, however our market analysis indicates standard charges of ₦45,000 for similar repairs in their locality" \n- "Upon reviewing the submitted invoice, we've noted the repair costs exceed current market rates. Our settlement ensures fair compensation while maintaining cost reasonableness"\n- "Our network of verified repair shops in the claimant's area consistently performs these repairs within the ₦40,000-₦50,000 range" \n- "The recommended settlement amount aligns with current market rates and ensures the claimant can obtain quality repairs from qualified workshops" -->
         - Fairly-used Median Price: {{fairly_used_median_price}}
         - Brand New Median Price: {{brand_new_median_price}}
       Settlement Range: {{upper_interval}} - {{lower_interval}}
@@ -74,9 +86,10 @@ PROCESS_CLERK_PROMPT: |
   [TEMPLATE]
   Settlement Offer: {{settlement_offer}}  <-- e.g ₦50,000 -->
   Settlement Offer Reason: {{a_list_of_reasons_with_❌_and_✓_symbols_explaining_the_damaging_from_the_vehicle_preloss_and_current_damage_considered_for_this_settlement_offer}} <-- e.g <br/> - "❌ Pre-existing damage to rear bumper will not be covered <br/> ✓ Front bumper damage from recent collision: ₦45,000 <br/> Note: While customer claimed ₦75,000 for both bumpers, we will only cover the front bumper damage" <br/> - "❌ Windshield crack pre-dates policy coverage <br/> ✓ Side mirror replacement from vandalism: ₦25,000 <br/> Note: Customer requested ₦60,000 for both repairs, but only side mirror damage falls within policy coverage" -->
-  Settlement Range: {{upper_interval}} - {{lower_interval}}  <-- e.g ₦35,000 - ₦55,000 -->
+  Settlement Range: {{lower_interval}} - {{upper_interval}}  <-- e.g ₦35,000 - ₦55,000 -->
   Marginal Price for Fairly-used parts: {{fairly_used_median_price_as_integer}} <-- e.g ₦45,000 -->
   Marginal Price for Brand New parts: {{brand_new_median_price}}  <-- e.g ₦65,000 -->
+  Justification: {{a_list_of_justifying_reasons_why_the_settlement_figure_was_offered}} <-- e.g 
   
   Do not provide summary of the claim form data as that does not concern your department.
 

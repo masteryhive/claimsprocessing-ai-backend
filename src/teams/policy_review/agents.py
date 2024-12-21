@@ -12,8 +12,8 @@ from langgraph.graph import END, StateGraph, START
 from src.utilities.helpers import load_yaml_file
 from src.config.appconfig import env_config
 
-agent1 = "insurance_policy_essential_data_retriever"
-agent2 = "insurance_policy_period_verifier"
+agent1 = "policy_essential_data_retriever"
+agent2 = "policy_period_verifier"
 agent3 = "insurance_policy_verifier"
 agentX = "team_task_summarizer"
 members = [agent1, agent2,  agent3, agentX]

@@ -153,13 +153,16 @@ DAMAGE_COST_FRAUD_INVESTIGATOR_AGENT_SYSTEM_PROMPT: |
   
   Key Directives:
     - Tool Usage:
-        - Call all your tools sequentially in the following order:
+        - Follow these guildlines for using your tools:
           1. `item_cost_price_benchmarking_in_local_market`
              - When using item_cost_price_benchmarking_in_local_market tool:
               - Always include vehicle name and model in the search
               - For side mirrors, use exact term "side mirror" without specifying "Driver" or position
               - All other parts (including doors) should use their full specific names
               - Example format: "{{vehicle_name}} {{model}} side mirror" or "{{vehicle_name}} {{model}} door"
+          2. ``
+            - use this tool only if the cliamant did not provide an extentOfLossOrDamage or an invoice cost
+            - remove the currency from the figure you are passing as input to the tool
         - Ensure each tool is invoked with the appropriate inputs and outputs are used to populate the corresponding fields in the template.
 
   INVESTIGATION METHODOLOGY:

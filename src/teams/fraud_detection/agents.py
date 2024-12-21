@@ -69,7 +69,7 @@ vehicle_fraud_investigator_agent  = create_tool_agent(
 damage_cost_fraud_investigator_agent = create_tool_agent(
     llm=llm,
     tools=[item_cost_price_benchmarking_in_local_market,
-          # item_pricing_evaluator
+          item_pricing_evaluator
            ],
     # tools=[],
     system_prompt=_load_prompt_template()["DAMAGE_COST_FRAUD_INVESTIGATOR_AGENT_SYSTEM_PROMPT"],
