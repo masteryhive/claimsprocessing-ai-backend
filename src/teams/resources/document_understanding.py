@@ -90,7 +90,6 @@ def invoice_entity_extraction(doc_url: str) -> str:
         ],
     )
     response = llm_flash.invoke([message])
-    print(response.content)
     return response.content
 
 

@@ -160,7 +160,7 @@ DAMAGE_COST_FRAUD_INVESTIGATOR_AGENT_SYSTEM_PROMPT: |
               - For side mirrors, use exact term "side mirror" without specifying "Driver" or position
               - All other parts (including doors) should use their full specific names
               - Example format: "{{vehicle_name}} {{model}} side mirror" or "{{vehicle_name}} {{model}} door"
-          2. ``
+          2. `item_pricing_evaluator`
             - use this tool only if the cliamant did not provide an extentOfLossOrDamage or an invoice cost
             - remove the currency from the figure you are passing as input to the tool
         - Ensure each tool is invoked with the appropriate inputs and outputs are used to populate the corresponding fields in the template.

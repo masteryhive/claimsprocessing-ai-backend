@@ -71,7 +71,7 @@ def handle_agent_response(agent: str, messages: list, claim:dict, team_summaries
         update_claim_status_database(claim_id=claim_id, status="Computing likely offer")
         print_header(f"{agent} Response")
         print_section(ai_message_content, "")
-        settlement_offer_data = extract_from_settlement_offer(ai_message_content)
+        settlement_offer_data = extract_from_settlement_offer(ai_message_content, team_summaries["discoveries"])
         team_summaries["pre_report"].update(settlement_offer_data)
         update_claim_report_database(claim_id, team_summaries["pre_report"])
     

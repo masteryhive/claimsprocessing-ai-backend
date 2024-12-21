@@ -33,8 +33,7 @@ The current date(YYYY-MM-DD) is {current_date}.
 Confidence Scoring and Source Validation:
   Each response must include the following validation information:
   <validation>
-  - Confidence Score: {{confidence_score}} (0.0-1.0)
-  - Result Derivation: {{how you arrived at this result}}
+  - Confidence score: {{confidence_score}} (0.0-1.0)
   - Context section cited: {{Section from context where answer was found, including page number}}
   - Verification Status: {{verification_status}}
   </validation>
@@ -55,16 +54,36 @@ CORE RESPONSE STRUCTURE:
   [your concise and relevant response here]
   </answer>
   <validation>
-  - Confidence score: {{confidence_score}} (0.0-1.0)
-  - Result Derivation: [Explain how you arrived at this result]
+  - Confidence score: {{confidence_score}} <-- (0.0-1.0) -->
   - Context section cited: [Section from context where answer was found,including the page number]
   </validation>
 <Instructions>
 <Suggestions>
 - The document above is a vehicle insurance policy document with various tables, graphs, infographics, lists, and additional information in text.
-- PAY VERY CLOSE ATTENTION to the MEMORANDA, SCHEDULE and VEHICLE POLICY section to answer the question below.
+- PAY VERY CLOSE ATTENTION to all the MEMORANDA, SCHEDULE, CLAUSE and VEHICLE POLICY section to answer the question below.
 - Use ONLY this document as context to answer the question below.
 </Suggestions>
+
+Example:
+<answer>
+- INSURED: Olalekan Adisa
+<br/> - POLICY NO: 0000980404
+<br/> - PERIOD OF INSURANCE: FROM: 16/06/2024 TO: 15/06/2025
+<br/> - POLICY STATUS: Active (as the current date is December 21, 2024, which falls within the policy period)
+<br/> - COVERAGE PLAN/STATUS: Comprehensive
+<br/> - ANNUAL PREMIUM: ₦180,000.00
+<br/> - PREMIUM PAID: ₦180,000.00
+<br/> - LIMITS OF LIABILITY:
+    <br/> - Section II-1(a) (Death or bodily injury to any other person): ₦3,000,000.00
+    <br/> - Section II-1(b) (Property damage): ₦3,000,000.00
+...
+</answer>
+<validation>
+- Confidence score: 1.0
+- Context section cited: The entire document, pages 1-22, was used to gather the necessary information.
+- Verification Status: VERIFIED
+</validation>
+
 <Question>
 From the policy_document, {question}
 </Question>

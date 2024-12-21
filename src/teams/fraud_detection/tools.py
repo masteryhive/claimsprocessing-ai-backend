@@ -6,7 +6,7 @@ from langchain_core.tools import StructuredTool
 from pydantic import BaseModel, Field
 from src.teams.resources.image_understanding import SSIM
 from src.rag.context_stuffing import process_query
-from src.teams.resources.cost_benchmarking import CostBenchmarking
+from src.teams.resources.cost_benchmarking import CostBenchmarkingPlaywright
 from src.teams.resources.retrieve_vehicle_policy import InsuranceDataExtractor
 
 
@@ -165,10 +165,11 @@ def check_NIID_database_to_confirm_vehicle_insurance(
 
 
 @tool
-def vehicle_chasis_number_matches_NIID_records(vehicle_chasis_number: Annotated[str, "vehicle chasis number"]):
+def vehicle_chasis_number_matches_NIID_records(vehicle_chasis_number: Annotated[str, "the chasisNumber"]):
     """
     Verify vehicle chasis matches NIID internal database records.
     """
+    print("chasis: ", vehicle_chasis_number)
     # Simulate a registration match check
     if niid_data.get('status') == 'success' and niid_data.get('data')["ChassisNumber"] == vehicle_chasis_number:
         niid_data["message"] = "Yes, this vehicle chasis number matches NIID internal database records"
@@ -192,8 +193,8 @@ def item_cost_price_benchmarking_in_local_market(
     password = "JLg8m4aQ8n46nhC"
     
     # Create separate instances for each search to avoid sharing state
-    tokunbo_benchmarking = CostBenchmarking(email, password)
-    brand_new_benchmarking = CostBenchmarking(email, password)
+    tokunbo_benchmarking = CostBenchmarkingPlaywright(email, password)
+    brand_new_benchmarking = CostBenchmarkingPlaywright(email, password)
 
     try:
         import threading
@@ -247,8 +248,8 @@ vehicle_name_and_model_and_damaged_part: Annotated[str, "search for the damaged 
         password = "JLg8m4aQ8n46nhC"
         
         # Create separate instances for each search to avoid sharing state
-        tokunbo_benchmarking = CostBenchmarking(email, password)
-        brand_new_benchmarking = CostBenchmarking(email, password)
+        tokunbo_benchmarking = CostBenchmarkingPlaywright(email, password)
+        brand_new_benchmarking = CostBenchmarkingPlaywright(email, password)
         if market_prices != {}:
             tokunbo_analysis = tokunbo_benchmarking.run_with_expected_range(vehicle_name_and_model_and_damaged_part,market_prices["tokunbo"])
             brand_new_analysis = brand_new_benchmarking.run_with_expected_range(vehicle_name_and_model_and_damaged_part,market_prices["brand_new"])

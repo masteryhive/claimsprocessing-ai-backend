@@ -1,7 +1,5 @@
 # Ensure the logs directory exists
-import inspect
-import logging
-import os
+import logging,os,inspect,sys,traceback
 
 
 LOG_DIR = "logs"
@@ -18,36 +16,42 @@ logging.basicConfig(
 # Logger instance
 logger = logging.getLogger("production_logger")
 
+
 def log_info(message: str):
     """
-    Log an error message to the systems.log file.
+    Log an info message to the systems.log file.
 
     Args:
-        message (str): The error message to log.
+        message (str): The message to log.
     """
     try:
-        # Capture the current function and line number
         frame = inspect.currentframe().f_back
         function_name = frame.f_code.co_name
         line_number = frame.f_lineno
         logger.info(f"{message} [Function: {function_name}, Line: {line_number}]")
     except Exception as e:
-        # Fallback if logging fails
-        print(f"Failed to log error: {e}")
+        print(f"Failed to log info: {e}")
 
-def log_error(message: str):
+def log_error(message: str, exc_info=None):
     """
-    Log an error message to the systems.log file.
+    Log an error message with exception traceback if available.
 
     Args:
         message (str): The error message to log.
+        exc_info: Exception information (optional). If None, will try to get current exception.
     """
     try:
-        # Capture the current function and line number
-        frame = inspect.currentframe().f_back
-        function_name = frame.f_code.co_name
-        line_number = frame.f_lineno
-        logger.error(f"{message} [Function: {function_name}, Line: {line_number}]")
+        if exc_info is None:
+            exc_info = sys.exc_info()
+        
+        if exc_info[0] is not None:  # If there's an active exception
+            error_msg = f"{message}\n{''.join(traceback.format_exception(*exc_info))}"
+        else:
+            frame = inspect.currentframe().f_back
+            function_name = frame.f_code.co_name
+            line_number = frame.f_lineno
+            error_msg = f"{message} [Function: {function_name}, Line: {line_number}]"
+            
+        logger.error(error_msg)
     except Exception as e:
-        # Fallback if logging fails
         print(f"Failed to log error: {e}")

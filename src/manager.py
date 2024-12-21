@@ -1,3 +1,4 @@
+import sys
 from typing import Any, Dict
 import asyncio, multiprocessing, time, uuid
 from langchain_core.messages import HumanMessage
@@ -52,13 +53,13 @@ def process_message(body: bytes):
         # Fetch and process claim data
         claim_data = get_claim_from_database(claim_request.model_dump())
         claim_data["dateClaimFiled"] = _new_get_datetime(claim_data["createdAt"])
-
+        print("\n",claim_data,"\n\n")
         # Process URLs if present
         if claim_data.get("resourceUrls"):
             loop = asyncio.get_event_loop()
             result = loop.run_until_complete(classify_supporting_documents(claim_data))
             claim_data = result
-        print(claim_data)
+        claim_id = claim_data["id"]
         # Type-specific claim data processing
         claim_data = (
             AccidentClaimData(**claim_data)
@@ -67,14 +68,14 @@ def process_message(body: bytes):
         )
 
         # Update claim and task statuses
-        update_claim_status_database(claim_data.id, status=TaskStatus.PENDING)
+        update_claim_status_database(claim_id, status=TaskStatus.PENDING)
 
         task.status = TaskStatus.RUNNING
         db.commit()
         db.refresh(task)
 
-        update_claim_status_database(claim_data.id, status=TaskStatus.RUNNING)
-        # print("\n\n",claim_data,"\n")
+        update_claim_status_database(claim_id, status=TaskStatus.RUNNING)
+        print("\naccident_formatted\n",claim_data,"\n")
         # Process claim workflow
         team_summaries: Dict[str, Any] = {}
         for s in super_graph.stream(
@@ -96,7 +97,7 @@ def process_message(body: bytes):
                 control_workflow(
                     db,
                     claim_data.model_dump(),
-                    claim_data.id,
+                    claim_id,
                     claim_request,
                     task,
                     s,
@@ -108,7 +109,7 @@ def process_message(body: bytes):
                     break
 
     except Exception as e:
-        log_error(f"Claim processing error: {e}")
+        log_error(f"Claim processing error: {e}", sys.exc_info())
         # Consider adding logic to handle unprocessable messages
 
     finally:

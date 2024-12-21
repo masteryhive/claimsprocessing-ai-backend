@@ -38,6 +38,10 @@ ENV ENV="production" \
 COPY --from=builder /usr/local/lib/python3.12/site-packages /usr/local/lib/python3.12/site-packages
 COPY --from=builder /usr/local/bin /usr/local/bin
 
+# Install Playwright browsers
+RUN poetry run playwright install chromium \
+    && poetry run playwright install-deps chromium
+    
 # Copy the application code into the container
 COPY . /app
 

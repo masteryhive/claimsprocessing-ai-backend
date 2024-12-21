@@ -20,14 +20,12 @@ class ProcessClaimTask(BaseModel):
         }
 
 class AccidentClaimData(BaseModel):
-    id: int
     nameOfInsured: str
     policyNumber: str
     addressOfInsured: str
     phoneNumberOfInsured: str
     declaration: bool
     signature: str
-    status: str
     signatureDate: str
     extentOfLossOrDamage: List[Union[dict,str]]
     particularsAddress: str

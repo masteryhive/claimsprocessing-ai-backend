@@ -17,7 +17,7 @@ def extract_from_policy_details(text:str,discoveries:list):
     details_html = "<ul>\n" + "\n".join(f"<li>{line.strip()}</li>" for line in details_lines if line.strip()) + "\n</ul>"
 
     return {
-        "coverageStatus": coverage_status+"<br>"+policy_status,
+        "coverageStatus": coverage_status+"<br/>"+policy_status,
         "policyReview": details_html,
-        "discoveries": discoveries + ["\n\n" +details_html]
+        "discoveries": discoveries + ["<br/><br/>" +details_html]
     }

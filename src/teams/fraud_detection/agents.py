@@ -61,7 +61,8 @@ vehicle_fraud_investigator_agent  = create_tool_agent(
         verify_vehicle_matches_preloss_using_SSIM,
            validate_if_this_is_a_real_vehicle,
            vehicle_chasis_number_matches_NIID_records,
-           check_NIID_database_to_confirm_vehicle_insurance
+           check_NIID_database_to_confirm_vehicle_insurance,
+           verify_vehicle_matches_preloss_using_SSIM
            ],
     system_prompt=_load_prompt_template()["VEHICLE_FRAUD_INVESTIGATOR_AGENT_SYSTEM_PROMPT"],
 )

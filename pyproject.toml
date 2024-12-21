@@ -37,6 +37,8 @@ en_core_web_sm = {url = "https://github.com/explosion/spacy-models/releases/down
 llama-index-multi-modal-llms-gemini = "^0.4.1"
 llama-index-llms-gemini = "^0.4.1"
 llama-index-llms-vertex = "^0.4.2"
+pytest = "^8.3.4"
+playwright = "^1.49.1"
 
 
 [build-system]
