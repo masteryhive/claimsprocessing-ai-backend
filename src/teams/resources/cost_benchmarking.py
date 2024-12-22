@@ -595,9 +595,6 @@ class CostBenchmarkingPlaywright:
         # First remove outliers
         cleaned_prices = self.remove_outliers(market_prices)
 
-        # print(f"\nOriginal number of prices: {len(market_prices)}")
-        # print(f"Number of prices after removing outliers: {len(cleaned_prices)}")
-
         result = self.new_analyze_price_realism(cleaned_prices, quoted_price)
         status = ""
         if result["is_realistic"]:

@@ -1,4 +1,3 @@
-
 from pydantic import BaseModel
 from src.ai.llm import llm
 from src.config.appconfig import env_config
@@ -19,63 +18,21 @@ from src.teams.document_processing.agents import (
     document_check_graph,
 )
 from typing import Literal
-from langgraph.graph import StateGraph,  START, END
+from langgraph.graph import StateGraph, START, END
 from langchain_core.messages import HumanMessage, AIMessage
 
 # Get application settings
 settings = get_setting()
 
-members = ["claim_form_screening_team", "policy_review_team","fraud_detection_team","settlement_offer_team", "summary_team"]
+members = [
+    "claim_form_screening_team",
+    "policy_review_team",
+    "fraud_detection_team",
+    "settlement_offer_team",
+    "summary_team",
+]
 
 options = ["FINISH"] + members
-
-# system_prompt = """You are a claims processing supervisor responsible for managing a conversation between the following departmental teams: {members}. Your primary objective is to efficiently coordinate tasks while minimizing unnecessary back-and-forth communication.
-
-
-# Operational Hierarchy:
-# STAGE 1 - Document Checking
-
-# Assign the claim_form_screening_team to verify the completeness and validity of documents and supporting evidence.
-# If the claim_form_screening_team reports missing documents or inappropriate evidence, immediately skip to STAGE 3.
-# If all documents are valid and complete, skip directly to STAGE 2.
-
-# STAGE 3 - Operations Summary
-
-# Assign the summary_team to prepare a comprehensive report summarizing the status of operations from all teams.
-# Provide the summary_team with the claimant's data for inclusion in the report.
-# FINISH
-
-# When the summary_team completes their report, respond with "FINISH" to indicate the process is complete.
-# Instructions:
-# Do not engage in unnecessary conversations or revalidate previous results.
-# Accept the claim_form_screening_team's report as-is and transition directly to the appropriate next stage.
-# Given the task and responses below, determine the next team to act based on the hierarchy and report outcomes.
-# Always respond with one of the following options: {options}.
-# Additional Guidelines:
-# If the claim_form_screening_team identifies issues, skip STAGE 2 and proceed directly to STAGE 3 for reporting.
-# Avoid redundant communication with teams that have already provided their results.
-# Do not use special characters like *, #, etc., in your response.
-# Example Workflow:
-# STAGE 1:
-
-# claim_form_screening_team responds: "Documents are complete and valid. Status: Verified."
-# Skip to policy_review_team for STAGE 2.
-# STAGE 2:
-
-# policy_review_team responds: "Policy is valid and active. Status: Approved."
-# Proceed to summary_team for STAGE 3.
-# STAGE 3:
-
-# summary_team responds: "Operations report prepared. Status: Completed."
-# Respond with "FINISH".
-# Handling Issues:
-
-# If the claim_form_screening_team reports missing/incomplete documents, skip STAGE 2 and proceed directly to the summary_team for a report.
-# If the policy_review_team identifies any policy issues, proceed immediately to the summary_team to create a report and stop further processing.
-
-# Given the following task, respond with the team to act next. Each team will perform a task and respond with their results and status. 
-# \n{format_instructions}\n
-# """
 
 system_prompt = """
 Role: Claims Processing Supervisor
@@ -149,21 +106,24 @@ to the summary team before closing the task.
 Given the following task and conversation history, the next worker to act MUST follow this flow: claim_form_screening_team -> policy_review_team -> fraud_detection_team -> summary_team.
 Select one of: {options} 
 \n{format_instructions}\n
-
-
 """
+
+
 class Router(BaseModel):
     """Worker to route to next. If no workers needed, route to FINISH."""
 
     next: Literal[*options]
 
+
 teams_supervisor_node = create_supervisor_node(system_prompt, llm, Router, members)
+
 
 def call_doc_team(state: AgentState) -> AgentState:
     response = document_check_graph.invoke(
         {
             "messages": [state["messages"][-1]],
             "agent_history": state["agent_history"],
+            "claim_form_json": state["claim_form_json"],
         }
     )
     return {
@@ -178,55 +138,59 @@ def call_pol_team(state: AgentState) -> AgentState:
         {
             "messages": [state["messages"][-1]],
             "agent_history": state["agent_history"],
+            "claim_form_json": state["claim_form_json"],
         }
     )
     return {
         "messages": [
             HumanMessage(
-                content=response["messages"][-1].content, name="policy_review_team"
+                content=response["messages"][-1].content, name=members[1]
             )
         ]
     }
+
 
 def call_fraud_team(state: AgentState) -> AgentState:
     response = fraud_detection_graph.invoke(
         {
             "messages": [state["messages"][-1]],
             "agent_history": state["agent_history"],
+            "claim_form_json": state["claim_form_json"],
         }
     )
     return {
         "messages": [
-            HumanMessage(
-                content=response["messages"][-1].content, name="policy_review_team"
-            )
+            HumanMessage(content=response["messages"][-1].content, name=members[2])
         ]
     }
+
 
 def call_settlement_offer_team(state: AgentState) -> AgentState:
     response = settlement_offer_graph.invoke(
         {
             "messages": [state["messages"][-1]],
             "agent_history": state["agent_history"],
+            "claim_form_json": state["claim_form_json"],
         }
     )
     return {
         "messages": [
-            HumanMessage(
-                content=response["messages"][-1].content, name="settlement_offer_team"
-            )
+            HumanMessage(content=response["messages"][-1].content, name=members[3])
         ]
     }
+
+
 def call_summary_team(state: AgentState) -> AgentState:
     response = report_graph.invoke(
         {
             "messages": [state["messages"][-1]],
             "agent_history": state["agent_history"],
+            "claim_form_json": state["claim_form_json"],
         }
     )
     return {
         "messages": [
-            HumanMessage(content=response["messages"][-1].content, name="summary_team")
+            HumanMessage(content=response["messages"][-1].content, name=members[4])
         ]
     }
 
@@ -248,10 +212,11 @@ super_builder.add_node(members[1], call_pol_team)
 super_builder.add_node(members[2], call_fraud_team)
 super_builder.add_node(members[3], call_settlement_offer_team)
 super_builder.add_node(members[4], call_summary_team)
+
 # Define the control flow
 super_builder.add_edge(START, "supervisor")
 # We want our teams to ALWAYS "report back" to the top-level supervisor when done
-super_builder.add_edge("supervisor",members[0])
+super_builder.add_edge("supervisor", members[0])
 super_builder.add_edge(members[0], members[1])
 super_builder.add_edge(members[1], members[2])
 super_builder.add_edge(members[2], members[3])

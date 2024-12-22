@@ -96,8 +96,7 @@ def verify_vehicle_matches_preloss_using_SSIM_func(prelossUrl: str, claimUrl: st
             "claimUrl": claimUrl
         }
         ]
-        print(claimant_incident_detail)
-        print("\n", ssim_data)
+
         resp = SSIM(claimant_incident_detail,ssim_data)
         return resp
     except Exception as e:
@@ -110,30 +109,6 @@ verify_vehicle_matches_preloss_using_SSIM = StructuredTool.from_function(
     args_schema=SSIMInput,
     return_direct=True,
 )
-# @tool
-# def verify_vehicle_matches_preloss_using_SSIM(
-#     ssim_data: Annotated[Any, "the ssim data from the claim form json."],
-#     claimant_incident_detail: Annotated[str, "the description of the incident that happened to the user e.g. A reckless driver hit my car from behind and broke breaking my rear lights."],
-# ):
-#     """
-#     Use this tool to verify if the damages in the claim being filed for this vehicle matches its pre-loss condition using Structural Similarity Index (SSIM).
-    
-#     Args:
-#     policy_number (str): The claimant's policy number.
-#     claimant_incident_detail (str): A description of the incident that happened to the user, e.g., "A reckless driver hit my car from behind and broke my rear lights."
-#     the_url_in_evidenceSourceUrl_of_the_damaged_vehicle_from_the_evidenceProvided_json (str): The URL of the evidence source of the damaged vehicle to be reviewed.
-    
-#     Returns:
-#     dict: A response indicating the result of the SSIM analysis, or an error message if the process fails.
-#     """
-#     try:
-
-#         print(claimant_incident_detail)
-#         print("\n", ssim_data)
-#         resp = SSIM(claimant_incident_detail,ssim_data)
-#         return resp
-#     except Exception as e:
-#         return {"status": "error", "message": str(e)}
 
 @tool
 def validate_if_this_is_a_real_vehicle(vehicle_information: Annotated[str, "vehicle make and brand. e.g toyota corolla 2012"]):
@@ -169,7 +144,6 @@ def vehicle_chasis_number_matches_NIID_records(vehicle_chasis_number: Annotated[
     """
     Verify vehicle chasis matches NIID internal database records.
     """
-    print("chasis: ", vehicle_chasis_number)
     # Simulate a registration match check
     if niid_data.get('status') == 'success' and niid_data.get('data')["ChassisNumber"] == vehicle_chasis_number:
         niid_data["message"] = "Yes, this vehicle chasis number matches NIID internal database records"
@@ -179,87 +153,74 @@ def vehicle_chasis_number_matches_NIID_records(vehicle_chasis_number: Annotated[
 
 ############## damage cost fraud ##################
 
-market_prices = {}
+# Create a singleton instance at module level
+_benchmarking_instance = None
+
+def get_benchmarking_instance():
+    global _benchmarking_instance
+    if _benchmarking_instance is None:
+        email = "sam@masteryhive.ai"
+        password = "JLg8m4aQ8n46nhC"
+        _benchmarking_instance = CostBenchmarkingPlaywright(email, password)
+    return _benchmarking_instance
 
 @tool
 def item_cost_price_benchmarking_in_local_market(
-    vehicle_name_and_model_and_damaged_part: Annotated[str, "search for the damaged parts from the supporting evidence picture using this term `{{vehicle_name}} {{damaged_part}}. e.g Honda civic side mirror"],
-    quoted_cost: Annotated[str, "the quoted cost from supporting evidence like invoice, required to fix the damage."]
+    vehicle_name_and_model_and_damaged_part: Annotated[str, "search term"],
+    quoted_cost: Annotated[str, "quoted cost"]
 ) -> str:
     """
     Benchmarks the quoted cost for vehicle repairs against local market prices.
     """
-    email = "sam@masteryhive.ai"
-    password = "JLg8m4aQ8n46nhC"
+    benchmarking = get_benchmarking_instance()
     
-    # Create separate instances for each search to avoid sharing state
-    tokunbo_benchmarking = CostBenchmarkingPlaywright(email, password)
-    brand_new_benchmarking = CostBenchmarkingPlaywright(email, password)
-
     try:
-        import threading
-        global market_price
-        def fetch_tokunbo_prices():
-            nonlocal tokunbo_prices
-            tokunbo_prices = tokunbo_benchmarking.fetch_market_data(f"{vehicle_name_and_model_and_damaged_part} tokunbo")
-
-        def fetch_brand_new_prices():
-            nonlocal brand_new_prices
-            brand_new_prices = brand_new_benchmarking.fetch_market_data(f"{vehicle_name_and_model_and_damaged_part} brand new")
-
-        tokunbo_prices = []
-        brand_new_prices = []
-
-        thread_tokunbo = threading.Thread(target=fetch_tokunbo_prices)
-        thread_brand_new = threading.Thread(target=fetch_brand_new_prices)
-
-        thread_tokunbo.start()
-        thread_brand_new.start()
-
-        thread_tokunbo.join()
-        thread_brand_new.join()
+        global market_prices
+        tokunbo_prices = benchmarking.fetch_market_data(f"{vehicle_name_and_model_and_damaged_part} tokunbo")
+        brand_new_prices = benchmarking.fetch_market_data(f"{vehicle_name_and_model_and_damaged_part} brand new")
+        
         market_prices = {
             "tokunbo": tokunbo_prices,
             "brand_new": brand_new_prices
         }
-        # Only analyze if we got prices
+        
         if tokunbo_prices and brand_new_prices:
             quoted_cost_value = float(quoted_cost.replace("\u20a6", "").replace(",", ""))
-            tokunbo_analysis = tokunbo_benchmarking.analyze_price(tokunbo_prices, quoted_cost_value)
-            brand_new_analysis = brand_new_benchmarking.analyze_price(brand_new_prices, quoted_cost_value)
+            tokunbo_analysis = benchmarking.analyze_price(tokunbo_prices, quoted_cost_value)
+            brand_new_analysis = benchmarking.analyze_price(brand_new_prices, quoted_cost_value)
+            print(f"FAIRLY USED (Tokunbo):\n{tokunbo_analysis}\n\nBRAND NEW:\n{brand_new_analysis}")
             return f"FAIRLY USED (Tokunbo):\n{tokunbo_analysis}\n\nBRAND NEW:\n{brand_new_analysis}"
-        else:
-            return "Unable to fetch market prices. Please try again later."
-
+        return "Unable to fetch market prices. Please try again later."
     except Exception as e:
         print(f"Error in benchmarking: {e}")
         return "An error occurred while benchmarking the cost. Please try again later."
 
-
 @tool
 def item_pricing_evaluator(
-vehicle_name_and_model_and_damaged_part: Annotated[str, "search for the damaged parts from the supporting evidence picture using this term `{{vehicle_name}} {{damaged_part}}. e.g Honda civic side mirror"],
+    vehicle_name_and_model_and_damaged_part: Annotated[str, "search term"]
 ):
     """
      this cost evaluation tool checks the local market place for how much the damaged part is worth.
     """
+    benchmarking = get_benchmarking_instance()
+    print("ok")
     try:
-        email = "sam@masteryhive.ai"
-        password = "JLg8m4aQ8n46nhC"
-        
-        # Create separate instances for each search to avoid sharing state
-        tokunbo_benchmarking = CostBenchmarkingPlaywright(email, password)
-        brand_new_benchmarking = CostBenchmarkingPlaywright(email, password)
-        if market_prices != {}:
-            tokunbo_analysis = tokunbo_benchmarking.run_with_expected_range(vehicle_name_and_model_and_damaged_part,market_prices["tokunbo"])
-            brand_new_analysis = brand_new_benchmarking.run_with_expected_range(vehicle_name_and_model_and_damaged_part,market_prices["brand_new"])
+        if market_prices:
+            tokunbo_analysis = benchmarking.run_with_expected_range(
+                vehicle_name_and_model_and_damaged_part,
+                market_prices["tokunbo"]
+            )
+            brand_new_analysis = benchmarking.run_with_expected_range(
+                vehicle_name_and_model_and_damaged_part,
+                market_prices["brand_new"]
+            )
             return f"FAIRLY USED (Tokunbo):\n{tokunbo_analysis}\n\nBRAND NEW:\n{brand_new_analysis}"
-        else:
-            return "Unable to fetch market prices. Please try again later."
+        return "Unable to fetch market prices. Please try again later."
     except Exception as e:
         return "sorry, this tool can not be used at the moment"
+    
 
-
+################### other checks ################
 @tool
 def claimant_location_check(claimant_id: str, location: str):
     """
@@ -290,63 +251,3 @@ def drivers_license_status_check(driver_license_number: Annotated[str, "claimant
     return {"status": "clear", "message": "Driver's license is valid."}
 
 
-
-# @tool
-# #def fraud_detection_tool(risk_indicators: Annotated[str, "the weights from each tool used in a list. e.g [0.12,0.15,0.13,0.18,0.12,0.05,0.10,0.15]"]) -> str:
-# def fraud_detection_tool(risk_indicators: Annotated[dict, 'A JSON string of risk indicators from fraud detection tools e.g {"claimant_exists": 0.12, "policy_status_check": 0.15, "vehicle_insurance_check": 0.13, "item_pricing_benchmarking": 0.18, "ghost_claims_vehicle_check": 0.12, "vehicle_registration_match": 0.05, "rapid_policy_claims_check": 0.10, "drivers_license_status_check": 0.15}']) -> Dict[str, Union[Dict[str, float], float, Dict[str, bool]]]:
-#     """
-#     This tool is used to calculate the fraud risk score from the weights of the investigator checks.
-#     """
-#     # Predefined weights for each fraud detection tool
-#     weights = {
-#         "claimant_exists": 0.12,
-#         "policy_status_check": 0.15,
-#         "vehicle_insurance_check": 0.13,
-#         "item_pricing_benchmarking": 0.18,
-#         "ghost_claims_vehicle_check": 0.12,
-#         "vehicle_registration_match": 0.05,
-#         "rapid_policy_claims_check": 0.10,
-#         "drivers_license_status_check": 0.15,
-#     }
-    
-#     # Validate input matches expected tools
-#     if set(risk_indicators.keys()) != set(weights.keys()):
-#         return "Mismatch between input indicators and expected fraud risk indicators. Please check your input!"
-    
-#     # Risk scoring
-#     risk_scores = {}
-#     total_risk_score = 0
-#     results = {}
-    
-#     # Calculate risk for each tool
-#     for tool, result in risk_indicators.items():
-#         # Determine if the tool indicates potential fraud
-#         is_fraud_indicator = result < weights[tool]
-        
-#         # Calculate risk score based on tool result and weight
-#         if is_fraud_indicator:
-#             tool_risk_score = weights[tool]
-#             total_risk_score += tool_risk_score
-#             risk_scores[tool] = tool_risk_score
-#             results[tool] = False
-#         else:
-#             risk_scores[tool] = result
-#             results[tool] = True
-    
-#     # Final risk score as a percentage
-#     final_risk_score = f"{total_risk_score:.0%}"  # Cap at 100%
-#     if total_risk_score <=15:
-#         fraud_level = "LOW"
-#     elif total_risk_score <= 50:
-#         fraud_level = "MEDIUM"
-#     else:
-#         fraud_level = "HIGH"
-#     res = {
-#         "indicator_risk_scores": risk_scores,
-#         "fraud_risk_score": final_risk_score,
-#         "indicators_used": results,
-#         "fraud_risk_level": fraud_level,
-#     }
-#     return res
-
-# implement SSIM

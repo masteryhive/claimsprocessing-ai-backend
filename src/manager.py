@@ -1,7 +1,7 @@
-import sys
+import sys,json
 from typing import Any, Dict
 import asyncio, multiprocessing, time, uuid
-from langchain_core.messages import HumanMessage
+from langchain_core.messages import HumanMessage,AIMessage,BaseMessage
 from src.teams.resources.helpers import get_preloss
 from src.error_trace.errorlogger import log_error, log_info
 from src.teams.resources.document_understanding import classify_supporting_documents
@@ -86,11 +86,13 @@ def process_message(body: bytes):
                             "Important information:"
                             "\nThis service is currently run in Nigeria, this means:"
                             "\n1. The currency is \u20a6"
-                            f"\n\nBegin this claim processing:\n{claim_data}"
+                            f"\n\nBegin this claim processing using this claim form JSON data:\n {claim_data.model_dump()}"
                             "\n\nYOU MUST USE THE SUMMARY TEAM TO PRESENT THE RESULT OF THIS TASK."
                         )
                     )
-                ]
+                ],
+                "claim_form_json":[HumanMessage(
+                        content=json.dumps(claim_data.model_dump()))]
             }
         ):
             if "__end__" not in s:
@@ -105,7 +107,7 @@ def process_message(body: bytes):
                 )
 
                 if "summary_team" in s:
-                    log_error("Summary team has completed processing.")
+                    log_info("Summary team has completed processing.")
                     break
 
     except Exception as e:

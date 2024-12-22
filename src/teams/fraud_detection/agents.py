@@ -51,14 +51,16 @@ def _load_prompt_template() -> str:
 
 claim_form_fraud_investigator_agent = create_tool_agent(
     llm=llm,
-    tools=[verify_this_claimant_exists_as_a_customer,investigate_if_this_claimant_is_attempting_a_rapid_policy_claim],
+    tools=[
+        verify_this_claimant_exists_as_a_customer,
+           investigate_if_this_claimant_is_attempting_a_rapid_policy_claim
+           ],
     system_prompt=_load_prompt_template()["CLAIMS_FORM_FRAUD_INVESTIGATOR_AGENT_SYSTEM_PROMPT"],
 )
 
 vehicle_fraud_investigator_agent  = create_tool_agent(
     llm=llm,
     tools=[
-        verify_vehicle_matches_preloss_using_SSIM,
            validate_if_this_is_a_real_vehicle,
            vehicle_chasis_number_matches_NIID_records,
            check_NIID_database_to_confirm_vehicle_insurance,
@@ -70,7 +72,7 @@ vehicle_fraud_investigator_agent  = create_tool_agent(
 damage_cost_fraud_investigator_agent = create_tool_agent(
     llm=llm,
     tools=[item_cost_price_benchmarking_in_local_market,
-          item_pricing_evaluator
+          # item_pricing_evaluator
            ],
     # tools=[],
     system_prompt=_load_prompt_template()["DAMAGE_COST_FRAUD_INVESTIGATOR_AGENT_SYSTEM_PROMPT"],
@@ -94,6 +96,7 @@ def comms_node(state):
         "messages": [state["messages"][-1]],
         "agent_history": state["agent_history"],
     }
+
     result = fraud_detection_clerk_agent.invoke(input)
     # respond back to the user.
     return {"messages": [result]}

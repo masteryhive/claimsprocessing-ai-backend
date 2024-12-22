@@ -155,7 +155,7 @@ PROCESS_CLERK_PROMPT: |
   </instruction>
 
   [TEMPLATE]
-  Policy Review Summary - ID: {{claim_id}}
+  Policy Review Summary
   {{a_brief_natural_introduction_of_the_case}} <-- e.g., "We've completed our review of Mr. Anderson's policy coverage for his recent claim..." -->
 
   Policy Details Summary:

@@ -25,11 +25,7 @@ class AccidentClaimData(BaseModel):
     addressOfInsured: str
     phoneNumberOfInsured: str
     declaration: bool
-    signature: str
-    signatureDate: str
     extentOfLossOrDamage: List[Union[dict,str]]
-    particularsAddress: str
-    particularsPhoneNo: str
     personInCharge: str
     addressOfPersonInCharge: str
     permissionConfirmation: str
@@ -50,11 +46,8 @@ class AccidentClaimData(BaseModel):
     yearOfManufacture: str
     chassisNumber: str
     engineNumber: str
-    locationAtTimeOfTheft: str
     dateOfDiscovery: Union[str,None]
-    discoveredBy: str
     vehicleLicenseNumber: str
-    dateReported: Union[str,None]
     policeStationName: str
     evidenceProvided: List[Any]
     ssim: dict

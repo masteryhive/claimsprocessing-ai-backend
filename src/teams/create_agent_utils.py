@@ -6,6 +6,7 @@ def crew_nodes(state, crew_member, name):
     input = {
         "messages": [state["messages"][-1]],
         "agent_history": state["agent_history"],
+        "claim_form_json":state["claim_form_json"]
     }
     result = crew_member.invoke(input)
     # add response to the agent history.

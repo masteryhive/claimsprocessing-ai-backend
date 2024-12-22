@@ -1,12 +1,11 @@
 from pathlib import Path
 from enum import Enum
 from pydantic import BaseModel
-from enum import Enum
 from src.ai.llm import llm
 from src.teams.resources.gen_mermaid import save_graph_mermaid
 from src.teams.create_agent import (
     AgentState,
-    create_ordinary_agent,
+    create_report_agent,
     create_supervisor_node,
 )
 from langgraph.graph import END, StateGraph, START
@@ -37,7 +36,7 @@ def _load_prompt_template() -> str:
         raise RuntimeError(f"Failed to load prompt template: {str(e)}")
 
 
-claim_adjuster_1_agent = create_ordinary_agent(
+claim_adjuster_1_agent = create_report_agent(
     _load_prompt_template()["CLAIM_ADJUSTER_SUMMARY_PROMPT"], llm
 )
 

@@ -1,5 +1,5 @@
 import operator
-from typing import Annotated, Sequence
+from typing import Annotated, Sequence, Any
 from typing_extensions import TypedDict
 from langchain_google_vertexai import ChatVertexAI
 from langchain_core.prompts import (
@@ -17,6 +17,8 @@ class AgentState(TypedDict):
     # The annotation tells the graph that new messages will always
     # be added to the current states
     messages: Annotated[Sequence[BaseMessage], operator.add]
+
+    claim_form_json: Annotated[Sequence[BaseMessage],operator.add]
     # The 'next' field indicates where to route to next
     next: str
 
@@ -39,22 +41,7 @@ def create_supervisor_node(system_prompt:str,llm:ChatVertexAI,SupervisorOutput:t
 
     return prompt | llm | supervisor_parser
 
-def create_ordinary_agent(system_prompt:str,llm: ChatVertexAI):
-    system_prompt_template = PromptTemplate(
-        template=system_prompt,
-        input_variables=["agent_history"],
-    )
 
-    system_message_prompt = SystemMessagePromptTemplate(prompt=system_prompt_template)
-
-    prompt = ChatPromptTemplate.from_messages(
-        [
-            system_message_prompt,
-            MessagesPlaceholder(variable_name="messages"),
-        ]
-    )
-
-    return prompt | llm
 
 def create_tool_agent(llm: ChatVertexAI, tools: list, system_prompt: str):
     """Helper function to create agents with custom tools and system prompt
@@ -74,10 +61,11 @@ def create_tool_agent(llm: ChatVertexAI, tools: list, system_prompt: str):
         + """
                 ONLY respond to the part of query relevant to your purpose.
                 IGNORE tasks you can't complete. 
+                The claim form submitted by the claimant to give you full access to the JSON form: \n{claim_form_json}\n.
                 Use the following context to answer your query 
                 if available: \n {agent_history} \n
                 """,
-        input_variables=["agent_history"],
+        input_variables=["agent_history","claim_form_json"],
     )
 
     # define system message
@@ -87,6 +75,7 @@ def create_tool_agent(llm: ChatVertexAI, tools: list, system_prompt: str):
         [
             system_message_prompt,
             MessagesPlaceholder(variable_name="messages"),
+            MessagesPlaceholder(variable_name="claim_form_json"),
             MessagesPlaceholder(variable_name="agent_scratchpad"),
         ]
     )
@@ -113,10 +102,11 @@ def create_tool_analyst_agent(llm: ChatVertexAI, tools: list, system_prompt: str
         template=system_prompt
         + """
                 ONLY respond to the part of query relevant to your purpose.
+                The claim form submitted by the claimant to give you full access to the JSON form: \n{claim_form_json}\n.
                 IGNORE tasks you can't complete.
                 Use the following context to compute the risk score based on the weights: \n {agent_history} \n
                 """,
-        input_variables=["agent_history"],
+        input_variables=["agent_history","claim_form_json"],
     )
 
     # define system message
@@ -136,6 +126,23 @@ def create_tool_analyst_agent(llm: ChatVertexAI, tools: list, system_prompt: str
     return executor
 
 def summarizer(system_prompt:str,llm: ChatVertexAI):
+    system_prompt_template = PromptTemplate(
+        template=system_prompt,
+        input_variables=["agent_history"],
+    )
+
+    system_message_prompt = SystemMessagePromptTemplate(prompt=system_prompt_template)
+
+    prompt = ChatPromptTemplate.from_messages(
+        [
+            system_message_prompt,
+            MessagesPlaceholder(variable_name="messages"),
+        ]
+    )
+
+    return prompt | llm
+
+def create_report_agent(system_prompt:str,llm: ChatVertexAI):
     system_prompt_template = PromptTemplate(
         template=system_prompt,
         input_variables=["agent_history"],
