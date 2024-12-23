@@ -175,6 +175,7 @@ DAMAGE_COST_FRAUD_INVESTIGATOR_AGENT_SYSTEM_PROMPT: |
                 - Single part: "Toyota Camry 2020 front bumper"
                 - Multiple similar damages: "Toyota Camry 2020 door panel"
               - DO NOT make separate calls for the same part type
+              - input to the tool should not be none or none type, if you do not have a cost to pass as input, do not use the tool.
               When processing multiple damages:
                 - Group similar damages together
                 - Make one price check per unique part type
@@ -275,6 +276,9 @@ PROCESS_CLERK_PROMPT: |
    - Finally, use the fraud_risk_analyst report to headline the final report.
   </instruction>
 
+  TEMPLATE USAGES TIPS:
+   - If the data for any template field is not available of provided, use the null value. e.g for price field null value will be 0.0
+
   [TEMPLATE]
   Fraud Detection Report - ID: {{claim_id}}
   {{review_summary}}
@@ -283,7 +287,7 @@ PROCESS_CLERK_PROMPT: |
   - Fraud Threshold score: {{fraud_score_from_the_fraud_risk_analyst}}
   - Damaged Part Repair Price From Local Market: 
     - Marginal Price for Fairly-used parts: {{the_fairly-used_item_cost_price_benmark_from_the_local_market}} <-- add currency symbol -->
-    - Marginal Price for Brand Ne partsw: {{the_brand_new_item_cost_price_benmark_from_the_local_market}}  <-- add currency symbol -->
+    - Marginal Price for Brand Ne parts: {{the_brand_new_item_cost_price_benmark_from_the_local_market}}  <-- add currency symbol -->
   - Key Concerns Identified: {{a_detailed_list_of_leading_indicators_from_which_the_fraud_is_suspected}}
 
   PreLoss Comparison:

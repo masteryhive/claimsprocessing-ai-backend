@@ -20,7 +20,7 @@ from src.manager import process_message
 init_vertexai()
 if __name__ == "__main__":
     # delete_claim_report_by_id(SessionLocal(),90)
-    process_message(b"91")
+    process_message(b"90")
 
 
 # {
