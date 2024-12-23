@@ -10,7 +10,9 @@ check if annual premium is paid or owe.
 check if policy is expired.
 
 check the image similarity between two images.
-fraud check does the policy doc match NIID
+
+**fraud check does the policy doc match NIID**
+
 Key majors:
 - Implement SSIM for two images
 - Fraud scenario
@@ -39,4 +41,5 @@ Marginal Price for Brand New parts: ₦55,000
 
 10. Pre-loss Comparison, should itemize the dents and not summarize. itemize the errors on the damaged vehicle from the SSIM and check if what was there is true. In the AI recommendation/discoveries discount what was not fraudlent and whta was found as fraudulent to show as evidence the settlement offer was generated
 
-11. go to jiji with the damages on the evidence provided -> check on SSIM -> show red X on what we will not pay for because they are pre-existing, and what we are paying for -> the customer says they want xxxx, but from what we identified, we will pay for yyyy.
+✅  11. go to jiji with the damages on the evidence provided -> check on SSIM -> show red X on what we will not pay for because they are pre-existing, and what we are paying for -> the customer says they want xxxx, but from what we identified, we will pay for yyyy.
+if invocie is not provided use the evaluator
