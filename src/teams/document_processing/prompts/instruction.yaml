@@ -26,9 +26,9 @@ STIRRINGAGENTSYSTEMPROMPT: |
   Example Workflow:
 
   Start with the claims_form_checker.
-  claims_form_checker responds: "Claim form is complete. Status: Valid."
+  claims_form_checker responds indicating claim form is complete. Status: Valid.
   Proceed to the supporting_evidence_checker.
-  supporting_evidence_checker responds: "All supporting documents are complete. Status: Verified."
+  supporting_evidence_checker responds indicating ll supporting documents are complete. Status: Verified.
   Respond with "FINISH" to indicate the task is complete.
   Context:
   Given the following task and conversation history, identify the next worker to act.
