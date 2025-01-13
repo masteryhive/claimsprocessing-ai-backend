@@ -1,5 +1,5 @@
 from pydantic import BaseModel
-from ai_models.llm import llm
+from src.ai_models.llm import llm
 from src.config.appconfig import env_config
 from src.teams.resources.gen_mermaid import save_graph_mermaid
 from src.teams.document_processing.agents import (

@@ -3,7 +3,7 @@ import asyncio
 from io import BytesIO
 from typing import Any, Dict, List
 import httpx, base64
-from ai_models.llm import llm_flash as llm
+from src.ai_models.llm import llm_flash as llm
 from src.config.appconfig import env_config
 from vertexai.generative_models import GenerativeModel, Part
 from PIL import Image

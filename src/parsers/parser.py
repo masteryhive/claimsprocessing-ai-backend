@@ -1,6 +1,6 @@
 from bs4 import BeautifulSoup
 import re
-from models.claim_processing import CreateClaimsReport
+from src.models.claim_processing import CreateClaimsReport
 
 
 def extract_claim_summary(data:str,team_summaries:dict) -> CreateClaimsReport:

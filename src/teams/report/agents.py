@@ -1,7 +1,7 @@
 from pathlib import Path
 from enum import Enum
 from pydantic import BaseModel
-from ai_models.llm import llm
+from src.ai_models.llm import llm
 from src.teams.resources.gen_mermaid import save_graph_mermaid
 from src.teams.create_agent import (
     AgentState,
@@ -21,7 +21,7 @@ def _load_prompt_template() -> str:
     """Load the instruction prompt template from YAML file."""
     try:
         prompt_path = Path(
-            "teams/report/prompts/instruction.yaml"
+            "src/teams/report/prompts/instruction.yaml"
         )
         if not prompt_path.exists():
             raise FileNotFoundError(f"Prompt template not found at {prompt_path}")

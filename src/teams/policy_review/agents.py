@@ -4,7 +4,7 @@ from pydantic import BaseModel
 from langgraph.graph import StateGraph, END
 from pathlib import Path
 from src.teams.create_agent_utils import crew_nodes
-from ai_models.llm import llm
+from src.ai_models.llm import llm
 from src.teams.resources.gen_mermaid import save_graph_mermaid
 from src.teams.policy_review.tools import *
 from src.teams.create_agent import *
@@ -23,7 +23,7 @@ def _load_prompt_template() -> str:
     """Load the instruction prompt template from YAML file."""
     try:
         prompt_path = Path(
-            "teams/policy_review/prompts/instruction.yaml"
+            "src/teams/policy_review/prompts/instruction.yaml"
         )
         if not prompt_path.exists():
             raise FileNotFoundError(f"Prompt template not found at {prompt_path}")
@@ -46,7 +46,7 @@ def _load_prompt_template() -> str:
 
 insurance_policy_essential_data_agent = create_tool_agent(
     llm=llm,
-    tools=[download_policy_document_from_storage,retrieve_all_essential_details_from_policy],
+    tools=[retrieve_all_essential_details_from_policy],
     system_prompt=_load_prompt_template()["INSURANCE_CLAIM_POLICY_DATA"],
 )
 

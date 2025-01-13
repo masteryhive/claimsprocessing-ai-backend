@@ -6,7 +6,7 @@ from langchain_google_vertexai import ChatVertexAI
 from PIL import Image
 from src.teams.resources.helpers import get_preloss
 from src.teams.resources.image_understanding import claims_image_evidence_recognizer
-from ai_models.llm import llm_flash
+from src.ai_models.llm import llm_flash
 
 
 def download_pdf(

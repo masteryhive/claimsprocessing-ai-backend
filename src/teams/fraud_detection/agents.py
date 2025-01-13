@@ -4,7 +4,7 @@ from pydantic import BaseModel
 from langgraph.graph import StateGraph, END
 from pathlib import Path
 from src.teams.create_agent_utils import crew_nodes
-from ai_models.llm import llm
+from src.ai_models.llm import llm
 from src.teams.resources.gen_mermaid import save_graph_mermaid
 from src.teams.fraud_detection.tools import *
 from src.teams.create_agent import *
@@ -24,7 +24,7 @@ def _load_prompt_template() -> str:
     """Load the instruction prompt template from YAML file."""
     try:
         prompt_path = Path(
-            "teams/fraud_detection/prompts/instruction.yaml"
+            "src/teams/fraud_detection/prompts/instruction.yaml"
         )
         if not prompt_path.exists():
             raise FileNotFoundError(f"Prompt template not found at {prompt_path}")

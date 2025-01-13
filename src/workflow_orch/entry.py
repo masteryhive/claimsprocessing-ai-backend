@@ -1,5 +1,5 @@
 # import asyncio
-# from parsers.fraud_team_parser import extract_from_fraud_checks
+# from src.parsersfraud_team_parser import extract_from_fraud_checks
 # from src.teams.resources.document_understanding import classify_supporting_documents
 # from datamodels.claim_processing import AccidentClaimData, TheftClaimData
 # from database.claim_processing.db_ops import get_claim_from_database,delete_claim_report_by_id
@@ -9,7 +9,7 @@ from workflow_orch.manager import process_message
 # from ai.claims_processing.teams.document_processing.agents import (
 #     document_check_graph,
 # )
-# from parsers.settlement_team_parser import extract_from_settlement_offer
+# from src.parserssettlement_team_parser import extract_from_settlement_offer
 # from config.db_setup import SessionLocal
 # from ai.claims_processing.teams.policy_review.agents import policy_review_graph
 # from src.teams.fraud_detection.agents import fraud_detection_graph

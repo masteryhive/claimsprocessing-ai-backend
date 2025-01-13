@@ -4,18 +4,18 @@ from typing import Dict, Any
 from colorama import init, Fore, Style
 import textwrap
 from sqlalchemy.orm import Session
-from parsers.settlement_team_parser import extract_from_settlement_offer
-from parsers.fraud_team_parser import extract_from_fraud_checks
-from database.schemas import Task, TaskStatus
-from database.db_ops import (
+from src.parsers.settlement_team_parser import extract_from_settlement_offer
+from src.parsers.fraud_team_parser import extract_from_fraud_checks
+from src.database.schemas import Task, TaskStatus
+from src.database.db_ops import (
     save_claim_report_database,
     update_claim_report_database,
     update_claim_status_database,
 )
-from models.claim_processing import ProcessClaimTask
-from parsers.doc_team_parser import extract_from_claim_processing
-from parsers.policy_review_team_parser import extract_from_policy_details
-from parsers.parser import extract_claim_summary
+from src.models.claim_processing import ProcessClaimTask
+from src.parsers.doc_team_parser import extract_from_claim_processing
+from src.parsers.policy_review_team_parser import extract_from_policy_details
+from src.parsers.parser import extract_claim_summary
 from src.teams.stirring_agent import members
 from langchain_core.messages import HumanMessage
 from src.config.appconfig import env_config
