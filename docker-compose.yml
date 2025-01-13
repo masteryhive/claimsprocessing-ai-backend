@@ -1,34 +1,12 @@
-services:
-  api_service:
-    build:
-      context: ./src/api
-      dockerfile: Dockerfile
-    hostname: api_service
-    container_name: api_service
-    restart: unless-stopped
-    ports:
-      - "8000:8000"
-    environment:
-      - PYTHON_ENV=${PYTHON_ENV}
-      - PORT=${PORT}
-      - AUTH_USERNAME=${AUTH_USERNAME}
-      - AUTH_PASSWORD=${AUTH_PASSWORD}
-    # env_file:
-    #   - src/api/.env
-    volumes:
-      - ./src/api:/home/api
-    networks:
-      - claimsprocessing_net
+# version: '3.8'
 
-  ai_workflow:
+services:
+  app:
+    image: claimprocessing-ai-backend
     build:
-      context: ./src/ai_workflow
-      dockerfile: Dockerfile
-    hostname: ai_workflow
-    container_name: ai_workflow
-    restart: unless-stopped
+      context: .
     ports:
-      - "50051:50051"
+      - "8080:8080"
     environment:
       - PYTHON_ENV=${PYTHON_ENV}
       - PORT=${PORT}
@@ -43,12 +21,4 @@ services:
       - DB_PASSWORD=${DB_PASSWORD}
       - DB_USER=${DB_USER}
       - DB_PORT=${DB_PORT}
-    # env_file:
-    #   - src/ai_workflow/.env
-    volumes:
-      - ./src/ai_workflow:/home/ai_workflow
-    networks:
-      - claimsprocessing_net
-
-networks:
-  claimsprocessing_net: 
+      - AMQP=${AMQP}
