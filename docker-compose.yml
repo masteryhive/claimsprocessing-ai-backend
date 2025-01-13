@@ -13,8 +13,8 @@ services:
       - PORT=${PORT}
       - AUTH_USERNAME=${AUTH_USERNAME}
       - AUTH_PASSWORD=${AUTH_PASSWORD}
-    env_file:
-      - src/api/.env
+    # env_file:
+    #   - src/api/.env
     volumes:
       - ./src/api:/home/api
     networks:
@@ -43,8 +43,8 @@ services:
       - DB_PASSWORD=${DB_PASSWORD}
       - DB_USER=${DB_USER}
       - DB_PORT=${DB_PORT}
-    env_file:
-      - src/ai_workflow/.env
+    # env_file:
+    #   - src/ai_workflow/.env
     volumes:
       - ./src/ai_workflow:/home/ai_workflow
     networks:
