@@ -1,0 +1,13 @@
+syntax = "proto3";
+
+package claims_processing;
+
+import "google/protobuf/empty.proto";
+
+message ClaimsRequest {
+  string claimId = 1;
+}
+
+service ClaimsProcessing {
+  rpc ProcessClaim(ClaimsRequest) returns (google.protobuf.Empty) {}
+}

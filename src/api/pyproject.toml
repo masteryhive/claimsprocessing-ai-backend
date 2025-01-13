@@ -1,0 +1,25 @@
+[tool.poetry]
+name = "api"
+version = "0.1.0"
+description = ""
+authors = ["Ayo Tosan Samuel <46663234+Stosan@users.noreply.github.com>"]
+package-mode = false
+
+[tool.poetry.dependencies]
+python = "^3.12"
+fastapi = "^0.115.6"
+uvicorn = {extras = ["standard"], version = "^0.34.0"}
+protobuf = "^5.29.3"
+grpcio = "^1.69.0"
+grpcio-tools = "^1.69.0"
+grpc-interceptor = "^0.15.4"
+python-dotenv = "^1.0.1"
+pydantic = "^2.10.5"
+pydantic-settings = "^2.7.1"
+sqlalchemy = "^2.0.37"
+psycopg2-binary = "^2.9.10"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+package-mode = false
