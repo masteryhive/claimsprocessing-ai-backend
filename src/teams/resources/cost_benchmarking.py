@@ -10,7 +10,7 @@ import time
 import numpy as np
 from bs4 import BeautifulSoup
 from typing import List
-from error_trace.errorlogger import log_error
+from src.error_trace.errorlogger import log_error
 from playwright.sync_api import sync_playwright, Page
 class CostBenchmarking:
     def __init__(self, email:str, password:str):

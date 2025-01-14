@@ -7,6 +7,7 @@ from src.ai_models.model import init_vertexai
 from grpc_interceptor import ExceptionToStatusInterceptor
 
 from src.config.settings import Settings
+from src.config.appconfig import env_config
 from src.pb.claims_processing_pb2_grpc import add_ClaimsProcessingServicer_to_server
 from src.services.ai_workflow import ClaimsProcessingBaseService
 
@@ -17,7 +18,7 @@ init_vertexai()
 class ClaimProcessingService(ClaimsProcessingBaseService):
     pass
 
-port = os.environ.get("PORT", "8080")
+port = os.environ.get("PORT", env_config.app_port)
 
 def serve():
     interceptors = [ExceptionToStatusInterceptor()]
