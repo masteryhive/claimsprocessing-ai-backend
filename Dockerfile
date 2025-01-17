@@ -47,6 +47,9 @@ ENV ENV="production" \
 COPY --from=builder /usr/local/lib/python3.12/site-packages /usr/local/lib/python3.12/site-packages
 COPY --from=builder /usr/local/bin /usr/local/bin
 
+# Copy the pyproject.toml and poetry.lock files from the builder stage
+COPY --from=builder /app/pyproject.toml /app/poetry.lock* /app/
+
 # Install Playwright browsers
 RUN poetry run playwright install chromium \
     && poetry run playwright install-deps chromium
@@ -56,5 +59,5 @@ COPY . /app
 
 EXPOSE 8080
 
-# Use uvicorn to serve FastAPI without auto-reload for production
+# Use startup file for production
 CMD ["python","-m", "src.main"]
