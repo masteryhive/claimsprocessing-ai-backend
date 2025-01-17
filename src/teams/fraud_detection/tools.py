@@ -1,5 +1,6 @@
 
 import os
+from pathlib import Path
 from langchain_core.tools import tool
 from typing import Annotated, Any, Dict, List, Union
 from langchain_core.tools import StructuredTool
@@ -11,7 +12,7 @@ from src.teams.resources.retrieve_vehicle_policy import InsuranceDataExtractor
 
 
 ############## Fraud checks tool ##############
-rag_path = "src/rag/doc/"
+rag_path = Path(__file__).parent.parent / "policy_doc/"
 
 @tool
 def verify_this_claimant_exists_as_a_customer(
@@ -39,7 +40,7 @@ def investigate_if_this_claimant_is_attempting_a_rapid_policy_claim(date_claim_f
     """
     # Retrieve
     query = f"this claim is/was filed: {date_claim_filed}.\nRespond with only the date the policy start in this format November 16, 2024, and do nothing else. interprete the insurance period as DD/MM/YYYY."
-    resp = process_query(query=query,pdf_path=f"{rag_path}{policy_number.replace("/", "-")}.pdf")
+    resp = process_query(query=query,pdf_path=f"{rag_path}/{policy_number.replace("/", "-")}.pdf")
   
     from datetime import datetime
     def calc(date_claim_filed,resp):
