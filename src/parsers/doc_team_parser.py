@@ -1,7 +1,7 @@
 import re
 
 
-def extract_from_claim_processing(text):
+def extract_from_claim_processing(text:str):
     # Extract Type of Incident
     type_match = re.search(r"Type of incident:\s*(.+)", text)
     type_of_incident = type_match.group(1).strip() if type_match else ""

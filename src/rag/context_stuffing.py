@@ -1,16 +1,18 @@
 
 from datetime import datetime
-import os,requests,time
+import time
 from typing import Iterable
 from vertexai.preview.generative_models import (
     GenerationResponse,
     GenerativeModel,
+       GenerationConfig,
     HarmBlockThreshold,
     HarmCategory,
     Part
 )
 
-MODEL_NAME = "gemini-1.5-pro-002"  # Replace with model name
+
+MODEL_NAME = "gemini-1.5-pro-002" 
 
 model = GenerativeModel(MODEL_NAME)
 BLOCK_LEVEL = HarmBlockThreshold.BLOCK_ONLY_HIGH
@@ -19,71 +21,10 @@ def _get_datetime():
     now = datetime.now()
     return now.strftime("%B %d %Y")
 
-context_prompt = """
-Use the document above to answer the question below. Follow the Instructions and Suggestions below as a guide to answering the question.
-The current date(YYYY-MM-DD) is {current_date}.
-
-Confidence Scoring and Source Validation:
-  Each response must include the following validation information:
-  <validation>
-  - Confidence score: {{confidence_score}} (0.0-1.0)
-  - Context section cited: {{Section from context where answer was found, including page number}}
-  - Verification Status: {{verification_status}}
-  </validation>
-Confidence Scoring:
-  - VERIFIED (1.0): Direct from authenticated source.
-  - HIGHLY CONFIDENT (0.8-0.9): Multiple supporting sources.
-  - MODERATELY CONFIDENT (0.6-0.7): Limited but reliable sources.
-  - LOW CONFIDENCE (0.4-0.5): Inferred or uncertain.
-  - SPECULATIVE (<0.4): Requires verification.
-<Instructions>
-- First, analyze the question below and return which variables need to be analyzed, from what insured period (example: 06/11/2020 - 15/10), and any other details present in the question.
-- Then return an analysis of what is asked in the question.
-- Finally, carefully analyze the document above and answer the question below completely and correctly, using the variables determined in the previous step.
-- Explain how you arrived at this result.
-- Answer ONLY what was asked.
-CORE RESPONSE STRUCTURE:
-  <answer>
-  [your concise and relevant response here]
-  </answer>
-  <validation>
-  - Confidence score: {{confidence_score}} <-- (0.0-1.0) -->
-  - Context section cited: [Section from context where answer was found,including the page number]
-  </validation>
-<Instructions>
-<Suggestions>
-- The document above is a vehicle insurance policy document with various tables, graphs, infographics, lists, and additional information in text.
-- PAY VERY CLOSE ATTENTION to all the MEMORANDA, SCHEDULE, CLAUSE and VEHICLE POLICY section to answer the question below.
-- Use ONLY this document as context to answer the question below.
-</Suggestions>
-
-Example:
-<answer>
-- INSURED: Olalekan Adisa
-<br/> - POLICY NO: 0000980404
-<br/> - PERIOD OF INSURANCE: FROM: 16/06/2024 TO: 15/06/2025
-<br/> - POLICY STATUS: Active (as the current date is December 21, 2024, which falls within the policy period)
-<br/> - COVERAGE PLAN/STATUS: Comprehensive
-<br/> - ANNUAL PREMIUM: ₦180,000.00
-<br/> - PREMIUM PAID: ₦180,000.00
-<br/> - LIMITS OF LIABILITY:
-    <br/> - Section II-1(a) (Death or bodily injury to any other person): ₦3,000,000.00
-    <br/> - Section II-1(b) (Property damage): ₦3,000,000.00
-...
-</answer>
-<validation>
-- Confidence score: 1.0
-- Context section cited: The entire document, pages 1-22, was used to gather the necessary information.
-- Verification Status: VERIFIED
-</validation>
-
-<Question>
-From the policy_document, {question}
-</Question>
-answer:"""
 
 def generate(
     prompt: list,
+        response_schema:dict,
     max_output_tokens: int = 2048,
     temperature: int = 2,
     top_p: float = 0.4,
@@ -110,11 +51,12 @@ def generate(
     """
     responses = model.generate_content(
         prompt,
-        generation_config={
-            "max_output_tokens": max_output_tokens,
-            "temperature": temperature,
-            "top_p": top_p,
-        },
+          generation_config=GenerationConfig(
+            max_output_tokens=max_output_tokens,
+            top_p=top_p,
+            temperature=temperature,
+        response_mime_type="application/json", response_schema=response_schema
+    ),
         safety_settings={
             HarmCategory.HARM_CATEGORY_HATE_SPEECH: BLOCK_LEVEL,
             HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT: BLOCK_LEVEL,
@@ -126,59 +68,16 @@ def generate(
 
     return responses
 
-def download_pdf(reference: str,download_path:str):
-    base_url = "https://storage.googleapis.com/masteryhive-insurance-claims/rawtest/policy_document"
-    modified_reference = reference.replace("/", "-")
-
-    # Ensure the download directory exists
-    os.makedirs(download_path, exist_ok=True)
-
-    file_path = os.path.join(download_path, f"{modified_reference}.pdf")
-
-    # Check if file already exists
-    if os.path.exists(file_path):
-        return "File already exists"
 
 
-    # Download the file
-    file_url = f"{base_url}/{modified_reference}.pdf"
-    response = requests.get(file_url, stream=True)
-    if response.status_code == 200:
-        with open(file_path, 'wb') as f:
-            for chunk in response.iter_content(chunk_size=1024):
-                f.write(chunk)
-        return "File downloaded successfully"
-    else:
-        return f"Failed to download the file. HTTP status code: {response.status_code}"
-
-def delete_pdf(reference: str, download_path: str) -> str:
-    """
-    Delete a PDF file from the specified path.
     
-    Args:
-        reference: The reference ID of the PDF file
-        download_path: The directory path where the PDF is stored
-        
-    Returns:
-        str: Status message indicating success or failure
-    """
-    modified_reference = reference.replace("/", "-")
-    file_path = os.path.join(download_path, f"{modified_reference}.pdf")
-    
-    try:
-        if os.path.exists(file_path):
-            os.remove(file_path)
-            return "File deleted successfully"
-        return "File does not exist"
-    except Exception as e:
-        return f"Error deleting file: {str(e)}"
-    
-def retry_generate(pdf_document: Part, prompt: str, question: str):
+def retry_generate(pdf_document: Part, prompt: str,response_schema:dict):
     predicted = False
     while not predicted:
         try:
             response = generate(
-                prompt=[pdf_document, prompt.format(question=question,current_date=_get_datetime())]
+                prompt=[pdf_document, prompt.format(current_date=_get_datetime())],
+                response_schema=response_schema
             )
         except Exception as e:
             print("sleeping for 2 seconds ...")
@@ -189,9 +88,64 @@ def retry_generate(pdf_document: Part, prompt: str, question: str):
 
     return response
 
-def process_query(query: str,  pdf_path:str, prompt: str = context_prompt) -> None:
+def process_query(prompt: str,  pdf_path:str,response_schema:dict) -> str:
     with open(pdf_path, "rb") as fp:
         pdf_document = Part.from_data(data=fp.read(), mime_type="application/pdf")
 
-    response = retry_generate(pdf_document, prompt, query)
-    return response.text
+    response = retry_generate(pdf_document,prompt,response_schema)
+    return response.candidates[0].content.parts[0].text
+
+
+# response_schema = {
+#         "type": "object",
+#         "properties": {
+#    "PolicyBasics": {
+#                 "type": "object",
+#                 "properties": {
+#                     "PolicyPeriod": {
+#                      "type": "object",
+#                         "properties": {
+#                              "From": {
+#                                 "type":  "string",
+#                                 "description": "The start date of the policy period, typically found in sections labeled 'policy period' or 'coverage dates'.",
+#                             },
+#                               "To": {
+#                                 "type":  "string",
+#                                 "description": "The end date of the policy period, typically found in sections labeled 'policy period' or 'coverage dates'.",
+#                             },
+#                     },
+#                     },
+#                     "PolicyType": {
+#                         "type": "string",
+#                         "description": "Type of policy and coverage category (e.g., 'comprehensive', 'third-party').",
+#                     },
+#                     "PremiumDetails": {
+#                         "type": "object",
+#                         "properties": {
+#                             "AnnualPremium": {
+#                                 "type": "string",
+#                                 "description": "The annual premium amount, from terms such as 'yearly cost' or 'premium amount'.",
+#                             },
+#                             "PaidAmount": {
+#                            "type": "string",
+#                                 "description": "The amount already paid, sometimes labeled as 'installments paid'.",
+#                             },
+#                             "PaymentTerms": {
+#                                 "type": "string",
+#                                 "description": "Payment terms such as 'monthly', 'quarterly', or 'annually'.",
+#                             },
+#                         },
+#                     },
+#                     "PolicyholderDetails": {
+#                         "type": "string",
+#                         "description": "Details about the policyholder, from fields like 'insured name', 'customer info', etc.",
+#                     },
+#                 },
+#             },
+                    
+#                     }
+#     }
+
+
+# print(process_query("""Please, analyze this motor insurance policy document comprehensively and provide all information.
+# The current date(YYYY-MM-DD) is {current_date}.""",  "src/teams/policy_doc/ZG-P-1000-010101-22-000346.pdf",response_schema))

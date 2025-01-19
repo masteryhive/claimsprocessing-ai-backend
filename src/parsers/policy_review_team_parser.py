@@ -2,8 +2,8 @@ import re
 
 def extract_from_policy_details(text:str,discoveries:list):
     # Extract Coverage Status
-    coverage_match = re.search(r"Coverage Status:\s*(.+)", text)
-    coverage_status = coverage_match.group(1).strip() if coverage_match else ""
+    # coverage_match = re.search(r"Coverage Status:\s*(.+)", text)
+    # coverage_status = coverage_match.group(1).strip() if coverage_match else ""
 
     # Extract Details under Policy Details Summary
     details_match = re.search(r"Policy Details Summary:(.+?)\n\s+- Policy Status:", text, re.DOTALL)
@@ -17,7 +17,7 @@ def extract_from_policy_details(text:str,discoveries:list):
     details_html = "<ul>\n" + "\n".join(f"<li>{line.strip()}</li>" for line in details_lines if line.strip()) + "\n</ul>"
 
     return {
-        "coverageStatus": coverage_status+"<br/>"+policy_status,
+        "coverageStatus": policy_status.removeprefix("- Policy Status:"),
         "policyReview": details_html,
         "discoveries": discoveries + ["<br/><br/>" +details_html]
     }

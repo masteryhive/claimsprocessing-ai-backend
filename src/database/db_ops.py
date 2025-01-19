@@ -1,47 +1,26 @@
 import json
 from typing import Union
-
-import httpx
-import requests
-from src.error_trace.errorlogger import log_error
+import httpx,requests
+from src.error_trace.errorlogger import system_logger
 from src.models.claim_processing import CreateClaimsReport, UpdateClaimsReportModel
 from src.config.appconfig import env_config
-import logging
 from sqlalchemy.orm import Session
 
-logger = logging.getLogger(__name__)
 
-async def save_claim_database(data_to_send: dict) -> bool:
-        """
-        This tool saves claims information to the database by sending a POST request to the backend API.
-        
-        Parameters:
-        - data_tO_send: dictionary
-        Returns:
-        - A string message indicating the success or failure of the operation.
-        """
-        import requests
-        # Send a POST request to the endpoint
-        response = requests.post(env_config.backend_api+"/claims", json=data_to_send)
 
-        # Check if the request was successful
-        if response.status_code == 201:
-            return True
-        else:
-            log_error(f"Failed to send claim details: {response.status_code} - {response.text}")
-            return f"Failed to send claim details: {response.status_code} - {response.text}"
+def get_claim_from_database(claim_id:str) -> dict:
+        try:
+            # Send a POST request to the endpoint
+            response = requests.get(env_config.backend_api+f"/claims/{claim_id}")
 
-def get_claim_from_database(claim_id:int) -> dict:
-        import requests
-        # Send a POST request to the endpoint
-        response = requests.get(env_config.backend_api+f"/claims/{claim_id}")
-
-        # Check if the request was successful
-        if response.status_code == 200:
-            resp_data = response.json()
-            return resp_data
-        else:
-            return f"Failed to get claim details: {response.status_code} - {response.text}"
+            # Check if the request was successful
+            if response.status_code == 200:
+                resp_data = response.json()
+                return resp_data
+            else:
+                return f"Failed to get claim details: {response.status_code} - {response.text}"
+        except Exception as e:
+            system_logger.error(error=f"An error occurred while fetching claim details: {str(e)}")
 
 def update_claim_status_database(claim_id: int, status:str) -> Union[str,bool]:
     """
@@ -54,18 +33,16 @@ def update_claim_status_database(claim_id: int, status:str) -> Union[str,bool]:
     - A string message indicating the success or failure of the operation.
     """
     try:
-        import requests
-
         # Send a POST request to the endpoint
         response = requests.patch(env_config.backend_api+f"/claims/{claim_id}", json={"status":status})
         # Check if the request was successful
         if response.status_code == 200:
             return True
         else:
-            log_error(f"Failed to send claim details: {response.status_code} - {response.text}")
+            system_logger.error(error=f"Failed to update claim status into database: {response.status_code} - {response.text}")
             return f"Failed to send claim details: {response.status_code} - {response.text}"
     except Exception as e:
-        return f"An error occurred while updating the claim: {str(e)}"
+        system_logger.error(error=f"An error occurred while updating the claim: {str(e)}")
 
 
 
@@ -92,10 +69,10 @@ def save_claim_report_database(claim_report: dict) -> bool:
         if response.status_code == 201:
             return True
         else:
-            print(f"Failed to send claim details: {response.status_code} - {response.text}")
+            system_logger.error(error=f"Failed to save claim status into database: {response.status_code} - {response.text}")
             return False
     except Exception as e:
-        print(f"Error occurred: {e}")
+        system_logger.error(error=f"Error occurred while saving claim report to database: {e}")
         return False
 
 def update_claim_report_database(claim_id:int,claim_report: dict) -> bool:
@@ -122,9 +99,8 @@ def update_claim_report_database(claim_id:int,claim_report: dict) -> bool:
         if response.status_code == 200:
             return True
         else:
-            print(f"Failed to send claim details: {response.status_code} - {response.text}")
+            system_logger.error(error=f"Failed to update claim report into database: {response.status_code} - {response.text}")
             return False
     except Exception as e:
-        print(f"Error occurred: {e}")
-        return False
+        system_logger.error(error=f"An error occurred while updating the claim report: {str(e)}")
     

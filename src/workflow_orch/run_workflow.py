@@ -19,13 +19,15 @@ from src.parsers.parser import extract_claim_summary
 from src.teams.stirring_agent import members
 from langchain_core.messages import HumanMessage
 from src.config.appconfig import env_config
+from src.error_trace.errorlogger import system_logger
+
 # Initialize colorama for cross-platform color support
 init()
 
 HEADER_WIDTH = 80
 
 def print_header(text: str) -> None:
-    if env_config.env != "local":
+    if env_config.env == "local":
         """Print a styled header with a border."""
         print(f"\n{Fore.CYAN}{'=' * HEADER_WIDTH}")
         print(f"{text.center(HEADER_WIDTH)}")
@@ -33,7 +35,7 @@ def print_header(text: str) -> None:
 
 
 def print_section(title: str, content: str, indent: int = 2) -> None:
-    if env_config.env != "local":
+    if env_config.env == "local":
         """Print a formatted section with title and indented content."""
         print(f"{Fore.GREEN}➤ {title}{Style.RESET_ALL}")
         wrapped_content = textwrap.fill(
@@ -44,40 +46,43 @@ def print_section(title: str, content: str, indent: int = 2) -> None:
 
 def handle_agent_response(agent: str, messages: list, claim:dict, team_summaries: dict, claim_id: int, db: Session) -> None:
     """Process and handle responses from agents."""
-    content = [m.content for m in messages if isinstance(m, HumanMessage)]
-    ai_message_content = content[0]
+    try:
+        content = [m.content for m in messages if isinstance(m, HumanMessage)]
+        ai_message_content = content[0]
 
-    if agent == members[0]:
-        update_claim_status_database(claim_id=claim_id, status="Examining claim form")
-        print_header(f"{agent} Response")
-        print_section(ai_message_content, "")
-        doc_data = extract_from_claim_processing(ai_message_content)
-        doc_data.update({"claimId": claim_id, "details": claim.get("incidentDetails")})
-        save_claim_report_database(doc_data)
-        team_summaries.update({"discoveries": doc_data.get("discoveries"), "pre_report": doc_data})
-    elif agent == members[1]:
-        update_claim_status_database(claim_id=claim_id, status="Reviewing claim policy")
-        print_header(f"{agent} Response")
-        print_section(ai_message_content, "")
-        policy_data = extract_from_policy_details(ai_message_content, team_summaries["discoveries"])
-        team_summaries["pre_report"].update(policy_data)
-        update_claim_report_database(claim_id, team_summaries["pre_report"])
-    elif agent == members[2]:
-        update_claim_status_database(claim_id=claim_id, status="Running fraud checks")
-        print_header(f"{agent} Response")
-        print_section(ai_message_content, "")
-        fraud_checks_data = extract_from_fraud_checks(ai_message_content, team_summaries["discoveries"])
-        team_summaries["pre_report"].update(fraud_checks_data)
-        update_claim_report_database(claim_id, team_summaries["pre_report"])
-    elif agent == members[3]:
-        update_claim_status_database(claim_id=claim_id, status="Computing likely offer")
-        print_header(f"{agent} Response")
-        print_section(ai_message_content, "")
-        settlement_offer_data = extract_from_settlement_offer(ai_message_content, team_summaries["discoveries"])
-        team_summaries["pre_report"].update(settlement_offer_data)
-        update_claim_report_database(claim_id, team_summaries["pre_report"])
-    
-    print(f"{Fore.CYAN}{'─' * HEADER_WIDTH}{Style.RESET_ALL}\n")
+        if agent == members[0]:
+            update_claim_status_database(claim_id=claim_id, status="Examining claim form")
+            print_header(f"{agent} Response")
+            print_section(ai_message_content, "")
+            doc_data = extract_from_claim_processing(ai_message_content)
+            doc_data.update({"claimId": claim_id, "details": claim.get("incidentDetails")})
+            save_claim_report_database(doc_data)
+            team_summaries.update({"discoveries": doc_data.get("discoveries"), "pre_report": doc_data})
+        elif agent == members[1]:
+            update_claim_status_database(claim_id=claim_id, status="Reviewing claim policy")
+            print_header(f"{agent} Response")
+            print_section(ai_message_content, "")
+            policy_data = extract_from_policy_details(ai_message_content, team_summaries["discoveries"])
+            team_summaries["pre_report"].update(policy_data)
+            update_claim_report_database(claim_id, team_summaries["pre_report"])
+        elif agent == members[2]:
+            update_claim_status_database(claim_id=claim_id, status="Running fraud checks")
+            print_header(f"{agent} Response")
+            print_section(ai_message_content, "")
+            fraud_checks_data = extract_from_fraud_checks(ai_message_content, team_summaries["discoveries"])
+            team_summaries["pre_report"].update(fraud_checks_data)
+            update_claim_report_database(claim_id, team_summaries["pre_report"])
+        elif agent == members[3]:
+            update_claim_status_database(claim_id=claim_id, status="Computing likely offer")
+            print_header(f"{agent} Response")
+            print_section(ai_message_content, "")
+            settlement_offer_data = extract_from_settlement_offer(ai_message_content, team_summaries["discoveries"])
+            team_summaries["pre_report"].update(settlement_offer_data)
+            update_claim_report_database(claim_id, team_summaries["pre_report"])
+        
+        print(f"{Fore.CYAN}{'─' * HEADER_WIDTH}{Style.RESET_ALL}\n")
+    except Exception as e:
+        system_logger.error(error=e)
 
 
 def control_workflow(
@@ -115,16 +120,19 @@ def handle_summary_team(
     task: Task,
 ) -> None:
     """Handle the summary team process."""
-    update_claim_status_database(claim_id=claim_id, status="Creating Report Summary")
-    messages = process_call["summary_team"]["messages"]
-    content = [m.content for m in messages if isinstance(m, HumanMessage)]
-    print_header("summary_team Response")
-    update_claim_status_database(claim_id=claim_id, status="Preparing Report Summary")
-    result = extract_claim_summary(content[0], team_summaries)
-    update_claim_report_database(claim_id, result)
-    # Update task record
-    task.status = TaskStatus.COMPLETED
-    db.commit()
-    db.refresh(task)
-    print_section(content[0], "")
-    update_claim_status_database(claim_id=claim_id, status=result["operationStatus"])
+    try:
+        update_claim_status_database(claim_id=claim_id, status="Creating Report Summary")
+        messages = process_call["summary_team"]["messages"]
+        content = [m.content for m in messages if isinstance(m, HumanMessage)]
+        print_header("summary_team Response")
+        update_claim_status_database(claim_id=claim_id, status="Preparing Report Summary")
+        result = extract_claim_summary(content[0], team_summaries)
+        update_claim_report_database(claim_id, result)
+        # Update task record
+        task.status = TaskStatus.COMPLETED
+        db.commit()
+        db.refresh(task)
+        print_section(content[0], "")
+        update_claim_status_database(claim_id=claim_id, status=result["operationStatus"])
+    except Exception as e:
+        system_logger.error(error=e)

@@ -17,15 +17,13 @@ agent2 = "vehicle_fraud_investigator"
 agent3 = "damage_cost_fraud_investigator"
 agent4 = "fraud_risk_analyst"
 agentX = "team_task_summarizer"
-members = [agent1, agent2,agent3,agent4, agentX]
+members = [agent1, agent2, agent3, agent4, agentX]
 
 
 def _load_prompt_template() -> str:
     """Load the instruction prompt template from YAML file."""
     try:
-        prompt_path = Path(
-            "src/teams/fraud_detection/prompts/instruction.yaml"
-        )
+        prompt_path = Path("src/teams/fraud_detection/prompts/instruction.yaml")
         if not prompt_path.exists():
             raise FileNotFoundError(f"Prompt template not found at {prompt_path}")
         yaml_data = load_yaml_file(prompt_path)
@@ -53,20 +51,23 @@ claim_form_fraud_investigator_agent = create_tool_agent(
     llm=llm,
     tools=[
         verify_this_claimant_exists_as_a_customer,
-           investigate_if_this_claimant_is_attempting_a_rapid_policy_claim
-           ],
-    system_prompt=_load_prompt_template()["CLAIMS_FORM_FRAUD_INVESTIGATOR_AGENT_SYSTEM_PROMPT"],
+        investigate_if_this_claimant_is_attempting_a_rapid_policy_claim,
+    ],
+    system_prompt=_load_prompt_template()[
+        "CLAIMS_FORM_FRAUD_INVESTIGATOR_AGENT_SYSTEM_PROMPT"
+    ],
 )
 
-vehicle_fraud_investigator_agent  = create_tool_agent(
+vehicle_fraud_investigator_agent = create_tool_agent(
     llm=llm,
     tools=[
-           validate_if_this_is_a_real_vehicle,
-           vehicle_chasis_number_matches_NIID_records,
-           check_NIID_database_to_confirm_vehicle_insurance,
-           verify_vehicle_matches_preloss_using_SSIM
-           ],
-    system_prompt=_load_prompt_template()["VEHICLE_FRAUD_INVESTIGATOR_AGENT_SYSTEM_PROMPT"],
+        validate_if_this_is_a_real_vehicle,
+        check_NIID_database_,
+        ssim,
+    ],
+    system_prompt=_load_prompt_template()[
+        "VEHICLE_FRAUD_INVESTIGATOR_AGENT_SYSTEM_PROMPT"
+    ],
 )
 
 damage_cost_fraud_investigator_agent = create_tool_agent(
@@ -74,8 +75,9 @@ damage_cost_fraud_investigator_agent = create_tool_agent(
     tools=[item_cost_price_benchmarking_in_local_market,
           # item_pricing_evaluator
            ],
-    # tools=[],
-    system_prompt=_load_prompt_template()["DAMAGE_COST_FRAUD_INVESTIGATOR_AGENT_SYSTEM_PROMPT"],
+    system_prompt=_load_prompt_template()[
+        "DAMAGE_COST_FRAUD_INVESTIGATOR_AGENT_SYSTEM_PROMPT"
+    ],
 )
 
 fraud_risk_analyst_agent = create_tool_agent(

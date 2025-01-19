@@ -1,8 +1,8 @@
 import json, asyncio, uuid
 from typing import Any, Dict
-from src.rag.context_stuffing import delete_pdf
+from src.utilities.pdf_handlers import delete_pdf
 from src.utilities.helpers import _new_get_datetime
-
+from src.error_trace.errorlogger import system_logger
 from src.database.schemas import Task, TaskStatus
 from src.config.db_setup import SessionLocal
 from src.models.claim_processing import (
@@ -115,11 +115,9 @@ def process_message(id: int):
                 if "summary_team" in s:
                     # log_info("Summary team has completed processing.")
                     break
-        delete_pdf(claim_data['policyNumber'])
+        delete_pdf(claim_data.model_dump()['policyNumber'])
     except Exception as e:
-        print(e)
-        # log_error(f"Claim processing error: {e}", sys.exc_info())
-        # Consider adding logic to handle unprocessable messages
+        system_logger.error(error=e)
 
     finally:
         db.close()

@@ -161,7 +161,7 @@ PROCESS_CLERK_PROMPT: |
   Policy Details Summary:
    - Coverage Type: {{type_of_policy}} <-- e.g., "Private Vehicle - Comprehensive coverage with special provisions for after-market modifications" -->
   Policy Information:\n{{all_the_retrieved_policy_information_from_policy_essential_data_retriever_agent}}
-  - Policy Status: {{is_policy_active_or_expired}} <-- infer from the Period of Insurance or Policy status from the policy_essential_data_retriever response.-->
+  - Policy Status: {{Active/Expired}} <-- Active if policy is not expired given the current date -->
   // end of template
 
   Do not provide summary of the claim form data as that does not concern your department.
