@@ -1,130 +1,437 @@
-
 from typing import Annotated
 from langchain_core.tools import tool
-from src.rag.context_stuffing import download_pdf, process_query
+from src.rag.context_stuffing import process_query
 from src.utilities.helpers import _new_get_datetime
 
 from pathlib import Path
+
+from src.utilities.pdf_handlers import download_pdf
 
 rag_path = Path(__file__).parent.parent / "policy_doc/"
 
 
 @tool
-def retrieve_all_essential_details_from_policy(policy_number: Annotated[str, "claimant's policy number."]):
+def retrieve_all_essential_details_from_policy(
+    policyNumber: Annotated[str, "claimant's policy number."]
+):
     """
     Use this tool to retrieve all essential details, including terms, policy status, and coverage plan or status.
     """
-    download_pdf(policy_number,rag_path)
+    download_pdf(policyNumber, rag_path)
     # Retrieve
-    query = (
-        "Analyze this vehicle insurance policy document comprehensively and provide all critical information in a structured format. "
-        "Extract and present the following details in very clear informative terms:\n\n"
-        "1. Policy Basics:\n"
-        " - Policy period/duration\n"
-        " - Policy type and coverage category\n"
-        " - Premium details (annual, paid amount, payment terms)\n"
-        " - Policyholder details\n\n"
-        "2. Vehicle Details:\n"
-        " - Make, model, and year\n"
-        " - Vehicle value/sum insured\n"
-        " - Vehicle usage type (private/commercial)\n\n"
-        "3. Coverage Details:\n"
-        " - Main coverage types (comprehensive, third party, etc.)\n"
-        " - Additional coverages/riders\n"
-        " - Coverage limits and sub-limits\n"
-        " - Authorized repair limits\n\n"
-        "4. Key Terms and Conditions:\n"
-        " - All policy conditions\n"
-        " - Warranties\n"
-        " - Special clauses\n"
-        " - Endorsements\n\n"
-        "5. Exclusions and Limitations:\n"
-        " - Policy exclusions\n"
-        " - Geographic limitations\n"
-        " - Usage restrictions\n\n"
-        "6. Claims and Notification Requirements:\n"
-        " - Claims procedure\n"
-        " - Notification period for valid claims\n"
-        " - Required documentation for claims\n"
-        " - Emergency contact numbers\n"
-        " - No-claim bonus details\n"
-        " - Time limits for claim submission\n"
-        " - Reporting requirements for accidents/incidents\n\n"
-        "7. Cancellation and Modification:\n"
-        " - Cancellation terms and notice periods\n"
-        " - Policy modification procedures\n"
-        " - Refund conditions\n\n"
-        "Important Instructions:\n"
-        " - To begin, carefully look through the entire document and identify all the information you should extract as they are required.\n"
-        " - Present each piece of information on a new line using `<br/>`\n"
-        " - Tag each item with a dash (-)\n"
-        " - Provide complete information without summarizing\n"
-        " - Include all schedules and estimated values\n"
-        " - List all memoranda, conditions, and clauses individually and not as summary\n"
-        " - Do not mark any information as 'MISSING'\n"
-        " - Do not redact or omit any information\n"
-        " - Include any other important information found in the document even if not specifically requested above"
+    query = "Please, analyze this vehicle insurance policy document comprehensively and provide all critical information in a template format.\nThe current date(YYYY-MM-DD) is {current_date}."
+
+    response_schema = {
+        "type": "object",
+        "properties": {
+            "PolicyBasics": {
+                "type": "object",
+                "properties": {
+                    "PolicyPeriod": {
+                        "type": "object",
+                        "properties": {
+                            "From": {
+                                "type": "string",
+                                "description": "The start date of the policy period, typically found in sections labeled 'policy period' or 'coverage dates'.",
+                            },
+                            "To": {
+                                "type": "string",
+                                "description": "The end date of the policy period, typically found in sections labeled 'policy period' or 'coverage dates'.",
+                            },
+                        },
+                    },
+                    "PolicyType": {
+                        "type": "string",
+                        "description": "Type of policy and coverage category (e.g., 'comprehensive', 'third-party').",
+                    },
+                    "PremiumDetails": {
+                        "type": "object",
+                        "properties": {
+                            "AnnualPremium": {
+                                "type": "string",
+                                "description": "The annual premium amount, from terms such as 'yearly cost' or 'premium amount'.",
+                            },
+                            "PaidAmount": {
+                                "type": "string",
+                                "description": "The amount already paid, sometimes labeled as 'installments paid'.",
+                            },
+                            "PaymentTerms": {
+                                "type": "string",
+                                "description": "Payment terms such as 'monthly', 'quarterly', or 'annually'.",
+                            },
+                        },
+                    },
+                    "PolicyholderDetails": {
+                        "type": "string",
+                        "description": "Details about the policyholder, from fields like 'insured name', 'customer info', etc.",
+                    },
+                },
+            },
+            "VehicleDetails": {
+                "type": "object",
+                "properties": {
+                    "MakeModelYear": {
+                        "type": "string",
+                        "description": "Vehicle make, model, and year, identified by terms like 'vehicle description'.",
+                    },
+                    "ValueInsured": {
+                        "type": "string",
+                        "description": "Vehicle value or sum insured, referred to as 'coverage amount' or 'asset value'.",
+                    },
+                    "UsageType": {
+                        "type": "string",
+                        "description": "Vehicle usage type, such as 'personal', 'private', or 'commercial'.",
+                    },
+                },
+            },
+            "CoverageDetails": {
+                "type": "object",
+                "properties": {
+                    "MainCoverageTypes": {
+                        "type": "array",
+                        "items": {"type": "string"},
+                        "description": "List of primary coverage types, including 'basic coverage' or 'default protection'.",
+                    },
+                    "AdditionalCoverages": {
+                        "type": "array",
+                        "items": {"type": "string"},
+                        "description": "Additional coverages or riders, referenced as 'addons' or 'enhancements'.",
+                    },
+                    "CoverageLimits": {
+                        "type": "string",
+                        "description": "Coverage limits and sub-limits, found under terms like 'maximum payout' or 'policy limit'.",
+                    },
+                    "RepairLimits": {
+                        "type": "string",
+                        "description": "Authorized repair limits, sometimes labeled 'repair cap'.",
+                    },
+                },
+            },
+            "KeyTermsConditions": {
+                "type": "object",
+                "properties": {
+                    "Conditions": {
+                        "type": "array",
+                        "items": {"type": "string"},
+                        "description": "All terms and conditions, found under 'policy stipulations' or 'requirements'.",
+                    },
+                    "Warranties": {
+                        "type": "array",
+                        "items": {"type": "string"},
+                        "description": "Warranty information, also termed 'guarantees'.",
+                    },
+                    "SpecialClauses": {
+                        "type": "array",
+                        "items": {"type": "string"},
+                        "description": "Special clauses or provisions.",
+                    },
+                    "Endorsements": {
+                        "type": "array",
+                        "items": {"type": "string"},
+                        "description": "Endorsements, sometimes referred to as 'amendments' or 'policy notes'.",
+                    },
+                },
+            },
+            "ExclusionsLimitations": {
+                "type": "object",
+                "properties": {
+                    "Exclusions": {
+                        "type": "array",
+                        "items": {"type": "string"},
+                        "description": "List of exclusions, also called 'policy restrictions' or 'non-covered items'.",
+                    },
+                    "GeographicLimits": {
+                        "type": "string",
+                        "description": "Geographic limitations, often labeled as 'service area' or 'coverage region'.",
+                    },
+                    "UsageRestrictions": {
+                        "type": "string",
+                        "description": "Restrictions on usage, referenced as 'limitations of use'.",
+                    },
+                },
+            },
+            "ClaimsRequirements": {
+                "type": "object",
+                "properties": {
+                    "Procedure": {
+                        "type": "string",
+                        "description": "The claims procedure, found as 'filing process' or 'claim handling'.",
+                    },
+                    "NotificationPeriod": {
+                        "type": "string",
+                        "description": "Required notification period for claims, labeled as 'reporting time'.",
+                    },
+                    "DocumentsRequired": {
+                        "type": "array",
+                        "items": {"type": "string"},
+                        "description": "List of required documentation for claims.",
+                    },
+                    "ContactNumbers": {
+                        "type": "array",
+                        "items": {"type": "string"},
+                        "description": "Emergency contact numbers.",
+                    },
+                    "NoClaimBonus": {
+                        "type": "string",
+                        "description": "Details about no-claim bonus, found under 'reward for no claims'.",
+                    },
+                    "SubmissionTimeLimit": {
+                        "type": "string",
+                        "description": "Time limits for submitting claims.",
+                    },
+                    "AccidentReporting": {
+                        "type": "string",
+                        "description": "Accident or incident reporting requirements.",
+                    },
+                },
+            },
+            "CancellationModification": {
+                "type": "object",
+                "properties": {
+                    "CancellationTerms": {
+                        "type": "string",
+                        "description": "Terms for policy cancellation, labeled as 'termination rules'.",
+                    },
+                    "ModificationProcedure": {
+                        "type": "string",
+                        "description": "Policy modification procedures.",
+                    },
+                    "RefundPolicy": {
+                        "type": "string",
+                        "description": "Refund conditions for cancellations.",
+                    },
+                },
+            },
+        },
+        "required": [
+            "PolicyBasics",
+            "VehicleDetails",
+            "CoverageDetails",
+            "KeyTermsConditions",
+            "ExclusionsLimitations",
+            "ClaimsRequirements",
+            "CancellationModification",
+        ],
+    }
+
+    resp = process_query(
+        prompt=query,
+        pdf_path=f"{rag_path}/{policyNumber.replace("/", "-")}.pdf",
+        response_schema=response_schema,
     )
-    resp = process_query(query=query,pdf_path=f"{rag_path}/{policy_number.replace("/", "-")}.pdf")
     return resp
 
 
 @tool
-def check_if_this_claim_is_within_insurance_period(policy_number: Annotated[str, "claimant's policy number."]):
+def check_if_this_claim_is_within_insurance_period(
+    policyNumber: Annotated[str, "claimant's policy number."]
+):
     """
     Check if the current date falls within the specified insurance period.
     """
-    download_pdf(policy_number,rag_path)
+    download_pdf(policyNumber, rag_path)
+    response_schema = {
+        "type": "object",
+        "properties": {
+            "InsurancePeriod": {
+                "type": "object",
+                "properties": {
+                    "StartDate": {
+                        "type": "string",
+                        "description": "The start date of the insurance period.",
+                    },
+                    "EndDate": {
+                        "type": "string",
+                        "description": "The end date of the insurance period.",
+                    },
+                    "IsActive": {
+                        "type": "boolean",
+                        "description": "Indicates if the insurance policy is currently active by verifying that the current date is not after the end date.",
+                    },
+                },
+                "required": ["StartDate", "EndDate", "IsActive"],
+            }
+        },
+        "required": ["InsurancePeriod"],
+    }
 
-    query = f"confirm that the insured period is still active."
-    resp = process_query(query=query,pdf_path=f"{rag_path}/{policy_number.replace("/", "-")}.pdf")
+    query = "Please, confirm that the insured period is still active.\nThe current date(YYYY-MM-DD) is {current_date}."
+    resp = process_query(
+        prompt=query,
+        pdf_path=f"{rag_path}/{policyNumber.replace("/", "-")}.pdf",
+        response_schema=response_schema,
+    )
     return resp
 
+
 @tool
-def check_if_this_claim_is_reported_within_insurance_period(date_of_incident: Annotated[str, "date the incident occured"],
-                                                            policy_number: Annotated[str, "claimant's policy number."]):
+def check_if_this_claim_is_reported_within_insurance_period(
+    date_of_incident: Annotated[str, "date the incident occured"],
+    policyNumber: Annotated[str, "claimant's policy number."],
+):
     """
     Check if the claim is reported within the stipulated notification period.
     """
-    download_pdf(policy_number,rag_path)
+    download_pdf(policyNumber, rag_path)
+    response_schema = {
+        "type": "object",
+        "properties": {
+            "ClaimNotification": {
+                "type": "object",
+                "properties": {
+                    "NotificationPeriod": {
+                        "type": "string",
+                        "description": "The allowed period for claim notification as per the policy.",
+                    },
+                    "IsWithinPeriod": {
+                        "type": "boolean",
+                        "description": "Indicates if the claim was reported within the allowed notification period.",
+                    },
+                },
+                "required": ["NotificationPeriod", "IsWithinPeriod"],
+            }
+        },
+        "required": ["ClaimNotification"],
+    }
 
-    query = f"\n the date the incident occured is {_new_get_datetime(date_of_incident)}. confirm that the claim is within the stipulated notification period."
-    resp = process_query(query=query,pdf_path=f"{rag_path}/{policy_number.replace("/", "-")}.pdf")
+    query = (
+        f"\n the date the incident occured is {_new_get_datetime(date_of_incident)}.",
+        " Please, confirm that the claim is within the stipulated notification period.",
+        "The current date(YYYY-MM-DD) is {current_date}.",
+    )
+    resp = process_query(
+        prompt="".join(query),
+        pdf_path=f"{rag_path}/{policyNumber.replace("/", "-")}.pdf",
+        response_schema=response_schema,
+    )
     return resp
 
-@tool
-def check_if_the_incident_occurred_within_the_geographical_coverage(location_of_incident: Annotated[str, "location where the incident occurred, default is Lagos, Nigeria"],
-                                                                    policy_number: Annotated[str, "claimant's policy number."]):
-    """
-    Check if the incident occurred within the geographical area covered by the policy.
-    """
-    download_pdf(policy_number,rag_path)
 
-    query = f"\n the incident occurred in Lagos, Nigeria. confirm if the incident occurred within the geographical area covered by the policy."
-    resp = process_query(query=query,pdf_path=f"{rag_path}/{policy_number.replace("/", "-")}.pdf")
-    return resp
+# @tool
+# def check_if_the_incident_occurred_within_the_geographical_coverage(
+#     location_of_incident: Annotated[
+#         str, "location where the incident occurred, default is Lagos, Nigeria"
+#     ],
+#     policyNumber: Annotated[str, "claimant's policy number."],
+# ):
+#     """
+#     Check if the incident occurred within the geographical area covered by the policy.
+#     """
+#     download_pdf(policyNumber, rag_path)
+#     response_schema = {
+#         "type": "object",
+#         "properties": {
+#             "GeographicalCoverage": {
+#                 "type": "object",
+#                 "properties": {
+#                     "CoveredArea": {
+#                         "type": "string",
+#                         "description": "The geographical area covered by the policy.",
+#                     },
+#                     "IsWithinCoverage": {
+#                         "type": "boolean",
+#                         "description": "Indicates if the incident location is within the geographical coverage area.",
+#                     },
+#                 },
+#                 "required": ["CoveredArea", "IsWithinCoverage"],
+#             }
+#         },
+#         "required": ["GeographicalCoverage"],
+#     }
+
+#     query = "\n the incident occurred in Lagos, Nigeria. confirm if the incident occurred within the geographical area covered by the policy.\nThe current date(YYYY-MM-DD) is {current_date}."
+#     resp = process_query(
+#         prompt=query,
+#         pdf_path=f"{rag_path}/{policyNumber.replace("/", "-")}.pdf",
+#         response_schema=response_schema,
+#     )
+#     print(resp)
+#     return resp
 
 
-@tool
-def check_if_the_damage_cost_does_not_exceed_authorised_repair_limit(cost_of_damage: Annotated[str, "invoice total cost of the damage"],
-                                                 policy_number: Annotated[str, "claimant's policy number."]):
-    """
-    Check if the cost of damage has not exceeded the authorised repair limit covered in the policy.
-    """
-    download_pdf(policy_number,rag_path)
+# @tool
+# def check_if_the_damage_cost_does_not_exceed_authorised_repair_limit(
+#     cost_of_damage: Annotated[str, "invoice total cost of the damage"],
+#     policyNumber: Annotated[str, "claimant's policy number."],
+# ):
+#     """
+#     Check if the cost of damage has not exceeded the authorised repair limit covered in the policy.
+#     """
+#     download_pdf(policyNumber, rag_path)
+#     response_schema = {
+#         "type": "object",
+#         "properties": {
+#             "RepairLimit": {
+#                 "type": "object",
+#                 "properties": {
+#                     "AuthorisedLimit": {
+#                         "type": "number",
+#                         "description": "The authorised repair limit as specified in the policy.",
+#                     },
+#                     "IsWithinLimit": {
+#                         "type": "boolean",
+#                         "description": "Indicates if the cost of damage is within the authorised repair limit.",
+#                     },
+#                 },
+#                 "required": ["AuthorisedLimit", "IsWithinLimit"],
+#             }
+#         },
+#         "required": ["RepairLimit"],
+#     }
 
-    query = f"\n the cost of the damage is {cost_of_damage}, confirm if the authorised repair limit has not been exceeded in the policy."
-    resp = process_query(query=query,pdf_path=f"{rag_path}/{policy_number.replace("/", "-")}.pdf")
-    return resp
+#     query = (
+#         f"\n the cost of the damage is {cost_of_damage}.",
+#         "Please, confirm if the authorised repair limit has not been exceeded in the policy.",
+#         "\nThe current date(YYYY-MM-DD) is {current_date}.",
+#     )
+#     resp = process_query(
+#         prompt=query,
+#         pdf_path=f"{rag_path}/{policyNumber.replace("/", "-")}.pdf",
+#         response_schema=response_schema,
+#     )
+#     print(resp)
+#     return resp
 
-@tool
-def check_if_the_premium_page_covers_damage_cost(cost_of_damage: Annotated[str, "invoice total cost of the damage"],
-                                                 policy_number: Annotated[str, "claimant's policy number."]):
-    """
-    Check if the premium paid covers the specified cost of damage in the policy.
-    """
-    download_pdf(policy_number,rag_path)
-    
-    query = f"\n the cost of the damage is {cost_of_damage}, confirm if the premium paid covers this cost in the policy."
-    resp = process_query(query=query,pdf_path=f"{rag_path}/{policy_number.replace("/", "-")}.pdf")
-    return resp
+
+# @tool
+# def check_if_the_premium_page_covers_damage_cost(
+#     cost_of_damage: Annotated[str, "invoice total cost of the damage"],
+#     policyNumber: Annotated[str, "claimant's policy number."],
+# ):
+#     """
+#     Check if the premium paid covers the specified cost of damage in the policy.
+#     """
+#     download_pdf(policyNumber, rag_path)
+#     response_schema = {
+#         "type": "object",
+#         "properties": {
+#             "PremiumCoverage": {
+#                 "type": "object",
+#                 "properties": {
+#                     "TotalPremiumPaid": {
+#                         "type": "number",
+#                         "description": "The total premium amount paid as specified in the policy.",
+#                     },
+#                     "CoversDamageCost": {
+#                         "type": "boolean",
+#                         "description": "Indicates if the premium paid covers the specified cost of damage.",
+#                     },
+#                 },
+#                 "required": ["TotalPremiumPaid", "CoversDamageCost"],
+#             }
+#         },
+#         "required": ["PremiumCoverage"],
+#     }
+
+#     query = (
+#         f"The cost of the damage is {cost_of_damage}.",
+#         " confirm if the premium paid covers this cost in the policy.",
+#         "\nThe current date(YYYY-MM-DD) is {current_date}.",
+#     )
+#     resp = process_query(
+#         prompt=query,
+#         pdf_path=f"{rag_path}/{policyNumber.replace("/", "-")}.pdf",
+#         response_schema=response_schema,
+#     )
+#     print(resp)
+#     return resp

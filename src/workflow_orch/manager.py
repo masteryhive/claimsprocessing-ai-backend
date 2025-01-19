@@ -1,6 +1,6 @@
 import json, asyncio, uuid
 from typing import Any, Dict
-from src.rag.context_stuffing import delete_pdf
+from src.utilities.pdf_handlers import delete_pdf
 from src.utilities.helpers import _new_get_datetime
 
 from src.database.schemas import Task, TaskStatus

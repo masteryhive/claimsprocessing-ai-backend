@@ -12,7 +12,6 @@ class ClaimsProcessingBaseService(ClaimsProcessingServicer):
     
     def ProcessClaim(self, request, context):
         try:
-            print(int(request.claimId))
             process_message(int(request.claimId))
         except Exception as e:
             raise GrpcException(status_code=StatusCode.INTERNAL, details=str(e))

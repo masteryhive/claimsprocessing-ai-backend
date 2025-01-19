@@ -1,31 +1,32 @@
-# import asyncio
+import asyncio
+import json
 # from src.parsersfraud_team_parser import extract_from_fraud_checks
-# from src.teams.resources.document_understanding import classify_supporting_documents
-# from datamodels.claim_processing import AccidentClaimData, TheftClaimData
-# from database.claim_processing.db_ops import get_claim_from_database,delete_claim_report_by_id
-from ai_models.model import init_vertexai
-from workflow_orch.manager import process_message
+from src.teams.resources.document_understanding import classify_supporting_documents
+from src.models.claim_processing import AccidentClaimData, TheftClaimData
+from src.database.db_ops import get_claim_from_database
+from src.ai_models.model import init_vertexai
+from src.workflow_orch.manager import process_message
 # from ai.claims_processing.stirring_agent import super_graph
 # from ai.claims_processing.teams.document_processing.agents import (
 #     document_check_graph,
 # )
 # from src.parserssettlement_team_parser import extract_from_settlement_offer
 # from config.db_setup import SessionLocal
-# from ai.claims_processing.teams.policy_review.agents import policy_review_graph
-# from src.teams.fraud_detection.agents import fraud_detection_graph
+# from src.teams.policy_review.agents import policy_review_graph
+from src.teams.fraud_detection.agents import fraud_detection_graph
 # from src.teams.settlement_offer.agents import settlement_offer_graph
-# from langchain_core.messages import HumanMessage
-# from src.utilities.helpers import _new_get_datetime
+from langchain_core.messages import HumanMessage
+from src.utilities.helpers import _new_get_datetime
 
 init_vertexai()
-if __name__ == "__main__":
-    # delete_claim_report_by_id(SessionLocal(),90)
-    process_message(b"90")
+# if __name__ == "__main__":
+#     # delete_claim_report_by_id(SessionLocal(),90)
+#     process_message(b"90")
 
 
 # {
 #     "id": 85,
-#     "nameOfInsured": "Ayo Samuel",
+#     "nameOfInsured": "Ayo Samuel",8
 #     "policyNumber": "ZG/P/1000/010101/22/000346",
 #     "addressOfInsured": "plot 23, colegeorge estate, college road, ogba Ikeja",
 #     "phoneNumberOfInsured": "+2348012675443",
@@ -129,34 +130,42 @@ if __name__ == "__main__":
 # }
 
 
-# if __name__ == "__main__":
+if __name__ == "__main__":
     # delete_claim_report_by_id(SessionLocal(),91)
-    # claim_data = get_claim_from_database({"claim_id": 91})
+    claim_data = get_claim_from_database("96")
     # print(claim_data)
-    # print()
-    # claim_data['dateClaimFiled'] = _new_get_datetime(claim_data["createdAt"])
-    # if len(claim_data['resourceUrls']) != 0:
-    #     print(claim_data['resourceUrls'])
-    #     result = asyncio.run(classify_supporting_documents(claim_data))
-    #     claim_data.pop('resourceUrls', None)
-    #     claim_data["evidenceProvided"] = result
-    # if claim_data["claimType"] in ["Accident","accident"]:
-    #     claim_data = AccidentClaimData(**claim_data)
-    # else:
-    #     claim_data = TheftClaimData(**claim_data)
+    print()
+    claim_data['dateClaimFiled'] = _new_get_datetime(claim_data["createdAt"])
+    if len(claim_data['resourceUrls']) != 0:
+        print(claim_data['resourceUrls'])
+        print()
+        result = asyncio.run(classify_supporting_documents(claim_data))
+        claim_data = result
+    if claim_data["claimType"] in ["Accident","accident"]:
+        claim_data = AccidentClaimData(**claim_data)
+    else:
+        claim_data = TheftClaimData(**claim_data)
 
     # print(claim_data)
-    # for s in fraud_detection_graph.stream(
-    #     {"messages": [HumanMessage(content=f"begin this claim processing")],
-    #      "claim_form_json":claim_data}
-    # ):
-    #     if "__end__" not in s:
-    #         # Extract content values from the dictionary
-    #         for key, value in s.items():
-    #             if isinstance(value, dict) and "agent_history" in value:
-    #                 for message in value["agent_history"]:
-    #                     print(message.content)
-    #             elif isinstance(value, dict) and "messages" in value:
-    #                 for message in value["messages"]:
-    #                     print(message.content)
-    #                     print(extract_from_fraud_checks(message.content))
+    for s in fraud_detection_graph.stream(
+        {"messages": [HumanMessage(content=(
+                            "Important information:"
+                            "\nThis service is currently run in Nigeria, this means:"
+                            "\n1. The currency is \u20a6"
+                            f"\n\nBegin this claim processing using this claim form JSON data:\n {claim_data.model_dump()}"
+                            "\n\nYOU MUST USE THE SUMMARY TEAM TO PRESENT THE RESULT OF THIS TASK."
+                        ))],
+        #  "claim_form_json":[HumanMessage(
+        #                 content=json.dumps(claim_data.model_dump()))]
+                        }
+    ):
+        if "__end__" not in s:
+            # Extract content values from the dictionary
+            for key, value in s.items():
+                if isinstance(value, dict) and "agent_history" in value:
+                    for message in value["agent_history"]:
+                        print(message.content)
+                elif isinstance(value, dict) and "messages" in value:
+                    for message in value["messages"]:
+                        print(message.content)
+                        # print(extract_from_fraud_checks(message.content))

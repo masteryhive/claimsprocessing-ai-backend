@@ -62,7 +62,7 @@ insurance_policy_period_verifier_agent = create_tool_agent(
 insurance_policy_verifier_agent = create_tool_agent(
     llm=llm,
     tools=[
-        check_if_the_incident_occurred_within_the_geographical_coverage,
+        # check_if_the_incident_occurred_within_the_geographical_coverage,
         # check_if_the_damage_cost_does_not_exceed_authorised_repair_limit,
     ],
     system_prompt=_load_prompt_template()["POLICY_VERIFICATION"],

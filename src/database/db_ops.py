@@ -31,7 +31,7 @@ async def save_claim_database(data_to_send: dict) -> bool:
             log_error(f"Failed to send claim details: {response.status_code} - {response.text}")
             return f"Failed to send claim details: {response.status_code} - {response.text}"
 
-def get_claim_from_database(claim_id:int) -> dict:
+def get_claim_from_database(claim_id:str) -> dict:
         import requests
         # Send a POST request to the endpoint
         response = requests.get(env_config.backend_api+f"/claims/{claim_id}")

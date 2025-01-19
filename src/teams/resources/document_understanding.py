@@ -4,7 +4,7 @@ import aiohttp
 import os, httpx, base64, io, fitz, uuid
 from langchain_google_vertexai import ChatVertexAI
 from PIL import Image
-from src.teams.resources.helpers import get_preloss
+from src.utilities.image_handlers import get_preloss
 from src.teams.resources.image_understanding import claims_image_evidence_recognizer
 from src.ai_models.llm import llm_flash
 
@@ -35,37 +35,6 @@ def pdf_page_to_base64(pdf_path: str, page_number: int):
     img.save(buffer, format="PNG")
 
     return base64.b64encode(buffer.getvalue()).decode("utf-8")
-
-
-def claims_form_recognizer(doc_url: str) -> str:
-    temp_file = download_pdf(pdf_url=doc_url)
-    base64_image = pdf_page_to_base64(temp_file, 2)
-    prompt = """Identify if this document is a motor insurance claims form.
-If it is, extract the following fields and the data filled in from the document as key,value pairs with linebreak e.g {{"policyNumber":"//the data filled in","claimType":"//the claim type filled in"}}:
-policyNumber, claimType, nameOfInsured, claimantName, roomId, addressOfInsured, 
-phoneNumberOfInsured, declaration, signature, signatureDate, extentOfLossOrDamage, 
-particularsAddress, particularsPhoneNo, personInCharge, addressOfPersonInCharge, 
-permissionConfirmation, otherInsuranceConfirmation, purposeOfUse, durationOfOwnership, 
-previousOwner, servicedBy, lastServiceDate, totalMileage, vehicleMake, registrationNumber, 
-vehicleCC, vehicleColor, typeOfBody, yearOfManufacture, chassisNumber, engineNumber, 
-locationAtTimeOfTheft, dateOfDiscovery, discoverdBy, howTheftOccurred, vehicleLicenseNumber, 
-dateReported, policeStationName, wasVehicleUnlocked, wasNightWatchmanInAttendance, suspect, 
-suspectDetails.
-if it is not respond with 'not a claim form"""
-    from langchain_core.messages import HumanMessage
-
-    # Initialize the model
-    message = HumanMessage(
-        content=[
-            {"type": "text", "text": prompt},
-            {
-                "type": "image_url",
-                "image_url": {"url": f"data:image/jpeg;base64,{base64_image}"},
-            },
-        ],
-    )
-    response = llm_flash.invoke([message])
-    return response.content
 
 
 def invoice_entity_extraction(doc_url: str) -> str:
@@ -130,7 +99,7 @@ async def classify_supporting_documents(resource_dict:dict)->dict:
     resource_dict["repairInvoice"] = invoice_data
                 
     resource_dict["ssim"]  = {
-            "prelossUrl":get_preloss(resource_dict["policyNumber"]),
-            "claimUrl": vehicle_url
+            "prelossImageUrl":get_preloss(resource_dict["policyNumber"]),
+            "damageConditionImageUrl": vehicle_url
         }
     return resource_dict

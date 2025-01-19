@@ -84,7 +84,12 @@ CLAIM_ADJUSTER_SUMMARY_PROMPT: |
   - Claims Action Recommendation: Formulated by you, based on the analysis of all gathered data.
   - Claims Operation Status: Determined by you, reflecting the current status of document verification and fraud assessment.
   - Settlement Offer: the proposed pricing provided by the fraud detection team.
-  
+
+  SCENARIOS WHICH ARE WORTHY OF MENTIONING:
+  These are scenarios occurence that when they occur, you should point it out to the human claim adjuster in your recommendations.
+  - Policy Review Scenarios:
+    - The incident occurred on November 30, 2024, and the claim was filed on January 15, 2025. While the policy was active at the time of the incident and the incident location is covered, the claim was reported outside the 15-day notification period stipulated in the policy. Additionally, the claimed amount (₦268,000) surpasses the authorized repair limit of ₦100,000 outlined in the policy.  These discrepancies require further investigation and may impact the claim settlement.
+
   TEMPLATE STRUCTURE:
   Examples of human-like discoveries:
   - "After reviewing James' submitted photos, we can see the damage perfectly matches his accident description"
