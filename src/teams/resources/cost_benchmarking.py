@@ -10,7 +10,7 @@ import time
 import numpy as np
 from bs4 import BeautifulSoup
 from typing import List
-from src.error_trace.errorlogger import log_error
+from src.error_trace.errorlogger import system_logger
 from playwright.sync_api import sync_playwright, Page
 class CostBenchmarking:
     def __init__(self, email:str, password:str):
@@ -337,7 +337,7 @@ class CostBenchmarking:
             quoted_price = float(quoted_price.replace(",", ""))
             return self.analyze_price(market_prices, quoted_price)
         except Exception as e:
-            log_error(e)
+            system_logger.error(error=f"An error occurred during item cost analysis: {e}")
 
     def run_with_expected_range(self, search_term:str,market_prices: list):
         """
@@ -354,7 +354,7 @@ class CostBenchmarking:
             expected_range = self.get_expected_price_range(market_prices)
             return f"Expected price range for '{search_term}': {expected_range}"
         except Exception as e:
-            log_error(e)
+            system_logger.error(error=f"An error occurred: {e}")
 
 
 class CostBenchmarkingPlaywright:
@@ -554,7 +554,11 @@ class CostBenchmarkingPlaywright:
         std_dev = np.std(prices)
 
         # Z-score calculation
-        z_score = (quote_price - mean_price) / std_dev
+        if std_dev != 0:
+            z_score = (quote_price - mean_price) / std_dev
+        else:
+            # Handle the case when all prices are the same
+            z_score = 0 if quote_price == mean_price else float('inf')
 
         # Percentile calculation
         percentile = np.sum(prices <= quote_price) / len(prices) * 100
@@ -568,7 +572,8 @@ class CostBenchmarkingPlaywright:
 
         # Outlier check
         is_outlier = quote_price < lower_bound or quote_price > upper_bound
-        z_score_close_to_zero = abs(z_score) < 0.1
+        z_score_close_to_zero = abs(z_score) < 0.1 if std_dev != 0 else True
+
         # Return analysis results
         analysis_result = {
             "analysis": {
@@ -647,7 +652,7 @@ class CostBenchmarkingPlaywright:
             quoted_price = float(quoted_price.replace(",", ""))
             return self.analyze_price(market_prices, quoted_price)
         except Exception as e:
-            log_error(e)
+            system_logger.error(error=f"An error occurred: {e}")
         finally:
             self.close_driver()
 
@@ -656,7 +661,7 @@ class CostBenchmarkingPlaywright:
             expected_range = self.get_expected_price_range(market_prices)
             return f"Expected price range for '{search_term}': {expected_range}"
         except Exception as e:
-            log_error(e)
+            system_logger.error(error=f"An error occurred: {e}")
         finally:
             self.close_driver()
 

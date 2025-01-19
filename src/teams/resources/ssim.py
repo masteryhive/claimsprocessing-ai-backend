@@ -175,11 +175,6 @@ Compare the "image of the vehicle before loss" with the other provided image(s) 
         #     raise ValueError("At least two images are required")
 
         model = GenerativeModel("gemini-1.5-flash-002")
-        print( [
-            pre_loss_image,
-            claim_image,
-        prompt.format(claim_details=claim_details),
-        ])
         response = model.generate_content(
             [
             pre_loss_image,

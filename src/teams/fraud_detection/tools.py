@@ -101,7 +101,53 @@ def investigate_if_this_claimant_is_attempting_a_rapid_policy_claim(
 
 
 ############## vehicle fraud ##################
-niid_data = {}
+@tool
+def validate_if_this_is_a_real_vehicle(
+    vehicle_information: Annotated[
+        str, "vehicle make and brand. e.g toyota corolla 2012"
+    ]
+):
+    """
+    Check if the provided vehicle information corresponds to a real vehicle to mitigate ghost vehicle claims.
+    """
+    # Simulate a check for ghost claims
+    return {"status": "clear", "message": "This vehicle is valid."}
+
+@tool
+def check_NIID_database_(
+    registrationNumber: Annotated[str, "The registration number of the vehicle."],
+    chasisNumber: Annotated[str, "The chassis number of the vehicle."]
+):
+    """
+    this tool calls the NIID database to see if the vehicle has been insured using the registrationNumber and verifies that the vehicle chasis matches NIID internal database records.
+    """
+    niid_data = {}
+    extractor = InsuranceDataExtractor(registrationNumber.strip().lower())
+    niid_data = extractor.run()
+    if niid_data.get("status") == "success":
+        niid_data["check_NIID_database_result"]={"existing_insurance_check_message": "Yes, this vehicle has an existing insurance record in the NIID database"}
+    else:
+        niid_data["check_NIID_database_result"]={"existing_insurance_check_message": "No, this vehicle does not have an existing insurance record in the NIID database"}
+    if (
+        niid_data.get("status") == "success"
+        and niid_data.get("data")["ChassisNumber"].lower() == chasisNumber.strip().lower()
+    ):
+        niid_data["check_NIID_database_result"].update({"chasis_check_message":
+            "Yes, this vehicle chasis number matches NIID internal database records"}
+        )
+    elif (
+        niid_data.get("status") == "success"
+        and niid_data.get("data")["ChassisNumber"].lower() != chasisNumber.strip().lower()
+    ):
+        niid_data["check_NIID_database_result"].update({"chasis_check_message":
+         "No, this vehicle chasis number does not match NIID internal database records"}
+        )
+    else:
+        niid_data["check_NIID_database_result"].update({"chasis_check_message":
+            "No, this vehicle has no record in NIID internal database records, therefore chasis number can not be checked against NIID record."}
+        )
+    extractor.driver_pool.shutdown() #shutdown driver pool for cleanup
+    return niid_data["check_NIID_database_result"]
 
 @tool
 def ssim(
@@ -126,59 +172,6 @@ def ssim(
         return resp
     except Exception as e:
         return {"status": "error", "message": str(e)}
-
-
-@tool
-def validate_if_this_is_a_real_vehicle(
-    vehicle_information: Annotated[
-        str, "vehicle make and brand. e.g toyota corolla 2012"
-    ]
-):
-    """
-    Check if the provided vehicle information corresponds to a real vehicle to mitigate ghost vehicle claims.
-    """
-    # Simulate a check for ghost claims
-    return {"status": "clear", "message": "This vehicle is valid."}
-
-
-@tool
-def check_NIID_database_to_confirm_if_vehicle_has_existing_insurance(
-    registrationNumber: Annotated[str, "claimant's vehicle registration number."]
-):
-    """
-    calls the NIID database to see if the vehicle has been insured using the vehicle registration number.
-    """
-    global niid_data
-
-    extractor = InsuranceDataExtractor(registrationNumber)
-    niid_data = extractor.run()
-    if niid_data.get("status") == "success":
-        niid_data["insured_message"] = "Yes, this vehicle is insured by NIID"
-    else:
-        niid_data["insured_message"] = "No, this vehicle is not insured by NIID"
-    return niid_data["insured_message"]
-
-
-@tool
-def vehicle_chasis_number_matches_NIID_records(
-    vehicle_chasis_number: Annotated[str, "the chasisNumber"]
-):
-    """
-    Verify vehicle chasis matches NIID internal database records.
-    """
-    # Simulate a registration match check
-    if (
-        niid_data.get("status") == "success"
-        and niid_data.get("data")["ChassisNumber"] == vehicle_chasis_number
-    ):
-        niid_data["message"] = (
-            "Yes, this vehicle chasis number matches NIID internal database records"
-        )
-    else:
-        niid_data["message"] = (
-            "No, this vehicle chasis number does not match NIID internal database records"
-        )
-    return niid_data["message"]
 
 
 ############## damage cost fraud ##################
@@ -207,7 +200,13 @@ def item_cost_price_benchmarking_in_local_market(
     benchmarking = get_benchmarking_instance()
 
     try:
+        # print(vehicle_name_and_model_and_damaged_part,quoted_cost)
+        quoted_cost = quoted_cost.replace("\u20a6", "").replace(",", "")
+        quoted_cost = quoted_cost if quoted_cost != "None" else 0
+        quoted_cost_value = float(quoted_cost)
+
         global market_prices
+
         tokunbo_prices = benchmarking.fetch_market_data(
             f"{vehicle_name_and_model_and_damaged_part} tokunbo"
         )
@@ -218,18 +217,13 @@ def item_cost_price_benchmarking_in_local_market(
         market_prices = {"tokunbo": tokunbo_prices, "brand_new": brand_new_prices}
 
         if tokunbo_prices and brand_new_prices:
-            quoted_cost_value = float(
-                quoted_cost.replace("\u20a6", "").replace(",", "")
-            )
             tokunbo_analysis = benchmarking.analyze_price(
                 tokunbo_prices, quoted_cost_value
             )
             brand_new_analysis = benchmarking.analyze_price(
                 brand_new_prices, quoted_cost_value
             )
-            print(
-                f"FAIRLY USED (Tokunbo):\n{tokunbo_analysis}\n\nBRAND NEW:\n{brand_new_analysis}"
-            )
+            # print(f"FAIRLY USED (Tokunbo):\n{tokunbo_analysis}\n\nBRAND NEW:\n{brand_new_analysis}")
             return f"FAIRLY USED (Tokunbo):\n{tokunbo_analysis}\n\nBRAND NEW:\n{brand_new_analysis}"
         return "Unable to fetch market prices. Please try again later."
     except Exception as e:
@@ -245,7 +239,6 @@ def item_pricing_evaluator(
     this cost evaluation tool checks the local market place for how much the damaged part is worth.
     """
     benchmarking = get_benchmarking_instance()
-    print("ok")
     try:
         if market_prices:
             tokunbo_analysis = benchmarking.run_with_expected_range(
