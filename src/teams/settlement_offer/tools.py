@@ -31,11 +31,13 @@ class SettlementConfig:
 def validate_positive_decimal(value: Union[float, Decimal]) -> TypeGuard[Decimal]:
     """Validate and convert input to positive Decimal"""
     try:
-        decimal_value = Decimal(str(value))
-        if decimal_value <= 0:
-            raise NegativeCostError(f"Cost must be positive, got: {value}")
-        if decimal_value > SettlementConfig.MAX_COST_THRESHOLD:
-            raise InvalidCostError(f"Cost exceeds maximum threshold: {value}")
+        if value == "None":
+            return "value can not be None or null, tell the supervisor to ask the fraud detection team to recompute market values"
+        # decimal_value = Decimal(str(value))
+        # if decimal_value <= 0:
+        #     raise NegativeCostError(f"Cost must be positive, got: {value}")
+        # if decimal_value > SettlementConfig.MAX_COST_THRESHOLD:
+        #     raise InvalidCostError(f"Cost exceeds maximum threshold: {value}")
         return True
     except InvalidOperation:
         raise InvalidCostError(f"Invalid cost value: {value}")
@@ -58,15 +60,15 @@ def validate_positive_decimal(value: Union[float, Decimal]) -> TypeGuard[Decimal
 
 @tool
 def determine_settlement_offer_range(
-    fairly_used_cost: Annotated[float, "The median cost of fairly-used parts"],
-    brand_new_price: Annotated[float, "The median cost of brand new parts"]
+    fairly_used_cost: Annotated[str, "The median cost of fairly-used parts"],
+    brand_new_price: Annotated[str, "The median cost of brand new parts"]
 ) -> Dict[str, Decimal]:
     """
     Calculate the settlement offer range based on the provided costs.
     
     Args:
-        fairly_used_cost: The median cost of fairly-used parts
-        brand_new_price: The median cost of brand new parts
+        fairly_used_cost: The median cost of fairly-used parts must be a value otherwise if not provided use 0(can not be None)
+        brand_new_price: The median cost of brand new parts must be a value otherwise if not provided use 0(can not be None)
         
     Returns:
         Dict containing upper and lower interval values as Decimals

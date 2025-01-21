@@ -225,10 +225,10 @@ def item_cost_price_benchmarking_in_local_market(
             )
             # print(f"FAIRLY USED (Tokunbo):\n{tokunbo_analysis}\n\nBRAND NEW:\n{brand_new_analysis}")
             return f"FAIRLY USED (Tokunbo):\n{tokunbo_analysis}\n\nBRAND NEW:\n{brand_new_analysis}"
-        return "Unable to fetch market prices. Please try again later."
+        return "Unable to fetch market prices. Please try again."
     except Exception as e:
         print(f"Error in benchmarking: {e}")
-        return "An error occurred while benchmarking the cost. Please try again later."
+        return "An error occurred while benchmarking the cost. Please try again."
 
 
 @tool

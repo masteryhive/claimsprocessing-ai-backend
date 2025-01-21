@@ -160,10 +160,111 @@ PROCESS_CLERK_PROMPT: |
 
   Policy Details Summary:
    - Coverage Type: {{type_of_policy}} <-- e.g., "Private Vehicle - Comprehensive coverage with special provisions for after-market modifications" -->
+  
   Policy Information:\n{{all_the_retrieved_policy_information_from_policy_essential_data_retriever_agent}}
   - Policy Status: {{Active/Expired}} <-- Active if policy is not expired given the current date -->
   // end of template
 
+  **Example Summaries**
+  Bad Policy Review Summary(presented used Policy Information as json):
+  ❌  ➤ Policy Review Summary
+  We've completed our review of Mr. Ayo Samuel's policy coverage (ZG/P/1000/010101/22/000346) for his recent accident claim.
+
+  Policy Details Summary:
+  - Coverage Type: Comprehensive
+  Policy Information:
+  ```json
+  {{"CancellationModification": {{"CancellationTerms": "7 days' notice by registered letter", "ModificationProcedure": "Not specified", "RefundPolicy": "Pro-rata refund for the remaining policy period"}}, "ClaimsRequirements": {{"AccidentReporting": "Immediate notification to the company and the police", "ContactNumbers": [], "DocumentsRequired": ["Police report", "Photographs of vehicles with registration details", "Phone number and address of third party", "Third party's vehicle documents and valid insurance certificate"], "NoClaimBonus": "Not mentioned in the document", "NotificationPeriod": "Within 15 days from the date of occurrence", "Procedure": "Immediate notification to the company with full particulars. All letters, claims, writs, summonses, and processes should be forwarded immediately upon receipt.", "SubmissionTimeLimit": "Not explicitly stated, but implied to be within a reasonable timeframe"}}, "CoverageDetails": {{"AdditionalCoverages": ["Medical Expenses", "Third Party Liability"], "CoverageLimits": "Section II-1(a): N3,000,000.00\nSection II-1(b): N3,000,000.00\nSection III: N50,000.00", "MainCoverageTypes": ["Accidental collision or overturning", "Fire, external explosion, self-ignition, lighting, burglary, housebreaking, or theft", "Malicious damage", "In transit damage (road, rail, inland waterway, lift, or elevator)"], "RepairLimits": "N100,000.00"}}, "ExclusionsLimitations": {{"Exclusions": ["Consequential loss", "Nuclear risks", "Liability assumed by agreement", "Events outside the geographical area (Nigeria)", "Use not in accordance with certificate of insurance", "Damage caused by unentitled drivers", "Flood, typhoon, hurricane, volcanic eruption, earthquake, or other natural disasters", "War, invasion, hostilities, civil war, etc.", "Damage beyond carriage limits during loading/unloading", "Injury to employees during employment", "Injury to non-employees entering/exiting vehicle", "Damage to insured's property", "Damage to bridges, weighbridges, viaducts", "Damage by sparks/ashes (steam vehicles)", "Boiler explosions", "Learner/inexperienced driver incidents", "Pre-existing damage", "Damage while under the influence of alcohol/drugs", "Claims without prior vehicle inspection", "Incidents involving insured's employees"], "GeographicLimits": "Nigeria", "UsageRestrictions": "As per the Certificate of Insurance"}}, "KeyTermsConditions": {{"Conditions": ["Cooling-off period of 14 days", "Insurer may choose to pay, repair, or replace", "Detailed repair estimate required", "Insurer's consent needed for costs and expenses", "Insurer may take over claims and legal proceedings", "Insured must cooperate with investigations", "Insured must safeguard vehicle and maintain it in efficient condition", "Notice of any incident must be given as soon as possible", "No admission, offer, promise, or payment without insurer's consent", "Insurer may pay full liability and relinquish conduct of defense", "Policy can be canceled with 7 days' notice", "Arbitration for disputes"], "Endorsements": [], "SpecialClauses": ["License clause", "Abandonment clause", "Jurisdiction clause", "Fire extinguisher clause", "Spare parts endorsement", "Constructive total loss clause", "Pair or set clause", "Total loss settlement on pre-accident value basis", "Authorized repair limit clause", "Intoxicating liquors or drugs warranty", "Depreciation in estimate of value", "Maintenance garage clause", "Automatic reduction in total loss payment", "Multiple claims penalty condition", "Pre-loss vehicle inspection clause", "Employee exclusion clause", "Towing clause", "Motor accessories clause", "Salvage retrieval clause", "Betterment clause", "Naked light warranty", "Penalty clause", "Pre-inception or renewal damage exclusion clause", "Subrogation clause"], "Warranties": ["Learner driver warranty", "Vehicle identification number (VIN) warranty", "Claims notification warranty"]}}, "PolicyBasics": {{"PolicyPeriod": {{"From": "16/11/2024", "To": "15/11/2025"}}, "PolicyType": "Comprehensive", "PolicyholderDetails": "Ayo Samuel\nplot 23, colegeorge estate, college road, ogba Ikeja", "PremiumDetails": {{"AnnualPremium": "₩180,000.00", "PaidAmount": "₩180,000.00"}}, "VehicleDetails": {{"MakeModelYear": "Hyundai SUV", "ValueInsured": "4,000,000.00"}}
+  ```
+  - Policy Status: Active
+
+  Findings:
+  Mr. Samuel's policy is active and covers accidental collisions. However, the claim presents two key issues concerning policy adherence:
+
+  1. **Late Notification:** The accident occurred on November 30, 2024, but the claim was filed on January 21, 2025, well beyond the 15-day notification period stipulated in the policy. This violation of the timely notification clause may impact coverage.
+
+  2. **Repair Limit Exceeded:**  The total repair cost of ₦268,000 exceeds the authorized repair limit of ₦100,000 defined in the policy.  This means that even if the claim is approved, the maximum payout under the policy would be ₦100,000, leaving Mr. Samuel responsible for the remaining balance.
+
+  Good Policy Review Summary(clear content presentation and policy template was used):
+  ✅ ➤ Policy Review Summary
+  We've completed our review of Mr. Ayo Samuel's policy coverage (ZG/P/1000/010101/22/000346) for his recent accident claim.
+
+  Policy Details Summary:
+  - Coverage Type: Comprehensive
+
+  Policy Information:
+  - Basic Information
+    Policy Number: ZG/P/1000/010101/22/000346
+    Policyholder: Ayo Samuel
+    Address: Plot 23, Colegeorge Estate, College Road, Ogba Ikeja
+    Policy Type: Comprehensive
+    Policy Period: November 16, 2024 - November 15, 2025
+    Premium: ₩180,000.00 (Fully Paid)
+    Vehicle: Hyundai SUV
+    Insured Value: ₦4,000,000.00
+  \n\n
+  - Coverage Details
+    Main Coverage Types
+    1. Accidental collision or overturning
+    2. Fire, external explosion, self-ignition, lighting, burglary, housebreaking, or theft
+    3. Malicious damage
+    4. In transit damage (road, rail, inland waterway, lift, or elevator)
+  \n\n
+    Additional Coverage
+    1. Medical Expenses
+    2. Third Party Liability
+  \n\n
+    Coverage Limits
+    1. Section II-1(a): ₦3,000,000.00
+    2. Section II-1(b): ₦3,000,000.00
+    3. Section III: ₦50,000.00
+    4. Repair Limit: ₦100,000.00
+  \n\n
+  - Claims Requirements
+    - Accident Reporting: Immediate notification required to company and police
+    - Notification Period: Within 15 days from occurrence
+    Required Documents:
+    - Police report
+    - Photographs of vehicles with registration details
+    - Third party's phone number and address
+    - Third party's vehicle documents and valid insurance certificate
+  \n\n
+  - Key Terms and Conditions
+    Important Conditions
+    - 14-day cooling-off period
+    - Insurer may choose to pay, repair, or replace
+    - Detailed repair estimate required
+    - Insurer's consent needed for costs and expenses
+    - Insured must maintain vehicle in efficient condition
+    - No admission of liability without insurer's consent
+  \n\n
+  - Policy Modifications
+    - Cancellation requires 7 days' notice by registered letter
+    - Pro-rata refund for remaining policy period
+  \n\n
+  - Current Claim Issues
+    - Late Notification Violation
+    - Accident Date: November 30, 2024
+    - Claim Filing Date: January 21, 2025
+    - Issue: Claim filed outside 15-day notification period
+    Repair Cost Exceeds Limit
+    - Actual Repair Cost: ₦268,000
+    - Policy Repair Limit: ₦100,000
+    - Gap: ₦168,000 (policyholder's responsibility)
+  \n\n
+  - Geographic Coverage
+    Limited to Nigeria only
+
+  - Policy Status: Active
+
+  Findings:
+  Mr. Samuel's policy is active and covers accidental collisions. However, the claim presents two key issues concerning policy adherence:
+
+  1. **Late Notification:** The accident occurred on November 30, 2024, but the claim was filed on January 21, 2025, well beyond the 15-day notification period stipulated in the policy. This violation of the timely notification clause may impact coverage.
+
+  2. **Repair Limit Exceeded:**  The total repair cost of ₦268,000 exceeds the authorized repair limit of ₦100,000 defined in the policy.  This means that even if the claim is approved, the maximum payout under the policy would be ₦100,000, leaving Mr. Samuel responsible for the remaining balance.
+
+  Important:
   Do not provide summary of the claim form data as that does not concern your department.
 
   The agent history is as follows:

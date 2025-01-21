@@ -23,7 +23,6 @@ init_vertexai()
 
 _LOGGER = logging.getLogger(__name__)
 _PROCESS_COUNT = multiprocessing.cpu_count()
-_THREAD_CONCURRENCY = _PROCESS_COUNT
 _ONE_DAY = datetime.timedelta(days=1)
 
 class ClaimProcessingService(ClaimsProcessingBaseService):

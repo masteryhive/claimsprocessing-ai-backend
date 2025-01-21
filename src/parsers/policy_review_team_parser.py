@@ -15,9 +15,10 @@ def extract_from_policy_details(text:str,discoveries:list):
     # Clean the details content and format as HTML list
     details_lines = re.split(r"\n", details_content)
     details_html = "<ul>\n" + "\n".join(f"<li>{line.strip()}</li>" for line in details_lines if line.strip()) + "\n</ul>"
+    policy_discoveries = details_content.replace("\n","<br/>")
 
     return {
         "coverageStatus": policy_status.removeprefix("- Policy Status:"),
         "policyReview": details_html,
-        "discoveries": discoveries + ["<br/><br/>" +details_html]
+        "discoveries": discoveries + ["<br/>"+policy_discoveries]
     }
