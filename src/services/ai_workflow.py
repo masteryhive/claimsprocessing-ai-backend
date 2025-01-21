@@ -14,6 +14,7 @@ class ClaimsProcessingBaseService(ClaimsProcessingServicer):
         try:
             process_message(int(request.claimId))
         except Exception as e:
+            
             raise GrpcException(status_code=StatusCode.INTERNAL, details=str(e))
         return Empty() 
     

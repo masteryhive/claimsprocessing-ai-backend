@@ -1,7 +1,7 @@
 from bs4 import BeautifulSoup
 import re
 from src.models.claim_processing import CreateClaimsReport
-
+from src.error_trace.errorlogger import system_logger
 
 def extract_claim_summary(data:str,team_summaries:dict) -> CreateClaimsReport:
     data = data.strip("xml\n").strip("```")
@@ -49,5 +49,5 @@ def extract_claim_summary(data:str,team_summaries:dict) -> CreateClaimsReport:
         )
         return team_summaries["pre_report"]
     except Exception as e:
-        print(e)
+        system_logger.error(error=e)
 

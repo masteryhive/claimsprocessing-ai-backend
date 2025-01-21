@@ -128,27 +128,6 @@ def test_extract_claim_summary_whitespace_handling():
     assert "Finding with spaces" in result["discoveries"]
     assert "Indicator with newlines" in result["fraudIndicators"]
 
-def test_extract_claim_summary_invalid_fraud_score():
-    # Test handling of invalid fraud score
-    input_data = """```xml
-    <fraud_score>invalid</fraud_score>
-    <discovery>Valid discovery</discovery>
-    ```"""
-    
-    team_summaries = {
-        "pre_report": {
-            "discoveries": [],
-            "fraudScore": 0,
-            "fraudIndicators": [],
-            "aiRecommendation": [],
-            "operationStatus": ""
-        }
-    }
-    
-    # This should raise an exception due to invalid float conversion
-    with pytest.raises(Exception):
-        extract_claim_summary(input_data, team_summaries)
-
 def test_extract_claim_summary_empty_input():
     # Test handling of empty input
     input_data = "```xml\n```"

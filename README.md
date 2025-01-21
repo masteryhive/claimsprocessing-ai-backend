@@ -11,6 +11,8 @@ generate proto
         src/protos/claims_processing.proto
 ```
 
+pytest tests/parsers/test_fraud_team_parser.py -v -s
+
 
 1. currency
 2. date so that AI can format the date in document according e.g in the policy docuemnt period 11/01/2024 for nigeria is 11th of january but AI id trained in US format, so it sees it as 1st of november.

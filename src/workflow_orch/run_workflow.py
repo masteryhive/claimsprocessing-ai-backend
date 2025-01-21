@@ -58,28 +58,28 @@ def handle_agent_response(agent: str, messages: list, claim:dict, team_summaries
             doc_data.update({"claimId": claim_id, "details": claim.get("incidentDetails")})
             save_claim_report_database(doc_data)
             team_summaries.update({"discoveries": doc_data.get("discoveries"), "pre_report": doc_data})
-        elif agent == members[1]:
             update_claim_status_database(claim_id=claim_id, status="Reviewing claim policy")
+        elif agent == members[1]:
             print_header(f"{agent} Response")
             print_section(ai_message_content, "")
             policy_data = extract_from_policy_details(ai_message_content, team_summaries["discoveries"])
             team_summaries["pre_report"].update(policy_data)
             update_claim_report_database(claim_id, team_summaries["pre_report"])
-        elif agent == members[2]:
             update_claim_status_database(claim_id=claim_id, status="Running fraud checks")
+        elif agent == members[2]:
             print_header(f"{agent} Response")
             print_section(ai_message_content, "")
             fraud_checks_data = extract_from_fraud_checks(ai_message_content, team_summaries["discoveries"])
             team_summaries["pre_report"].update(fraud_checks_data)
             update_claim_report_database(claim_id, team_summaries["pre_report"])
-        elif agent == members[3]:
             update_claim_status_database(claim_id=claim_id, status="Computing likely offer")
+        elif agent == members[3]:
             print_header(f"{agent} Response")
             print_section(ai_message_content, "")
             settlement_offer_data = extract_from_settlement_offer(ai_message_content, team_summaries["discoveries"])
             team_summaries["pre_report"].update(settlement_offer_data)
             update_claim_report_database(claim_id, team_summaries["pre_report"])
-        
+            update_claim_status_database(claim_id=claim_id, status="Creating Report Summary")
         print(f"{Fore.CYAN}{'─' * HEADER_WIDTH}{Style.RESET_ALL}\n")
     except Exception as e:
         system_logger.error(error=e)
@@ -121,11 +121,10 @@ def handle_summary_team(
 ) -> None:
     """Handle the summary team process."""
     try:
-        update_claim_status_database(claim_id=claim_id, status="Creating Report Summary")
-        messages = process_call["summary_team"]["messages"]
-        content = [m.content for m in messages if isinstance(m, HumanMessage)]
         print_header("summary_team Response")
         update_claim_status_database(claim_id=claim_id, status="Preparing Report Summary")
+        messages = process_call["summary_team"]["messages"]
+        content = [m.content for m in messages if isinstance(m, HumanMessage)]
         result = extract_claim_summary(content[0], team_summaries)
         update_claim_report_database(claim_id, result)
         # Update task record
