@@ -3,8 +3,8 @@
 import grpc
 import warnings
 
+import src.pb.claims_processing_pb2 as claims__processing__pb2
 from google.protobuf import empty_pb2 as google_dot_protobuf_dot_empty__pb2
-from src.pb import claims_processing_pb2 as src_dot_protos_dot_claims__processing__pb2
 
 GRPC_GENERATED_VERSION = '1.69.0'
 GRPC_VERSION = grpc.__version__
@@ -19,7 +19,7 @@ except ImportError:
 if _version_not_supported:
     raise RuntimeError(
         f'The grpc package installed is at version {GRPC_VERSION},'
-        + f' but the generated code in src/protos/claims_processing_pb2_grpc.py depends on'
+        + f' but the generated code in claims_processing_pb2_grpc.py depends on'
         + f' grpcio>={GRPC_GENERATED_VERSION}.'
         + f' Please upgrade your grpc module to grpcio>={GRPC_GENERATED_VERSION}'
         + f' or downgrade your generated code using grpcio-tools<={GRPC_VERSION}.'
@@ -37,13 +37,18 @@ class ClaimsProcessingStub(object):
         """
         self.ProcessClaim = channel.unary_unary(
                 '/claims_processing.ClaimsProcessing/ProcessClaim',
-                request_serializer=src_dot_protos_dot_claims__processing__pb2.ClaimsRequest.SerializeToString,
+                request_serializer=claims__processing__pb2.ClaimsRequest.SerializeToString,
                 response_deserializer=google_dot_protobuf_dot_empty__pb2.Empty.FromString,
                 _registered_method=True)
         self.HealthCheck = channel.unary_unary(
                 '/claims_processing.ClaimsProcessing/HealthCheck',
-                request_serializer=src_dot_protos_dot_claims__processing__pb2.HealthCheckRequest.SerializeToString,
-                response_deserializer=src_dot_protos_dot_claims__processing__pb2.HealthCheckResponse.FromString,
+                request_serializer=claims__processing__pb2.HealthCheckRequest.SerializeToString,
+                response_deserializer=claims__processing__pb2.HealthCheckResponse.FromString,
+                _registered_method=True)
+        self.ViewLogs = channel.unary_unary(
+                '/claims_processing.ClaimsProcessing/ViewLogs',
+                request_serializer=claims__processing__pb2.LogViewRequest.SerializeToString,
+                response_deserializer=claims__processing__pb2.LogViewResponse.FromString,
                 _registered_method=True)
 
 
@@ -62,18 +67,29 @@ class ClaimsProcessingServicer(object):
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
+    def ViewLogs(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
 
 def add_ClaimsProcessingServicer_to_server(servicer, server):
     rpc_method_handlers = {
             'ProcessClaim': grpc.unary_unary_rpc_method_handler(
                     servicer.ProcessClaim,
-                    request_deserializer=src_dot_protos_dot_claims__processing__pb2.ClaimsRequest.FromString,
+                    request_deserializer=claims__processing__pb2.ClaimsRequest.FromString,
                     response_serializer=google_dot_protobuf_dot_empty__pb2.Empty.SerializeToString,
             ),
             'HealthCheck': grpc.unary_unary_rpc_method_handler(
                     servicer.HealthCheck,
-                    request_deserializer=src_dot_protos_dot_claims__processing__pb2.HealthCheckRequest.FromString,
-                    response_serializer=src_dot_protos_dot_claims__processing__pb2.HealthCheckResponse.SerializeToString,
+                    request_deserializer=claims__processing__pb2.HealthCheckRequest.FromString,
+                    response_serializer=claims__processing__pb2.HealthCheckResponse.SerializeToString,
+            ),
+            'ViewLogs': grpc.unary_unary_rpc_method_handler(
+                    servicer.ViewLogs,
+                    request_deserializer=claims__processing__pb2.LogViewRequest.FromString,
+                    response_serializer=claims__processing__pb2.LogViewResponse.SerializeToString,
             ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
@@ -101,7 +117,7 @@ class ClaimsProcessing(object):
             request,
             target,
             '/claims_processing.ClaimsProcessing/ProcessClaim',
-            src_dot_protos_dot_claims__processing__pb2.ClaimsRequest.SerializeToString,
+            claims__processing__pb2.ClaimsRequest.SerializeToString,
             google_dot_protobuf_dot_empty__pb2.Empty.FromString,
             options,
             channel_credentials,
@@ -128,8 +144,35 @@ class ClaimsProcessing(object):
             request,
             target,
             '/claims_processing.ClaimsProcessing/HealthCheck',
-            src_dot_protos_dot_claims__processing__pb2.HealthCheckRequest.SerializeToString,
-            src_dot_protos_dot_claims__processing__pb2.HealthCheckResponse.FromString,
+            claims__processing__pb2.HealthCheckRequest.SerializeToString,
+            claims__processing__pb2.HealthCheckResponse.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def ViewLogs(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/claims_processing.ClaimsProcessing/ViewLogs',
+            claims__processing__pb2.LogViewRequest.SerializeToString,
+            claims__processing__pb2.LogViewResponse.FromString,
             options,
             channel_credentials,
             insecure,

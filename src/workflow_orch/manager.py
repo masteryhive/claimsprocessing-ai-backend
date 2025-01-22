@@ -75,7 +75,7 @@ def create_or_get_task(db: sessionmaker, claim_request: ProcessClaimTask) -> Tas
         system_logger.error(f"Task creation/retrieval failed: {str(e)}")
         raise ClaimProcessingError(f"Failed to create/get task: {str(e)}")
     
-def process_message(id: int):
+def start_process_manager(id: int):
     """
     Robust message processing with comprehensive error handling.
 

@@ -14,7 +14,16 @@ message HealthCheckResponse {
   string status = 1;
 }
 
+message LogViewRequest {
+  string log_type = 1; // Accepts "error" or "info"
+}
+
+message LogViewResponse {
+  repeated string logs = 1; // List of log messages
+}
+
 service ClaimsProcessing {
   rpc ProcessClaim(ClaimsRequest) returns (google.protobuf.Empty) {}
   rpc HealthCheck(HealthCheckRequest) returns (HealthCheckResponse) {}
+  rpc ViewLogs(LogViewRequest) returns (LogViewResponse) {} 
 }
