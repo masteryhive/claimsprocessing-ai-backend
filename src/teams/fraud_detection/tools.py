@@ -1,16 +1,17 @@
+import asyncio
 from datetime import datetime
 import json
 from pathlib import Path
-from langchain_core.tools import tool
-from typing import Annotated
-from langchain_core.tools import StructuredTool
-from pydantic import BaseModel, Field
+from langchain_core.tools import tool,StructuredTool,ToolException
+from typing import Annotated,Optional, Dict, List, Any
 from src.teams.resources.ssim import structural_similarity_index_measure
 from src.rag.context_stuffing import process_query
-from src.teams.resources.cost_benchmarking import CostBenchmarkingPlaywright
-from src.teams.resources.retrieve_vehicle_policy import InsuranceDataExtractor
+from src.pipelines.local_markets.jiji.cost_benchmarking import CostBenchmarking
+from src.pipelines.niid_check import InsuranceDataExtractor
 from src.utilities.pdf_handlers import download_pdf
-from typing import TypedDict
+from typing_extensions import Annotated
+from contextlib import asynccontextmanager
+from src.error_trace.errorlogger import system_logger
 ############## Fraud checks tool ##############
 rag_path = Path(__file__).parent.parent / "policy_doc/"
 
@@ -113,8 +114,8 @@ def validate_if_this_is_a_real_vehicle(
     # Simulate a check for ghost claims
     return {"status": "clear", "message": "This vehicle is valid."}
 
-@tool
-def check_NIID_database_(
+
+async def acheck_NIID_database_(
     registrationNumber: Annotated[str, "The registration number of the vehicle."],
     chasisNumber: Annotated[str, "The chassis number of the vehicle."]
 ):
@@ -123,7 +124,8 @@ def check_NIID_database_(
     """
     niid_data = {}
     extractor = InsuranceDataExtractor(registrationNumber.strip().lower())
-    niid_data = extractor.run()
+    niid_data = await extractor.run()
+
     if niid_data.get("status") == "success":
         niid_data["check_NIID_database_result"]={"existing_insurance_check_message": "Yes, this vehicle has an existing insurance record in the NIID database"}
     else:
@@ -146,8 +148,9 @@ def check_NIID_database_(
         niid_data["check_NIID_database_result"].update({"chasis_check_message":
             "No, this vehicle has no record in NIID internal database records, therefore chasis number can not be checked against NIID record."}
         )
-    extractor.driver_pool.shutdown() #shutdown driver pool for cleanup
     return niid_data["check_NIID_database_result"]
+
+check_NIID_database_ = StructuredTool.from_function(coroutine=acheck_NIID_database_)
 
 @tool
 def ssim(
@@ -166,6 +169,16 @@ def ssim(
     Returns:
     str: The result of the SSIM analysis.
     """
+    # Validate inputs
+    if not prelossImageUrl or not damageConditionImageUrl or not incidentDetails:
+        raise ToolException("All inputs (prelossImageUrl, damageConditionImageUrl, and incidentDetails) must be provided")
+
+    prelossImageUrl = prelossImageUrl.strip()
+    damageConditionImageUrl = damageConditionImageUrl.strip() 
+    incidentDetails = incidentDetails.strip()
+
+    if not prelossImageUrl or not damageConditionImageUrl or not incidentDetails:
+        raise ToolException("All inputs must contain non-empty strings")
     try:
         ssim_data = [{"prelossUrl": prelossImageUrl.replace("https://storage.googleapis.com","gs://"), "claimUrl": damageConditionImageUrl.replace("https://storage.googleapis.com/","gs://")}]
         resp = structural_similarity_index_measure(incidentDetails, ssim_data)
@@ -176,81 +189,115 @@ def ssim(
 
 ############## damage cost fraud ##################
 
-# Create a singleton instance at module level
-_benchmarking_instance = None
+class BenchmarkingToolkit:
+    _instance: Optional['BenchmarkingToolkit'] = None
+    _benchmarking: Optional[CostBenchmarking] = None
+    _market_prices: Dict[str, List[float]] = {}
+    
+    def __new__(cls):
+        if cls._instance is None:
+            cls._instance = super().__new__(cls)
+        return cls._instance
+    
+    @classmethod
+    @asynccontextmanager
+    async def get_benchmarking(cls):
+        if cls._benchmarking is None:
+            cls._benchmarking = CostBenchmarking(
+                email="sam@masteryhive.ai",
+                password="JLg8m4aQ8n46nhC"
+            )
+            await cls._benchmarking.__aenter__()
+        try:
+            yield cls._benchmarking
+        except Exception as e:
+            system_logger.error(f"Error in benchmarking context: {e}")
+            raise
+    
+    @classmethod
+    async def cleanup(cls):
+        if cls._benchmarking:
+            await cls._benchmarking.__aexit__(None, None, None)
+            cls._benchmarking = None
+
+    @classmethod
+    def parse_quoted_cost(cls, quoted_cost: str) -> float:
+        quoted_cost = quoted_cost.replace("\u20a6", "").replace(",", "")
+        return float(quoted_cost if quoted_cost != "None" else 0)
+
+    @classmethod
+    async def fetch_prices(cls, search_term: str) -> Dict[str, List[float]]:
+        async with cls.get_benchmarking() as benchmarking:
+            tokunbo_prices = await benchmarking.analyze_market_price(
+                f"{search_term} tokunbo", 0
+            )
+            brand_new_prices = await benchmarking.analyze_market_price(
+                f"{search_term} brand new", 0
+            )
+            cls._market_prices = {
+                "tokunbo": tokunbo_prices,
+                "brand_new": brand_new_prices
+            }
+            return cls._market_prices
 
 
-def get_benchmarking_instance():
-    global _benchmarking_instance
-    if _benchmarking_instance is None:
-        email = "sam@masteryhive.ai"
-        password = "JLg8m4aQ8n46nhC"
-        _benchmarking_instance = CostBenchmarkingPlaywright(email, password)
-    return _benchmarking_instance
-
-
-@tool
-def item_cost_price_benchmarking_in_local_market(
+async def aitem_cost_price_benchmarking_in_local_market(
     vehicle_name_and_model_and_damaged_part: Annotated[str, "search term"],
     quoted_cost: Annotated[str, "quoted cost"],
 ) -> str:
-    """
-    Benchmarks the quoted cost for vehicle repairs against local market prices.
-    """
-    benchmarking = get_benchmarking_instance()
-
+    """Benchmarks quoted cost for vehicle repairs against local market prices."""
+    toolkit = BenchmarkingToolkit()
+    
     try:
-        # print(vehicle_name_and_model_and_damaged_part,quoted_cost)
-        quoted_cost = quoted_cost.replace("\u20a6", "").replace(",", "")
-        quoted_cost = quoted_cost if quoted_cost != "None" else 0
-        quoted_cost_value = float(quoted_cost)
-
-        global market_prices
-
-        tokunbo_prices = benchmarking.fetch_market_data(
-            f"{vehicle_name_and_model_and_damaged_part} tokunbo"
-        )
-        brand_new_prices = benchmarking.fetch_market_data(
-            f"{vehicle_name_and_model_and_damaged_part} brand new"
-        )
-
-        market_prices = {"tokunbo": tokunbo_prices, "brand_new": brand_new_prices}
-
-        if tokunbo_prices and brand_new_prices:
-            tokunbo_analysis = benchmarking.analyze_price(
-                tokunbo_prices, quoted_cost_value
+        quoted_cost_value = toolkit.parse_quoted_cost(quoted_cost)
+        market_prices = await toolkit.fetch_prices(vehicle_name_and_model_and_damaged_part)
+        
+        async with toolkit.get_benchmarking() as benchmarking:
+            tokunbo_analysis = await benchmarking.analyze_market_price(
+                f"{vehicle_name_and_model_and_damaged_part} tokunbo",
+                quoted_cost_value
             )
-            brand_new_analysis = benchmarking.analyze_price(
-                brand_new_prices, quoted_cost_value
+            brand_new_analysis = await benchmarking.analyze_market_price(
+                f"{vehicle_name_and_model_and_damaged_part} brand new",
+                quoted_cost_value
             )
-            # print(f"FAIRLY USED (Tokunbo):\n{tokunbo_analysis}\n\nBRAND NEW:\n{brand_new_analysis}")
-            return f"FAIRLY USED (Tokunbo):\n{tokunbo_analysis}\n\nBRAND NEW:\n{brand_new_analysis}"
-        return "Unable to fetch market prices. Please try again."
+            
+        return f"FAIRLY USED (Tokunbo):\n{tokunbo_analysis}\n\nBRAND NEW:\n{brand_new_analysis}"
+    
     except Exception as e:
-        print(f"Error in benchmarking: {e}")
+        system_logger.error(f"Error in benchmarking: {e}")
         return "An error occurred while benchmarking the cost. Please try again."
 
 
-@tool
-def item_pricing_evaluator(
+item_cost_price_benchmarking_in_local_market = StructuredTool.from_function(coroutine=aitem_cost_price_benchmarking_in_local_market)
+
+
+async def item_pricing_evaluator(
     vehicle_name_and_model_and_damaged_part: Annotated[str, "search term"]
-):
-    """
-    this cost evaluation tool checks the local market place for how much the damaged part is worth.
-    """
-    benchmarking = get_benchmarking_instance()
+) -> str:
+    """Evaluates cost ranges for vehicle parts in the local market."""
+    toolkit = BenchmarkingToolkit()
+    
     try:
-        if market_prices:
-            tokunbo_analysis = benchmarking.run_with_expected_range(
-                vehicle_name_and_model_and_damaged_part, market_prices["tokunbo"]
+        if not toolkit._market_prices:
+            await toolkit.fetch_prices(vehicle_name_and_model_and_damaged_part)
+            
+        async with toolkit.get_benchmarking() as benchmarking:
+            tokunbo_range = benchmarking.analyzer.get_expected_price_range(
+                toolkit._market_prices["tokunbo"]
             )
-            brand_new_analysis = benchmarking.run_with_expected_range(
-                vehicle_name_and_model_and_damaged_part, market_prices["brand_new"]
+            brand_new_range = benchmarking.analyzer.get_expected_price_range(
+                toolkit._market_prices["brand_new"]
             )
-            return f"FAIRLY USED (Tokunbo):\n{tokunbo_analysis}\n\nBRAND NEW:\n{brand_new_analysis}"
-        return "Unable to fetch market prices. Please try again later."
+            
+        return (
+            f"FAIRLY USED (Tokunbo):\nExpected price range: {tokunbo_range}\n\n"
+            f"BRAND NEW:\nExpected price range: {brand_new_range}"
+        )
+    
     except Exception as e:
-        return "sorry, this tool can not be used at the moment"
+        system_logger.error(f"Error in price evaluation: {e}")
+        return "Price evaluation unavailable at this time"
 
 
 ################### other checks ################

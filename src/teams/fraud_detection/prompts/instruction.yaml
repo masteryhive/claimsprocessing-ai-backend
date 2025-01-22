@@ -137,8 +137,8 @@ VEHICLE_FRAUD_INVESTIGATOR_AGENT_SYSTEM_PROMPT: |
   - Policy Number: {{policy_number}}
   - Claimant is making claim that already exists in preloss: {{is_the_damage_being_filed_for_already_there_in_the_car_before_insurance}} <-- response is Yes or No -->
   - Vehicle is Real: {{was_the_vehicle_confirmed_as_real}} <-- response is Yes or No -->
-  - Vehicle is Insured By NIID: {{is_the_vehicle_insured_by_NIID}} <-- response is Yes or No -->
-  - Vehicle Chasis Matches: {{does_vehicle_chasis_matches_that_of_NIID_database}}  <-- response is Yes or No -->
+  - Vehicle is Insured By NIID: {{is_the_vehicle_insured_by_NIID}} <-- response is Yes, there is an existing policy/No, there is no active policy on NIID database -->
+  - Vehicle Chasis Matches: {{does_vehicle_chasis_matches_that_of_NIID_database}}  <-- response is Yes, NIID data confirms it/No, there is no active policy on NIID database to confirm this -->
 
   INVESTIGATION CONSTRAINTS:
   - Maintain absolute objectivity
@@ -286,8 +286,8 @@ PROCESS_CLERK_PROMPT: |
   Fraud Investigation Details:
   - Fraud Threshold score: {{fraud_score_from_the_fraud_risk_analyst}}
   - Damaged Part Repair Price From Local Market: 
-    - Marginal Price for Fairly-used parts: {{the_fairly-used_item_cost_price_benmark_from_the_local_market}} <-- add currency symbol -->
-    - Marginal Price for Brand Ne parts: {{the_brand_new_item_cost_price_benmark_from_the_local_market}}  <-- add currency symbol -->
+    - Marginal Price for Fairly-used parts: {{the_fairly-used_item_cost_price_benchmark_from_the_local_market}} <-- add currency symbol -->
+    - Marginal Price for Brand Ne parts: {{the_brand_new_item_cost_price_benchmark_from_the_local_market}}  <-- add currency symbol -->
   - Key Concerns Identified: {{a_detailed_list_of_leading_indicators_from_which_the_fraud_is_suspected}}
 
   PreLoss Comparison:
