@@ -8,7 +8,7 @@ def extract_claim_summary(data:str, discoveries: list) -> CreateClaimsReport:
     fraud_score = re.search(
         r"<fraud_score>\s*(?:\/\/)?(.*?)\s*</fraud_score>", data, re.DOTALL
     )
-    discoveries = re.findall(
+    summary_discoveries = re.findall(
         r"<discovery>\s*(?:\/\/)?(.*?)\s*</discovery>", data, re.DOTALL
     )
     fraud_indicators = re.findall(
@@ -27,7 +27,7 @@ def extract_claim_summary(data:str, discoveries: list) -> CreateClaimsReport:
         fraud_score_data = fraud_score.group(1).strip() if fraud_score else 0
         if fraud_score_data == 'Information Not Available':
             fraud_score_data = 0
-        report_discoveries = [discovery.strip() for discovery in discoveries]
+        report_discoveries = [discovery.strip() for discovery in summary_discoveries]
 
         return {
                "fraudScore": float(fraud_score_data),

@@ -131,6 +131,7 @@ def handle_summary_team(
         update_claim_status_database(claim_id=claim_id, status="Preparing Report Summary")
         messages = process_call["summary_team"]["messages"]
         content = [m.content for m in messages if isinstance(m, HumanMessage)]
+        print_section(content[0], "")
         claim_processing_summary = extract_claim_summary(content[0], team_summaries.discoveries)
         team_summaries=team_summaries.model_copy(update=claim_processing_summary)
         update_claim_report_database(claim_id, team_summaries)
@@ -138,7 +139,6 @@ def handle_summary_team(
         task.status = TaskStatus.COMPLETED
         db.commit()
         db.refresh(task)
-        print_section(content[0], "")
         update_claim_status_database(claim_id=claim_id, status=claim_processing_summary["operationStatus"])
         return team_summaries
     except Exception as e:
