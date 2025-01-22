@@ -1,5 +1,4 @@
 
-from asyncio import create_task
 from typing import Dict, Any
 from colorama import init, Fore, Style
 import textwrap
@@ -133,6 +132,6 @@ def handle_summary_team(
         db.commit()
         db.refresh(task)
         print_section(content[0], "")
-        update_claim_status_database(claim_id=claim_id, status=result["operationStatus"])
+        update_claim_status_database(claim_id=claim_id, status=claim_processing_summary["operationStatus"])
     except Exception as e:
         system_logger.error(error=e)
