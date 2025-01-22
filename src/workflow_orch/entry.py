@@ -19,9 +19,9 @@ from langchain_core.messages import HumanMessage
 from src.utilities.helpers import _new_get_datetime
 
 init_vertexai()
-# if __name__ == "__main__":
-#     # delete_claim_report_by_id(SessionLocal(),90)
-#     process_message(100)
+if __name__ == "__main__":
+    # delete_claim_report_by_id(SessionLocal(),90)
+    process_message(100)
 
 
 # {

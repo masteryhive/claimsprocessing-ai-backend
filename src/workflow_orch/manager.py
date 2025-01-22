@@ -16,6 +16,7 @@ from src.database.db_ops import (
     get_claim_from_database,
     update_claim_status_database,
 )
+from src.models.claim_processing import UpdateClaimsReportModel
 from tenacity import retry, stop_after_attempt, wait_exponential
 from langchain_core.messages import HumanMessage
 # # from error_trace.errorlogger import log_error, log_info
@@ -136,7 +137,7 @@ def process_message(id: int):
                 raise ClaimProcessingError(f"Failed to update status: {str(e)}")
             try:
                 # Process claim workflow
-                team_summaries: Dict[str, Any] = {}
+                team_summaries: UpdateClaimsReportModel = UpdateClaimsReportModel()
                 for s in super_graph.stream(
                     {
                         "messages": [
@@ -156,7 +157,7 @@ def process_message(id: int):
                     # interrupt_after=call_summary_team
                 ):
                     if "__end__" not in s:
-                        control_workflow(
+                        team_summaries = control_workflow(
                             db,
                             claim_data.model_dump(),
                             claim_id,

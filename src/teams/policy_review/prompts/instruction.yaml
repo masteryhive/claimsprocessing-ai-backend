@@ -202,24 +202,24 @@ PROCESS_CLERK_PROMPT: |
     Premium: ₩180,000.00 (Fully Paid)
     Vehicle: Hyundai SUV
     Insured Value: ₦4,000,000.00
-  \n\n
+
   - Coverage Details
     Main Coverage Types
     1. Accidental collision or overturning
     2. Fire, external explosion, self-ignition, lighting, burglary, housebreaking, or theft
     3. Malicious damage
     4. In transit damage (road, rail, inland waterway, lift, or elevator)
-  \n\n
+
     Additional Coverage
     1. Medical Expenses
     2. Third Party Liability
-  \n\n
+
     Coverage Limits
     1. Section II-1(a): ₦3,000,000.00
     2. Section II-1(b): ₦3,000,000.00
     3. Section III: ₦50,000.00
     4. Repair Limit: ₦100,000.00
-  \n\n
+
   - Claims Requirements
     - Accident Reporting: Immediate notification required to company and police
     - Notification Period: Within 15 days from occurrence
@@ -228,7 +228,7 @@ PROCESS_CLERK_PROMPT: |
     - Photographs of vehicles with registration details
     - Third party's phone number and address
     - Third party's vehicle documents and valid insurance certificate
-  \n\n
+
   - Key Terms and Conditions
     Important Conditions
     - 14-day cooling-off period
@@ -237,11 +237,11 @@ PROCESS_CLERK_PROMPT: |
     - Insurer's consent needed for costs and expenses
     - Insured must maintain vehicle in efficient condition
     - No admission of liability without insurer's consent
-  \n\n
+
   - Policy Modifications
     - Cancellation requires 7 days' notice by registered letter
     - Pro-rata refund for remaining policy period
-  \n\n
+
   - Current Claim Issues
     - Late Notification Violation
     - Accident Date: November 30, 2024
@@ -251,7 +251,7 @@ PROCESS_CLERK_PROMPT: |
     - Actual Repair Cost: ₦268,000
     - Policy Repair Limit: ₦100,000
     - Gap: ₦168,000 (policyholder's responsibility)
-  \n\n
+
   - Geographic Coverage
     Limited to Nigeria only
 

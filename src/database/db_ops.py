@@ -75,7 +75,7 @@ def save_claim_report_database(claim_report: dict) -> bool:
         system_logger.error(error=f"Error occurred while saving claim report to database: {e}")
         return False
 
-def update_claim_report_database(claim_id:int,claim_report: dict) -> bool:
+def update_claim_report_database(claim_id:int,claim_report: UpdateClaimsReportModel) -> bool:
     """
     This function saves claims report information to the database by sending a POST request to the backend API.
     
@@ -85,11 +85,9 @@ def update_claim_report_database(claim_id:int,claim_report: dict) -> bool:
     - A boolean indicating whether the operation was successful.
     """
     try:
-        # Assuming CreateClaimsReport is a class that takes a dictionary and converts it to a model instance
-        model_instance = UpdateClaimsReportModel(**claim_report)  # Instantiate the model
-        
+ 
         # Convert model instance to a dictionary or JSON-serializable format
-        model_result = model_instance.model_dump()  # or json.dumps(model_instance) if it's a dict-like object
+        model_result = claim_report.model_dump()
         print(json.dumps(model_result))
         # Send a PATCH request to the endpoint using httpx
         with httpx.Client() as client:

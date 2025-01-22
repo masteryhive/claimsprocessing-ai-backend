@@ -25,5 +25,5 @@ def extract_from_fraud_checks(text:str, discoveries: list)->dict:
     )
     return {
         "preLossComparison": pre_loss_data.replace("\n","<br/>"),
-        "discoveries": discoveries + ["\n\n" + fraud_report_summary]
+        "discoveries": discoveries + ["<br/>" + fraud_report_summary]
     }
