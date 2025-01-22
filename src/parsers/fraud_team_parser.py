@@ -18,10 +18,10 @@ def extract_from_fraud_checks(text:str, discoveries: list)->dict:
     
     # Create fraud report summary
     fraud_report_summary = (
-        f"Fraud Assessment Summary:\n"
+        f"Fraud Assessment Summary:<br/>"
         # f"- Fraud Score: {fraud_score}\n"
-        f"- Risk Level: {risk_level}\n"
-        f"- Recommendations: {recommendations}"
+        f"- Risk Level: {risk_level}<br/>"
+        f"- Recommendations: {recommendations}<br/>"
     )
     return {
         "preLossComparison": pre_loss_data.replace("\n","<br/>"),

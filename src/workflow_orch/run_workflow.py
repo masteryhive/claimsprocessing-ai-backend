@@ -125,8 +125,9 @@ def handle_summary_team(
         update_claim_status_database(claim_id=claim_id, status="Preparing Report Summary")
         messages = process_call["summary_team"]["messages"]
         content = [m.content for m in messages if isinstance(m, HumanMessage)]
-        result = extract_claim_summary(content[0], team_summaries)
-        update_claim_report_database(claim_id, result)
+        claim_processing_summary = extract_claim_summary(content[0], team_summaries["discoveries"])
+        team_summaries["pre_report"].update(claim_processing_summary)
+        update_claim_report_database(claim_id, team_summaries["pre_report"])
         # Update task record
         task.status = TaskStatus.COMPLETED
         db.commit()
