@@ -11,6 +11,7 @@ from langchain_core.prompts import (
 from langchain_core.messages import BaseMessage
 from langchain.agents import AgentExecutor, create_tool_calling_agent
 from langchain_core.output_parsers import JsonOutputParser
+from langgraph.graph.message import add_messages
 
 class ClaimFormScreeningTeamAgentState(TypedDict):
     messages: Annotated[list, add_messages]
