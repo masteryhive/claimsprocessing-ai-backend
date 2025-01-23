@@ -268,10 +268,20 @@ def item_cost_price_benchmarking_in_local_market(
     quoted_cost: Annotated[str, "quoted cost"],
 ) -> str:
     """Benchmarks quoted cost for vehicle repairs against local market prices."""
+    
     toolkit = BenchmarkingToolkit()
     
     try:
         async def async_task():
+            async with CostBenchmarking(
+                    email="sam@masteryhive.ai",
+                    password="JLg8m4aQ8n46nhC"
+                ) as benchmarking:
+                    result = await benchmarking.analyze_market_price(
+                        f"{vehicle_name_and_model_and_damaged_part} tokunbo",
+                        quoted_cost
+                    )
+                    print(result)
             quoted_cost_value = toolkit.parse_quoted_cost(quoted_cost)
             market_prices = await toolkit.fetch_prices(vehicle_name_and_model_and_damaged_part)
             

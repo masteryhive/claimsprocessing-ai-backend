@@ -46,6 +46,7 @@ def comms_node(state):
     input = {
         "messages": [state["messages"][-1]],
         "agent_history": state["agent_history"],
+        "claim_form_json":state["claim_form_json"],
     }
     result = claim_adjuster_1_agent.invoke(input)
     # respond back to the user.
