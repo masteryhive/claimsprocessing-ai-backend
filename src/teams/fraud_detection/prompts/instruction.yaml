@@ -137,7 +137,7 @@ VEHICLE_FRAUD_INVESTIGATOR_AGENT_SYSTEM_PROMPT: |
   - Policy Number: {{policy_number}}
   - Claimant is making claim that already exists in preloss: {{is_the_damage_being_filed_for_already_there_in_the_car_before_insurance}} <-- response is Yes or No -->
   - Vehicle is Real: {{was_the_vehicle_confirmed_as_real}} <-- response is Yes or No -->
-  - Vehicle is Insured By NIID: {{is_the_vehicle_insured_by_NIID}} <-- response is Yes, there is an existing policy/No, there is no active policy on NIID database -->
+  - Vehicle is Insured By NIID: {{is_the_vehicle_insured_by_NIID}} <-- response is Yes, there is an existing policy with certificate number: {{the_InsuranceCerticateNumber_from_your_tool}}/No, there is no active policy on NIID database -->
   - Vehicle Chasis Matches: {{does_vehicle_chasis_matches_that_of_NIID_database}}  <-- response is Yes, NIID data confirms it/No, there is no active policy on NIID database to confirm this -->
 
   INVESTIGATION CONSTRAINTS:

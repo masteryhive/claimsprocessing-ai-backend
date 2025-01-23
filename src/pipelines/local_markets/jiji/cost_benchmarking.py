@@ -4,6 +4,7 @@ from src.pipelines.local_markets.jiji.playwright_browser import PlaywrightBrowse
 from src.pipelines.local_markets.price_analyzer import PriceAnalyzer
 from src.pipelines.local_markets.market_data_fetcher import JijiMarketDataFetcher
 from typing import Optional, Dict, Any
+from langchain_core.tools import ToolException
 
 class CostBenchmarking:
     def __init__(
@@ -40,13 +41,13 @@ class CostBenchmarking:
         )
 
     async def analyze_market_price(self, search_term: str, quoted_price: float) -> str:
-        
         page = await self.browser.context.new_page()
         await self.browser.login(page)
         market_prices = await self.fetcher.fetch_market_data(page, search_term)
+        if isinstance(market_prices,str):
+            return market_prices
         if not market_prices:
-            return "Unable to fetch market prices"
-            
+            ToolException("Unable to fetch market prices")
         analysis = self.analyzer.analyze_price_realism(market_prices, quoted_price)
         await self.browser.cleanup()
         return self.format_analysis_result(analysis, quoted_price)
@@ -58,8 +59,8 @@ class CostBenchmarking:
 #         password="JLg8m4aQ8n46nhC"
 #     ) as benchmarking:
 #         result = await benchmarking.analyze_market_price(
-#             "hyundai sonata side mirror tokunbo",
-#             49000
+#             "hyundai suv 2019 side mirror tokunbo",
+#             49000.4
 #         )
 #         print(result)
     

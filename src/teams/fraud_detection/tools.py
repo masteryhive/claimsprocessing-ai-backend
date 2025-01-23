@@ -18,12 +18,6 @@ from decimal import Decimal, InvalidOperation
 rag_path = Path(__file__).parent.parent / "policy_doc/"
 
 
-@tool
-def search(query: str):
-    """Call to surf the web."""
-    print(query)
-    # This is a placeholder, but don't tell the LLM that...
-    return ["The answer to your question lies within."]
 
 @tool
 def verify_this_claimant_exists_as_a_customer(
@@ -213,63 +207,13 @@ def ssim(
 
 ############## damage cost fraud ##################
 
-class BenchmarkingToolkit:
-    _instance: Optional['BenchmarkingToolkit'] = None
-    _benchmarking: Optional[CostBenchmarking] = None
-    _market_prices: Dict[str, List[float]] = {}
-    
-    def __new__(cls):
-        if cls._instance is None:
-            cls._instance = super().__new__(cls)
-        return cls._instance
-    
-    @classmethod
-    @asynccontextmanager
-    async def get_benchmarking(cls):
-        if cls._benchmarking is None:
-            cls._benchmarking = CostBenchmarking(
-                email="sam@masteryhive.ai",
-                password="JLg8m4aQ8n46nhC"
-            )
-            await cls._benchmarking.__aenter__()
-        try:
-            yield cls._benchmarking
-        except Exception as e:
-            system_logger.error(f"Error in benchmarking context: {e}")
-            raise
-    
-    @classmethod
-    async def cleanup(cls):
-        if cls._benchmarking:
-            await cls._benchmarking.__aexit__(None, None, None)
-            cls._benchmarking = None
-
-    @classmethod
-    def parse_quoted_cost(cls, quoted_cost: str) -> float:
-        quoted_cost = quoted_cost.replace("\u20a6", "").replace(",", "")
-        return float(quoted_cost if quoted_cost != "None" else 0)
-
-    @classmethod
-    async def fetch_prices(cls, search_term: str) -> Dict[str, List[float]]:
-        async with cls.get_benchmarking() as benchmarking:
-            tokunbo_prices = await benchmarking.analyze_market_price(
-                f"{search_term} tokunbo", 0
-            )
-            brand_new_prices = await benchmarking.analyze_market_price(
-                f"{search_term} brand new", 0
-            )
-            cls._market_prices = {
-                "tokunbo": tokunbo_prices,
-                "brand_new": brand_new_prices
-            }
-            return cls._market_prices
-
-
+market_prices = {}
 async def aitem_cost_price_benchmarking_in_local_market(
     vehicle_name_and_model_and_damaged_part: Annotated[str, "search term"],
     quoted_cost: Annotated[str, "quoted cost"],
 ) -> str:
     """Benchmarks quoted cost for vehicle repairs against local market prices."""
+    global market_prices
     try:
         # Validate vehicle_name_and_model_and_damaged_part
         if not isinstance(vehicle_name_and_model_and_damaged_part, str) or not vehicle_name_and_model_and_damaged_part.strip():
@@ -299,13 +243,15 @@ async def aitem_cost_price_benchmarking_in_local_market(
             
             # Run tasks concurrently
             results = await asyncio.gather(*tasks)
-            
+            condition_result = []
+            for condition, result in zip(conditions, results):
+                market_prices.update({
+                     condition.replace(" ","_"):result
+                 })
+                condition_result.append(f"{condition.upper()}:\n{result}")
             # Format results
-            formatted_results = "\n\n".join([
-                f"{condition.upper()}:\n{result}" 
-                for condition, result in zip(conditions, results)
-            ])
-            print(formatted_results)
+            formatted_results = "\n\n".join(condition_result)
+
             return formatted_results
     
     except ToolException as e:
@@ -340,19 +286,17 @@ def item_pricing_evaluator(
     vehicle_name_and_model_and_damaged_part: Annotated[str, "search term"]
 ) -> str:
     """Evaluates cost ranges for vehicle parts in the local market."""
-    toolkit = BenchmarkingToolkit()
-    
+
     try:
         async def async_task():
-            if not toolkit._market_prices:
-                await toolkit.fetch_prices(vehicle_name_and_model_and_damaged_part)
-                
-            async with toolkit.get_benchmarking() as benchmarking:
+            async with CostBenchmarking(
+                email="sam@xxxx",
+                password="xxxx") as benchmarking:
                 tokunbo_range = benchmarking.analyzer.get_expected_price_range(
-                    toolkit._market_prices["tokunbo"]
+                    market_prices["fairly_used"]
                 )
                 brand_new_range = benchmarking.analyzer.get_expected_price_range(
-                    toolkit._market_prices["brand_new"]
+                    market_prices["brand_new"]
                 )
                 
             return (
