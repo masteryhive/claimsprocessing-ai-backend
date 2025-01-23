@@ -209,7 +209,7 @@ super_builder.add_node(members[0], call_doc_team)
 super_builder.add_node(members[1], call_pol_team)
 super_builder.add_node(members[2], call_fraud_team)
 super_builder.add_node(members[3], call_settlement_offer_team)
-# super_builder.add_node(members[4], call_summary_team)
+super_builder.add_node(members[4], call_summary_team)
 
 # Define the control flow
 super_builder.add_edge(START, "supervisor")

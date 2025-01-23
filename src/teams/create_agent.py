@@ -105,7 +105,11 @@ def create_supervisor_node(
 
     return prompt | llm | supervisor_parser
 
-
+def create_atool_agent(state:dict,llm,tools):
+    llm_with_tools = llm.bind_tools(tools)
+    result = llm_with_tools.invoke(state["messages"])
+    return {"messages": [result]}
+    
 def create_tool_agent(llm: ChatVertexAI, tools: list):
     """Helper function to create agents with custom tools and system prompt
     Args:

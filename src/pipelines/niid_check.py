@@ -33,6 +33,7 @@ class InsuranceDataExtractor:
             soup = BeautifulSoup(await page.content(), "html.parser")
             result = {
                 "PolicyNumber": soup.find("span", {"id": "ContentPlaceHolder1_lblPolicyNo"}).text,
+                "InsuranceCerticateNumber" : soup.find("span", {"id": "ContentPlaceHolder1_lblBrownCardPolicyNo"}).text,
                 "NewRegistrationNumber": soup.find("span", {"id": "ContentPlaceHolder1_lblNewRegistrationNo"}).text,
                 "RegistrationNumber": soup.find("span", {"id": "ContentPlaceHolder1_lblRegistrationNo"}).text,
                 "TypeOfCover": soup.find("span", {"id": "ContentPlaceHolder1_lblTypeOfCover"}).text,
@@ -61,7 +62,7 @@ class InsuranceDataExtractor:
             try:
                 page = await context.new_page()
                 data = await self._perform_extraction(page)
-                if data == "Your Policy has expired !!!!":
+                if isinstance(data,str) and data == "Your Policy has expired !!!!":
                     return {"status": "failure", "data": data}
                 return {"status": "success", "data": data}
             except Exception as e:
@@ -72,4 +73,10 @@ class InsuranceDataExtractor:
                 await context.close()
 
 
+# async def run():
+#     registrationNumber = "LND 242 JC"
+#     extractor = InsuranceDataExtractor(registrationNumber.strip().lower())
+#     niid_data = await extractor.run()
+#     print(niid_data)
 
+# asyncio.run(run())

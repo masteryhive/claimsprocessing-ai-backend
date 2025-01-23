@@ -47,33 +47,42 @@ def _load_prompt_template() -> str:
         raise RuntimeError(f"Failed to load prompt template: {str(e)}")
 
 
-claim_form_fraud_investigator_agent = create_tool_agent(
-    llm=llm,
-    tools=[
-        verify_this_claimant_exists_as_a_customer,
-        investigate_if_this_claimant_is_attempting_a_rapid_policy_claim,
-    ]
-)
-
 async def claim_form_fraud_investigator_node(state):
-           # read the last message in the message history.
-    input = {
-        "messages": [SystemMessage(content=_load_prompt_template()["CLAIMS_FORM_FRAUD_INVESTIGATOR_AGENT_SYSTEM_PROMPT"])] + [state["messages"][-1]],
-        "claim_form_json":state["claim_form_json"],
-    }
-    result = await claim_form_fraud_investigator_agent.ainvoke(input)
-    # respond back to the user.
-    return {"claim_form_fraud_investigator_result": [result]}
+    llm_with_tools = llm.bind_tools([search])
+    result = await llm_with_tools.ainvoke(state["messages"])
+    print(1)
+    print(result)
+    return {"messages": [result]}
+
+# async def claim_form_fraud_investigator_node(state):
+#            # read the last message in the message history.
+#     input = {
+#         "messages": [SystemMessage(content=_load_prompt_template()["CLAIMS_FORM_FRAUD_INVESTIGATOR_AGENT_SYSTEM_PROMPT"])] + [state["messages"][-1]],
+#         "claim_form_json":state["claim_form_json"],
+#          "agent_history": state["agent_history"],
+#     }
+#     print(1)
+#     result = await claim_form_fraud_investigator_agent.ainvoke(input)
+#     print(result)
+#     # respond back to the user.
+#     return {"claim_form_fraud_investigator_result": [result], "agent_history": [
+#             AIMessage(
+#                 content=result.content,
+#                 # additional_kwargs={"intermediate_steps": result["intermediate_steps"]},
+#                 name=agent1,
+#             )
+#         ]}
 
 
 
 vehicle_fraud_investigator_agent = create_tool_agent(
     llm=llm,
     tools=[
-        validate_if_this_is_a_real_vehicle,
-        check_NIID_database_,
-        ssim,
+        # validate_if_this_is_a_real_vehicle,
+        # check_niid_database,
+        # ssim,
     ]
+
 )
 
 async def vehicle_fraud_investigator_node(state):
@@ -82,14 +91,18 @@ async def vehicle_fraud_investigator_node(state):
         "messages": [SystemMessage(content=_load_prompt_template()[ "VEHICLE_FRAUD_INVESTIGATOR_AGENT_SYSTEM_PROMPT"])] + [state["messages"][-1]],
         "claim_form_json":state["claim_form_json"],
     }
+    print()
+    print(2)
     result = await vehicle_fraud_investigator_agent.ainvoke(input)
+    # print({"vehicle_fraud_investigator_result": [result]})
     # respond back to the user.
     return {"vehicle_fraud_investigator_result": [result]}
 
 
 damage_cost_fraud_investigator_agent = create_tool_agent(
     llm=llm,
-    tools=[item_cost_price_benchmarking_in_local_market,
+    tools=[
+        # item_cost_price_benchmarking_in_local_market,
           # item_pricing_evaluator
            ]
 )
@@ -100,6 +113,8 @@ async def damage_cost_fraud_investigator_node(state):
         "messages": [SystemMessage(content=_load_prompt_template()["DAMAGE_COST_FRAUD_INVESTIGATOR_AGENT_SYSTEM_PROMPT"])] + [state["messages"][-1]],
         "claim_form_json":state["claim_form_json"],
     }
+    print()
+    print(3)
     result = await damage_cost_fraud_investigator_agent.ainvoke(input)
     # respond back to the user.
     return {"damage_cost_fraud_investigator_result": [result]}
@@ -116,6 +131,8 @@ async def fraud_risk_analyst_node(state):
         "messages": [SystemMessage(content=_load_prompt_template()["FRAUD_RISK_AGENT_SYSTEM_PROMPT"])] + [state["messages"][-1]],
         "claim_form_json":state["claim_form_json"],
     }
+    print()
+    print(4)
     result = await fraud_risk_analyst_agent.ainvoke(input)
     # respond back to the user.
     return {"fraud_risk_analyst_result": [result]}
@@ -127,7 +144,7 @@ async def comms_node(state:FraudTeamAgentState):
     vehicle_fraud = [c.content for c in state["vehicle_fraud_investigator_result"] if isinstance(c,AIMessage)]
     damage_cost_fraud = [c.content for c in state["damage_cost_fraud_investigator_result"] if isinstance(c,AIMessage)]
     fraud_risk = [c.content for c in state["fraud_risk_analyst_result"] if isinstance(c,AIMessage)]
-    
+    # print(vehicle_fraud)
     team_mates = HumanMessage(
                 content=(f"\n\nClaim Form Fraud Investigation Result:\n{claim_form_fraud[-1]}\n\n"
                          f"Vehicle Fraud Investigation Result:\n{vehicle_fraud[-1]}\n\n"
@@ -174,12 +191,16 @@ fraud_detection_builder.add_node(agentX, comms_node)
 fraud_detection_builder.set_entry_point("supervisor")
 # We want our workers to ALWAYS "report back" to the supervisor when done
 fraud_detection_builder.add_edge("supervisor", agent1)
-fraud_detection_builder.add_edge(agent1, agent2)
-fraud_detection_builder.add_edge(agent2, agent3)
-fraud_detection_builder.add_edge(agent3, agent4)
+fraud_detection_builder.add_edge("supervisor", agent2)
+fraud_detection_builder.add_edge("supervisor", agent3)
+fraud_detection_builder.add_edge("supervisor", agent4)
+fraud_detection_builder.add_edge(agent1, agentX)
+fraud_detection_builder.add_edge(agent2, agentX)
+fraud_detection_builder.add_edge(agent3, agentX)
 fraud_detection_builder.add_edge(agent4, agentX)
+
 fraud_detection_builder.add_edge(agentX, END)
 
 fraud_detection_graph = fraud_detection_builder.compile()
-# if env_config.env == "local":
-#     save_graph_mermaid(fraud_detection_graph, output_file="display/fraud_langgraph.png")
+if env_config.env == "local":
+    save_graph_mermaid(fraud_detection_graph, output_file="display/fraud_langgraph.png")
