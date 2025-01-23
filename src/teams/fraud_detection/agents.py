@@ -11,6 +11,8 @@ from src.teams.create_agent import *
 from langgraph.graph import END, StateGraph, START
 from src.utilities.helpers import load_yaml_file
 from src.config.appconfig import env_config
+from langchain_core.messages import AIMessage
+
 
 agent1 = "claims_form_fraud_investigator"  # New agent added
 agent2 = "vehicle_fraud_investigator"
@@ -62,8 +64,8 @@ vehicle_fraud_investigator_agent = create_tool_agent(
     llm=llm,
     tools=[
         validate_if_this_is_a_real_vehicle,
-        check_NIID_database_,
-        ssim,
+        # check_NIID_database_,
+        # ssim,
     ],
     system_prompt=_load_prompt_template()[
         "VEHICLE_FRAUD_INVESTIGATOR_AGENT_SYSTEM_PROMPT"
@@ -72,7 +74,8 @@ vehicle_fraud_investigator_agent = create_tool_agent(
 
 damage_cost_fraud_investigator_agent = create_tool_agent(
     llm=llm,
-    tools=[item_cost_price_benchmarking_in_local_market,
+    tools=[
+        #item_cost_price_benchmarking_in_local_market,
           # item_pricing_evaluator
            ],
     system_prompt=_load_prompt_template()[
@@ -94,9 +97,20 @@ fraud_detection_clerk_agent = summarizer(
 
 def comms_node(state):
     # read the last message in the message history.
+    claim_form_fraud = [c.content for c in state["claims_form_fraud_investigator_result"] if isinstance(c,AIMessage)]
+    vehicle_fraud = [c.content for c in state["vehicle_fraud_investigator_result"] if isinstance(c,AIMessage)]
+    damage_cost_fraud = [c.content for c in state["damage_cost_fraud_investigator_result"] if isinstance(c,AIMessage)]
+    fraud_risk = [c.content for c in state["fraud_risk_analyst_result"] if isinstance(c,AIMessage)]
+    # print(vehicle_fraud)
+    team_mates =(f"\n\nClaim Form Fraud Investigation Result:\n{claim_form_fraud[-1]}\n\n"
+                         f"Vehicle Fraud Investigation Result:\n{vehicle_fraud[-1]}\n\n"
+                         f"Damage Cost Fraud Investigation Result:\n{damage_cost_fraud[-1]}\n\n"
+                         f"Fraud Risk Analysis Result:\n{fraud_risk[-1]}"
+                         f"the claimants form in JSON format: {state["claim_form_json"]}")
     input = {
-        "messages": [state["messages"][-1]],
+        "messages": [state["messages"][-1]+team_mates],
         "agent_history": state["agent_history"],
+        "claim_form_json":state["claim_form_json"]
     }
 
     result = fraud_detection_clerk_agent.invoke(input)
@@ -124,7 +138,7 @@ fraud_detection_supervisor_node = create_supervisor_node(
 )
 
 
-fraud_detection_builder = StateGraph(AgentState)
+fraud_detection_builder = StateGraph(FraudTeamAgentState)
 
 claim_form_fraud_investigator_node = functools.partial(
     crew_nodes, crew_member=claim_form_fraud_investigator_agent, name=agent1
