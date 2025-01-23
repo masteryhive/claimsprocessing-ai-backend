@@ -11,6 +11,7 @@ from src.teams.create_agent import *
 from langgraph.graph import END, StateGraph, START
 from src.utilities.helpers import load_yaml_file
 from src.config.appconfig import env_config
+from langchain_core.messages import AIMessage
 
 agent1 = "policy_essential_data_retriever"
 agent2 = "policy_period_verifier"
@@ -75,8 +76,18 @@ policy_review_clerk_agent = summarizer(
 
 def comms_node(state):
     # read the last message in the message history.
+    policy_essential_data = [c.content for c in state["policy_essential_data_retriever_result"] if isinstance(c,AIMessage)]
+    policy_period_data = [c.content for c in state["policy_period_verifier_result"] if isinstance(c,AIMessage)]
+    insurance_policy_data = [c.content for c in state["insurance_policy_verifier_result"] if isinstance(c,AIMessage)]
+    
+    team_mates = (f"\n\nPolicy Essential Data Result:\n{policy_essential_data[-1]}\n\n"
+                         f"Policy Period Verification Result:\n{policy_period_data[-1]}\n\n"
+                         f"Insurance Policy Verification Result:\n{insurance_policy_data[-1]}"
+                         f"the claimants form in JSON format: {state["claim_form_json"]}"
+                )
+            
     input = {
-        "messages": [state["messages"][-1]],
+        "messages": [state["messages"][-1]+team_mates],
         "agent_history": state["agent_history"],
         "claim_form_json":state["claim_form_json"]
     }
