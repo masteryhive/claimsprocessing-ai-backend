@@ -201,6 +201,7 @@ def summarizer(system_prompt:str,llm: ChatVertexAI):
 
     return prompt | llm
 
+
 def create_report_agent(system_prompt:str,llm: ChatVertexAI):
     system_prompt_template = PromptTemplate(
         template=system_prompt,
