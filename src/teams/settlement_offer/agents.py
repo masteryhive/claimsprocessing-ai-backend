@@ -11,7 +11,7 @@ from src.teams.create_agent import *
 from langgraph.graph import END, StateGraph, START
 from src.utilities.helpers import load_yaml_file
 from src.config.appconfig import env_config
-
+from langchain_core.messages import AIMessage
 
 agent1 = "offer_analyst"
 agentX = "team_task_summarizer"
@@ -53,8 +53,15 @@ settlement_clerk_agent = summarizer(
 
 def comms_node(state):
     # read the last message in the message history.
+    offer_analyst = [c.content for c in state["offer_analyst_result"] if isinstance(c,AIMessage)]
+
+    
+    team_mates = (f"\n\nClaim Offer Analysis Result:\n{offer_analyst[-1]}\n\n"
+                         f"the claimants form in JSON format: {state["claim_form_json"]}"
+                )
+            
     input = {
-        "messages": [state["messages"][-1]],
+        "messages": [state["messages"][-1]+team_mates],
         "agent_history": state["agent_history"],
         "claim_form_json":state["claim_form_json"]
     }
