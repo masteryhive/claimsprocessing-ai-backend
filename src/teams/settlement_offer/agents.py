@@ -56,6 +56,7 @@ def comms_node(state):
     input = {
         "messages": [state["messages"][-1]],
         "agent_history": state["agent_history"],
+        "claim_form_json":state["claim_form_json"]
     }
     result = settlement_clerk_agent.invoke(input)
     # respond back to the user.
@@ -82,7 +83,7 @@ settlement_offer_supervisor_node = create_supervisor_node(
 )
 
 
-settlement_offer_builder = StateGraph(AgentState)
+settlement_offer_builder = StateGraph(SettlementOfferTeamAgentState)
 
 offer_analyst_node = functools.partial(
     crew_nodes, crew_member=offer_analyst_agent, name=agent1
