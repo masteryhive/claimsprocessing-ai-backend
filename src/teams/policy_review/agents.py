@@ -78,6 +78,7 @@ def comms_node(state):
     input = {
         "messages": [state["messages"][-1]],
         "agent_history": state["agent_history"],
+        "claim_form_json":state["claim_form_json"]
     }
     result = policy_review_clerk_agent.invoke(input)
     # respond back to the user.
@@ -111,7 +112,7 @@ policy_review_supervisor_node = create_supervisor_node(
 #     else:
 #         return '__end__'
 
-policy_review_builder = StateGraph(AgentState)
+policy_review_builder = StateGraph(PolicyReviewTeamAgentState)
 
 insurance_policy_essential_data_node = functools.partial(
     crew_nodes, crew_member=insurance_policy_essential_data_agent, name=agent1
