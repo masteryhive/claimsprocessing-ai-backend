@@ -1,3 +1,4 @@
+import asyncio
 from grpc import StatusCode
 from grpc_interceptor.exceptions import NotFound, GrpcException
 from google.protobuf.empty_pb2 import Empty
@@ -61,8 +62,10 @@ class ClaimsProcessingBaseService(ClaimsProcessingServicer):
 
     def _process_single_claim(self, claim_id):
         """Process a single claim with error handling"""
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
         try:
-            start_process_manager(claim_id)
+            loop.run_until_complete(start_process_manager(claim_id))
             system_logger.info(f"Successfully processed claim ID: {claim_id}")
         except Exception as e:
             system_logger.error(f"Error processing claim ID {claim_id}: {str(e)}")

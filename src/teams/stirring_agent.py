@@ -116,8 +116,8 @@ class Router(BaseModel):
 teams_supervisor_node = create_supervisor_node(system_prompt, llm, Router, members)
 
 
-def call_doc_team(state: AgentState) -> AgentState:
-    response = document_check_graph.invoke(
+async def call_doc_team(state: AgentState) -> AgentState:
+    response = await document_check_graph.ainvoke(
         {
             "messages": [state["messages"][-1]],
             "agent_history": state["agent_history"],
@@ -131,8 +131,8 @@ def call_doc_team(state: AgentState) -> AgentState:
     }
 
 
-def call_pol_team(state: AgentState) -> AgentState:
-    response = policy_review_graph.invoke(
+async def call_pol_team(state: AgentState) -> AgentState:
+    response = await policy_review_graph.ainvoke(
         {
             "messages": [state["messages"][-1]],
             "agent_history": state["agent_history"],
@@ -148,8 +148,8 @@ def call_pol_team(state: AgentState) -> AgentState:
     }
 
 
-def call_fraud_team(state: AgentState) -> AgentState:
-    response = fraud_detection_graph.invoke(
+async def call_fraud_team(state: AgentState) -> AgentState:
+    response = await fraud_detection_graph.ainvoke(
         {
             "messages": [state["messages"][-1]],
             "agent_history": state["agent_history"],
@@ -163,8 +163,8 @@ def call_fraud_team(state: AgentState) -> AgentState:
     }
 
 
-def call_settlement_offer_team(state: AgentState) -> AgentState:
-    response = settlement_offer_graph.invoke(
+async def call_settlement_offer_team(state: AgentState) -> AgentState:
+    response = await settlement_offer_graph.ainvoke(
         {
             "messages": [state["messages"][-1]],
             "agent_history": state["agent_history"],
@@ -178,8 +178,8 @@ def call_settlement_offer_team(state: AgentState) -> AgentState:
     }
 
 
-def call_summary_team(state: AgentState) -> AgentState:
-    response = report_graph.invoke(
+async def call_summary_team(state: AgentState) -> AgentState:
+    response = await report_graph.ainvoke(
         {
             "messages": [state["messages"][-1]],
             "agent_history": state["agent_history"],
@@ -209,7 +209,7 @@ super_builder.add_node(members[0], call_doc_team)
 super_builder.add_node(members[1], call_pol_team)
 super_builder.add_node(members[2], call_fraud_team)
 super_builder.add_node(members[3], call_settlement_offer_team)
-super_builder.add_node(members[4], call_summary_team)
+# super_builder.add_node(members[4], call_summary_team)
 
 # Define the control flow
 super_builder.add_edge(START, "supervisor")

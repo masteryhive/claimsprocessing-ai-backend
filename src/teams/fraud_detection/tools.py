@@ -115,7 +115,7 @@ def validate_if_this_is_a_real_vehicle(
     return {"status": "clear", "message": "This vehicle is valid."}
 
 
-async def acheck_NIID_database_(
+async def check_NIID_database_(
     registrationNumber: Annotated[str, "The registration number of the vehicle."],
     chasisNumber: Annotated[str, "The chassis number of the vehicle."]
 ):
@@ -150,7 +150,6 @@ async def acheck_NIID_database_(
         )
     return niid_data["check_NIID_database_result"]
 
-check_NIID_database_ = StructuredTool.from_function(coroutine=acheck_NIID_database_)
 
 @tool
 def ssim(
@@ -241,7 +240,7 @@ class BenchmarkingToolkit:
             return cls._market_prices
 
 
-async def aitem_cost_price_benchmarking_in_local_market(
+async def item_cost_price_benchmarking_in_local_market(
     vehicle_name_and_model_and_damaged_part: Annotated[str, "search term"],
     quoted_cost: Annotated[str, "quoted cost"],
 ) -> str:
@@ -268,8 +267,6 @@ async def aitem_cost_price_benchmarking_in_local_market(
         system_logger.error(f"Error in benchmarking: {e}")
         return "An error occurred while benchmarking the cost. Please try again."
 
-
-item_cost_price_benchmarking_in_local_market = StructuredTool.from_function(coroutine=aitem_cost_price_benchmarking_in_local_market)
 
 
 async def item_pricing_evaluator(

@@ -41,25 +41,30 @@ def _load_prompt_template() -> str:
 
 offer_analyst_agent = create_tool_agent(
     llm=llm,
-    tools=[determine_settlement_offer_range,determine_settlement_offer],
-    system_prompt=_load_prompt_template()["OFFER_ANALYST_AGENT_SYSTEM_PROMPT"],
+    tools=[determine_settlement_offer_range,determine_settlement_offer]
 )
 
-
-settlement_clerk_agent = summarizer(
-    _load_prompt_template()["PROCESS_CLERK_PROMPT"], llm
-)
-
-
-def comms_node(state):
+async def offer_analyst_node(state:dict):
     # read the last message in the message history.
     input = {
-        "messages": [state["messages"][-1]],
-        "agent_history": state["agent_history"],
+        "messages": [SystemMessage(content=_load_prompt_template()["OFFER_ANALYST_AGENT_SYSTEM_PROMPT"])] + [state["messages"][-1]],
+        "claim_form_json":state["claim_form_json"],
     }
-    result = settlement_clerk_agent.invoke(input)
+    result = await offer_analyst_agent.ainvoke(input)
     # respond back to the user.
-    return {"messages": [result]}
+    return {"offer_analyst_result": [result]}
+
+async def comms_node(state:dict):
+    offer_analyst = [c.content for c in state["offer_analyst_result"] if isinstance(c,AIMessage)]
+
+    
+    team_mates = HumanMessage(
+                content=(f"\n\nClaim Offer Analysis Result:\n{offer_analyst[-1]}\n\n"
+                         f"the claimants form in JSON format: {state["claim_form_json"]}"
+                )
+            )
+    return await summarizer(state,llm,_load_prompt_template()["PROCESS_CLERK_PROMPT"],team_mates,agentX)
+
 
 
 # create options map for the supervisor output parser.
@@ -82,11 +87,7 @@ settlement_offer_supervisor_node = create_supervisor_node(
 )
 
 
-settlement_offer_builder = StateGraph(AgentState)
-
-offer_analyst_node = functools.partial(
-    crew_nodes, crew_member=offer_analyst_agent, name=agent1
-)
+settlement_offer_builder = StateGraph(SettlementOfferTeamAgentState)
 
 
 settlement_offer_builder.add_node("supervisor", settlement_offer_supervisor_node)

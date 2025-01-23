@@ -11,6 +11,7 @@ from src.teams.create_agent import *
 from langgraph.graph import END, StateGraph, START
 from src.utilities.helpers import load_yaml_file
 from src.config.appconfig import env_config
+from langchain_core.messages import HumanMessage,SystemMessage,AIMessage
 
 agent1 = "claim_form_checker"
 agent2 = "supporting_evidence_checker"
@@ -44,33 +45,50 @@ def _load_prompt_template() -> str:
 claims_document_verifier_agent = create_tool_agent(
     llm=llm,
     tools=[],
-    system_prompt=_load_prompt_template()[
-        "CLAIMS_DOCUMENT_VERIFIER_AGENT_SYSTEM_PROMPT"
-    ],
 )
+
+async def claims_document_verifier_node(state):
+    # read the last message in the message history.
+    input = {
+        "messages": [SystemMessage(content=_load_prompt_template()[
+        "CLAIMS_DOCUMENT_VERIFIER_AGENT_SYSTEM_PROMPT"
+    ])] + [state["messages"][-1]],
+        "claim_form_json":state["claim_form_json"],
+    }
+    result = await claims_document_verifier_agent.ainvoke(input)
+    # respond back to the user.
+    return {"document_verifier_result": [result]}
+
 
 supporting_document_verifier_agent = create_tool_agent(
     llm,
     tools=[],
-    system_prompt=_load_prompt_template()[
-        "SUPPORTING_DOCUMENT_VERIFIER_AGENT_SYSTEM_PROMPT"
-    ],
 )
 
-document_processing_clerk_agent = summarizer(
-    _load_prompt_template()["PROCESS_CLERK_PROMPT"], llm
-)
-
-
-def comms_node(state):
+async def supporting_document_verifier_node(state):
     # read the last message in the message history.
     input = {
-        "messages": [state["messages"][-1]],
-        "agent_history": state["agent_history"],
+        "messages": [SystemMessage(content=_load_prompt_template()[
+        "SUPPORTING_DOCUMENT_VERIFIER_AGENT_SYSTEM_PROMPT"
+    ])] +[state["messages"][-1]],
+        "claim_form_json":state["claim_form_json"],
     }
-    result = document_processing_clerk_agent.invoke(input)
+    result = await supporting_document_verifier_agent.ainvoke(input)
     # respond back to the user.
-    return {"messages": [result]}
+    return {"supporting_document_verifier_result": [result]}
+
+
+async def comms_node(state:ClaimFormScreeningTeamAgentState):
+    doc_content = [c.content for c in state["document_verifier_result"] if isinstance(c,AIMessage)]
+    supporting_doc_content = [c.content for c in state["supporting_document_verifier_result"] if isinstance(c,AIMessage)]
+
+    team_mates = HumanMessage(
+                content=(f"\n\nDocument Verification Result:\n{doc_content[-1]}\n\n"
+                         f"Supporting Document Verification Result:\n{supporting_doc_content[-1]}"
+                         f"the claimants form in JSON format: {state["claim_form_json"]}"
+                )
+            )
+    return await summarizer(state,llm,_load_prompt_template()["PROCESS_CLERK_PROMPT"],team_mates,agentX)
 
 
 # create options map for the supervisor output parser.
@@ -100,14 +118,7 @@ document_check_supervisor_node = create_supervisor_node(
 #     else:
 #         return '__end__'
 
-document_check_builder = StateGraph(AgentState)
-
-claims_document_verifier_node = functools.partial(
-    crew_nodes, crew_member=claims_document_verifier_agent, name=agent1
-)
-supporting_document_verifier_node = functools.partial(
-    crew_nodes, crew_member=supporting_document_verifier_agent, name=agent2
-)
+document_check_builder = StateGraph(ClaimFormScreeningTeamAgentState)
 
 document_check_builder.add_node("supervisor", document_check_supervisor_node)
 document_check_builder.add_node(agent1, claims_document_verifier_node)
@@ -116,18 +127,13 @@ document_check_builder.add_node(agentX, comms_node)
 
 # Define the control flow
 document_check_builder.set_entry_point("supervisor")
+
 # We want our workers to ALWAYS "report back" to the supervisor when done
 document_check_builder.add_edge("supervisor", agent1)
 document_check_builder.add_edge(agent1, agent2)
 document_check_builder.add_edge(agent2, agentX)
 document_check_builder.add_edge(agentX, END)
-# document_check_builder.add_conditional_edges(  ## sup choice to go to email, or LLM or bye based on result of function decide_next_node
-#     "supervisor",
-#     router,
-#     {members[0]:members[0],members[1]:members[1],
-#          "__end__": END
-#     },
-# )
+
 document_check_graph = document_check_builder.compile()
 # if env_config.env == "local":
 #     save_graph_mermaid(document_check_graph, output_file="display/doc_langgraph.png")

@@ -46,42 +46,73 @@ def _load_prompt_template() -> str:
 
 insurance_policy_essential_data_agent = create_tool_agent(
     llm=llm,
-    tools=[retrieve_all_essential_details_from_policy],
-    system_prompt=_load_prompt_template()["INSURANCE_CLAIM_POLICY_DATA"],
+    tools=[retrieve_all_essential_details_from_policy]
 )
+
+async def insurance_policy_essential_data_node(state):
+    # read the last message in the message history.
+    input = {
+        "messages": [SystemMessage(content=_load_prompt_template()["INSURANCE_CLAIM_POLICY_DATA"])] + [state["messages"][-1]],
+        "claim_form_json":state["claim_form_json"],
+    }
+    result = await insurance_policy_essential_data_agent.ainvoke(input)
+    # respond back to the user.
+    return {"policy_essential_data_retriever_result": [result]}
+
 
 insurance_policy_period_verifier_agent = create_tool_agent(
     llm=llm,
     tools=[
         check_if_this_claim_is_within_insurance_period,
         check_if_this_claim_is_reported_within_insurance_period,
-    ],
-    system_prompt=_load_prompt_template()["PERIOD_VERIFICATION"],
+    ]
 )
+
+async def insurance_policy_period_verifier_node(state):
+        # read the last message in the message history.
+    input = {
+        "messages": [SystemMessage(content=_load_prompt_template()["PERIOD_VERIFICATION"])] + [state["messages"][-1]],
+        "claim_form_json":state["claim_form_json"],
+    }
+    result = await insurance_policy_period_verifier_agent.ainvoke(input)
+    # respond back to the user.
+    return {"policy_period_verifier_result": [result]}
+
 
 insurance_policy_verifier_agent = create_tool_agent(
     llm=llm,
     tools=[
         # check_if_the_incident_occurred_within_the_geographical_coverage,
         # check_if_the_damage_cost_does_not_exceed_authorised_repair_limit,
-    ],
-    system_prompt=_load_prompt_template()["POLICY_VERIFICATION"],
+    ]
 )
 
-policy_review_clerk_agent = summarizer(
-    _load_prompt_template()["PROCESS_CLERK_PROMPT"], llm
-)
-
-
-def comms_node(state):
-    # read the last message in the message history.
+async def insurance_policy_verifier_node(state):
+        # read the last message in the message history.
     input = {
-        "messages": [state["messages"][-1]],
-        "agent_history": state["agent_history"],
+        "messages": [SystemMessage(content=_load_prompt_template()["POLICY_VERIFICATION"])] + [state["messages"][-1]],
+        "claim_form_json":state["claim_form_json"],
     }
-    result = policy_review_clerk_agent.invoke(input)
+    result = await insurance_policy_verifier_agent.ainvoke(input)
     # respond back to the user.
-    return {"messages": [result]}
+    return {"insurance_policy_verifier_result": [result]}
+
+
+
+async def comms_node(state:PolicyReviewTeamAgentState):
+    policy_essential_data = [c.content for c in state["policy_essential_data_retriever_result"] if isinstance(c,AIMessage)]
+    policy_period_data = [c.content for c in state["policy_period_verifier_result"] if isinstance(c,AIMessage)]
+    insurance_policy_data = [c.content for c in state["insurance_policy_verifier_result"] if isinstance(c,AIMessage)]
+    
+    team_mates = HumanMessage(
+                content=(f"\n\nPolicy Essential Data Result:\n{policy_essential_data[-1]}\n\n"
+                         f"Policy Period Verification Result:\n{policy_period_data[-1]}\n\n"
+                         f"Insurance Policy Verification Result:\n{insurance_policy_data[-1]}"
+                         f"the claimants form in JSON format: {state["claim_form_json"]}"
+                )
+            )
+    return await summarizer(state,llm,_load_prompt_template()["PROCESS_CLERK_PROMPT"],team_mates,agentX)
+
 
 
 # create options map for the supervisor output parser.
@@ -111,17 +142,9 @@ policy_review_supervisor_node = create_supervisor_node(
 #     else:
 #         return '__end__'
 
-policy_review_builder = StateGraph(AgentState)
+policy_review_builder = StateGraph(PolicyReviewTeamAgentState)
 
-insurance_policy_essential_data_node = functools.partial(
-    crew_nodes, crew_member=insurance_policy_essential_data_agent, name=agent1
-)
-insurance_policy_period_verifier_node = functools.partial(
-    crew_nodes, crew_member=insurance_policy_period_verifier_agent, name=agent2
-)
-insurance_policy_verifier_node = functools.partial(
-    crew_nodes, crew_member=insurance_policy_verifier_agent, name=agent3
-)
+
 policy_review_builder.add_node("supervisor", policy_review_supervisor_node)
 policy_review_builder.add_node(agent1, insurance_policy_essential_data_node)
 policy_review_builder.add_node(agent2, insurance_policy_period_verifier_node)

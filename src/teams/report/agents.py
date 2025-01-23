@@ -7,10 +7,10 @@ from src.teams.create_agent import (
     AgentState,
     create_report_agent,
     create_supervisor_node,
+    SystemMessage
 )
 from langgraph.graph import END, StateGraph, START
 from src.utilities.helpers import load_yaml_file
-from src.config.appconfig import env_config
 
 agent1 = "claims_adjuster_1"
 
@@ -41,16 +41,26 @@ claim_adjuster_1_agent = create_report_agent(
 )
 
 
-def comms_node(state):
+# def comms_node(state):
+#     # read the last message in the message history.
+#     input = {
+#         "messages": [state["messages"][-1]],
+#         "agent_history": state["agent_history"],
+#     }
+#     result = claim_adjuster_1_agent.invoke(input)
+#     # respond back to the user.
+#     return {"messages": [result]}
+
+async def comms_node(state):
     # read the last message in the message history.
     input = {
-        "messages": [state["messages"][-1]],
+        "messages": [SystemMessage(content=_load_prompt_template()["CLAIM_ADJUSTER_SUMMARY_PROMPT"])] + [state["messages"][-1]],
+        "claim_form_json":state["claim_form_json"],
         "agent_history": state["agent_history"],
     }
-    result = claim_adjuster_1_agent.invoke(input)
+    result = await claim_adjuster_1_agent.ainvoke(input)
     # respond back to the user.
     return {"messages": [result]}
-
 
 # create options map for the supervisor output parser.
 member_options = {member: member for member in members}

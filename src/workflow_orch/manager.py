@@ -23,7 +23,6 @@ from langchain_core.messages import HumanMessage
 from src.teams.resources.document_understanding import classify_supporting_documents
 from src.workflow_orch.run_workflow import control_workflow
 from contextlib import contextmanager
-from src.teams.stirring_agent import call_summary_team
 from src.teams.stirring_agent import super_graph
 from sqlalchemy.exc import SQLAlchemyError
 
@@ -75,7 +74,7 @@ def create_or_get_task(db: sessionmaker, claim_request: ProcessClaimTask) -> Tas
         system_logger.error(f"Task creation/retrieval failed: {str(e)}")
         raise ClaimProcessingError(f"Failed to create/get task: {str(e)}")
     
-def start_process_manager(id: int):
+async def start_process_manager(id: int):
     """
     Robust message processing with comprehensive error handling.
 
@@ -138,7 +137,7 @@ def start_process_manager(id: int):
             try:
                 # Process claim workflow
                 team_summaries: UpdateClaimsReportModel = UpdateClaimsReportModel()
-                for s in super_graph.stream(
+                async for s in super_graph.astream(
                     {
                         "messages": [
                             HumanMessage(

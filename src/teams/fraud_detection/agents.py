@@ -52,11 +52,20 @@ claim_form_fraud_investigator_agent = create_tool_agent(
     tools=[
         verify_this_claimant_exists_as_a_customer,
         investigate_if_this_claimant_is_attempting_a_rapid_policy_claim,
-    ],
-    system_prompt=_load_prompt_template()[
-        "CLAIMS_FORM_FRAUD_INVESTIGATOR_AGENT_SYSTEM_PROMPT"
-    ],
+    ]
 )
+
+async def claim_form_fraud_investigator_node(state):
+           # read the last message in the message history.
+    input = {
+        "messages": [SystemMessage(content=_load_prompt_template()["CLAIMS_FORM_FRAUD_INVESTIGATOR_AGENT_SYSTEM_PROMPT"])] + [state["messages"][-1]],
+        "claim_form_json":state["claim_form_json"],
+    }
+    result = await claim_form_fraud_investigator_agent.ainvoke(input)
+    # respond back to the user.
+    return {"claim_form_fraud_investigator_result": [result]}
+
+
 
 vehicle_fraud_investigator_agent = create_tool_agent(
     llm=llm,
@@ -64,44 +73,70 @@ vehicle_fraud_investigator_agent = create_tool_agent(
         validate_if_this_is_a_real_vehicle,
         check_NIID_database_,
         ssim,
-    ],
-    system_prompt=_load_prompt_template()[
-        "VEHICLE_FRAUD_INVESTIGATOR_AGENT_SYSTEM_PROMPT"
-    ],
+    ]
 )
+
+async def vehicle_fraud_investigator_node(state):
+           # read the last message in the message history.
+    input = {
+        "messages": [SystemMessage(content=_load_prompt_template()[ "VEHICLE_FRAUD_INVESTIGATOR_AGENT_SYSTEM_PROMPT"])] + [state["messages"][-1]],
+        "claim_form_json":state["claim_form_json"],
+    }
+    result = await vehicle_fraud_investigator_agent.ainvoke(input)
+    # respond back to the user.
+    return {"vehicle_fraud_investigator_result": [result]}
+
 
 damage_cost_fraud_investigator_agent = create_tool_agent(
     llm=llm,
     tools=[item_cost_price_benchmarking_in_local_market,
           # item_pricing_evaluator
-           ],
-    system_prompt=_load_prompt_template()[
-        "DAMAGE_COST_FRAUD_INVESTIGATOR_AGENT_SYSTEM_PROMPT"
-    ],
+           ]
 )
+
+async def damage_cost_fraud_investigator_node(state):
+           # read the last message in the message history.
+    input = {
+        "messages": [SystemMessage(content=_load_prompt_template()["DAMAGE_COST_FRAUD_INVESTIGATOR_AGENT_SYSTEM_PROMPT"])] + [state["messages"][-1]],
+        "claim_form_json":state["claim_form_json"],
+    }
+    result = await damage_cost_fraud_investigator_agent.ainvoke(input)
+    # respond back to the user.
+    return {"damage_cost_fraud_investigator_result": [result]}
+
 
 fraud_risk_analyst_agent = create_tool_agent(
     llm=llm,
-    tools=[],
-    system_prompt=_load_prompt_template()["FRAUD_RISK_AGENT_SYSTEM_PROMPT"],
+    tools=[]
 )
 
-
-fraud_detection_clerk_agent = summarizer(
-    _load_prompt_template()["PROCESS_CLERK_PROMPT"], llm
-)
-
-
-def comms_node(state):
+async def fraud_risk_analyst_node(state):
     # read the last message in the message history.
     input = {
-        "messages": [state["messages"][-1]],
-        "agent_history": state["agent_history"],
+        "messages": [SystemMessage(content=_load_prompt_template()["FRAUD_RISK_AGENT_SYSTEM_PROMPT"])] + [state["messages"][-1]],
+        "claim_form_json":state["claim_form_json"],
     }
-
-    result = fraud_detection_clerk_agent.invoke(input)
+    result = await fraud_risk_analyst_agent.ainvoke(input)
     # respond back to the user.
-    return {"messages": [result]}
+    return {"fraud_risk_analyst_result": [result]}
+
+
+
+async def comms_node(state:FraudTeamAgentState):
+    claim_form_fraud = [c.content for c in state["claim_form_fraud_investigator_result"] if isinstance(c,AIMessage)]
+    vehicle_fraud = [c.content for c in state["vehicle_fraud_investigator_result"] if isinstance(c,AIMessage)]
+    damage_cost_fraud = [c.content for c in state["damage_cost_fraud_investigator_result"] if isinstance(c,AIMessage)]
+    fraud_risk = [c.content for c in state["fraud_risk_analyst_result"] if isinstance(c,AIMessage)]
+    
+    team_mates = HumanMessage(
+                content=(f"\n\nClaim Form Fraud Investigation Result:\n{claim_form_fraud[-1]}\n\n"
+                         f"Vehicle Fraud Investigation Result:\n{vehicle_fraud[-1]}\n\n"
+                         f"Damage Cost Fraud Investigation Result:\n{damage_cost_fraud[-1]}\n\n"
+                         f"Fraud Risk Analysis Result:\n{fraud_risk[-1]}"
+                         f"the claimants form in JSON format: {state["claim_form_json"]}"
+                )
+            )
+    return await summarizer(state,llm,_load_prompt_template()["PROCESS_CLERK_PROMPT"],team_mates,agentX)
 
 
 # create options map for the supervisor output parser.
@@ -124,20 +159,8 @@ fraud_detection_supervisor_node = create_supervisor_node(
 )
 
 
-fraud_detection_builder = StateGraph(AgentState)
+fraud_detection_builder = StateGraph(FraudTeamAgentState)
 
-claim_form_fraud_investigator_node = functools.partial(
-    crew_nodes, crew_member=claim_form_fraud_investigator_agent, name=agent1
-)
-vehicle_fraud_investigator_node = functools.partial(
-    crew_nodes, crew_member=vehicle_fraud_investigator_agent, name=agent2
-)
-damage_cost_fraud_investigator_node = functools.partial(
-    crew_nodes, crew_member=damage_cost_fraud_investigator_agent, name=agent3
-)
-fraud_risk_analyst_node = functools.partial(
-    crew_nodes, crew_member=fraud_risk_analyst_agent, name=agent4
-)
 
 
 fraud_detection_builder.add_node("supervisor", fraud_detection_supervisor_node)
