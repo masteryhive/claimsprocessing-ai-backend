@@ -11,6 +11,7 @@ from src.teams.create_agent import *
 from langgraph.graph import END, StateGraph, START
 from src.utilities.helpers import load_yaml_file
 from src.config.appconfig import env_config
+from langchain_core.messages import AIMessage
 
 agent1 = "claim_form_checker"
 agent2 = "supporting_evidence_checker"
@@ -64,9 +65,17 @@ document_processing_clerk_agent = summarizer(
 
 def comms_node(state):
     # read the last message in the message history.
+    doc_content = [c.content for c in state["document_verifier_result"] if isinstance(c,AIMessage)]
+    supporting_doc_content = [c.content for c in state["supporting_document_verifier_result"] if isinstance(c,AIMessage)]
+
+    team_mates = (f"\n\nDocument Verification Result:\n{doc_content[-1]}\n\n"
+                         f"Supporting Document Verification Result:\n{supporting_doc_content[-1]}"
+                         f"the claimants form in JSON format: {state["claim_form_json"]}"
+                )
     input = {
-        "messages": [state["messages"][-1]],
+        "messages": [state["messages"][-1]+team_mates],
         "agent_history": state["agent_history"],
+        "claim_form_json":state["claim_form_json"]
     }
     result = document_processing_clerk_agent.invoke(input)
     # respond back to the user.
@@ -100,7 +109,7 @@ document_check_supervisor_node = create_supervisor_node(
 #     else:
 #         return '__end__'
 
-document_check_builder = StateGraph(AgentState)
+document_check_builder = StateGraph(ClaimFormScreeningTeamAgentState)
 
 claims_document_verifier_node = functools.partial(
     crew_nodes, crew_member=claims_document_verifier_agent, name=agent1
