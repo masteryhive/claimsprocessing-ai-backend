@@ -325,8 +325,11 @@ def item_cost_price_benchmarking_in_local_market(
             vehicle_name_and_model_and_damaged_part, 
             quoted_cost
         )
+    # async_item_cost_price_benchmarking_in_local_market = StructuredTool.from_function(coroutine=aitem_cost_price_benchmarking_in_local_market)
+    # asyncio.run(async_item_cost_price_benchmarking_in_local_market.ainvoke({"vehicle_name_and_model_and_damaged_part":vehicle_name_and_model_and_damaged_part,
+    #                                                             "quoted_cost":quoted_cost}))
     return asyncio.run(
-        item_cost_price_benchmarking_in_local_market(
+        aitem_cost_price_benchmarking_in_local_market(
             vehicle_name_and_model_and_damaged_part, 
             quoted_cost
         )

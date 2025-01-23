@@ -65,7 +65,7 @@ vehicle_fraud_investigator_agent = create_tool_agent(
     tools=[
         validate_if_this_is_a_real_vehicle,
         check_niid_database,
-        ssim,
+
     ],
     system_prompt=_load_prompt_template()[
         "VEHICLE_FRAUD_INVESTIGATOR_AGENT_SYSTEM_PROMPT"
@@ -74,7 +74,8 @@ vehicle_fraud_investigator_agent = create_tool_agent(
 
 damage_cost_fraud_investigator_agent = create_tool_agent(
     llm=llm,
-    tools=[
+    tools=[        
+        ssim,
         item_cost_price_benchmarking_in_local_market,
           # item_pricing_evaluator
            ],
@@ -172,5 +173,5 @@ fraud_detection_builder.add_edge(agent4, agentX)
 fraud_detection_builder.add_edge(agentX, END)
 
 fraud_detection_graph = fraud_detection_builder.compile()
-# if env_config.env == "local":
-#     save_graph_mermaid(fraud_detection_graph, output_file="display/fraud_langgraph.png")
+if env_config.env == "local":
+    save_graph_mermaid(fraud_detection_graph, output_file="display/fraud_langgraph.png")
