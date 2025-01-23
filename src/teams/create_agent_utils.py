@@ -11,6 +11,7 @@ def crew_nodes(state, crew_member, name):
     result = crew_member.invoke(input)
     # add response to the agent history.
     return {
+        name+"_result": result["output"],
         "agent_history": [
             AIMessage(
                 content=result["output"],
