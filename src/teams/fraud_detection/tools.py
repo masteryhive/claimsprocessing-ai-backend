@@ -12,6 +12,8 @@ from src.utilities.pdf_handlers import download_pdf
 from typing_extensions import Annotated
 from contextlib import asynccontextmanager
 from src.error_trace.errorlogger import system_logger
+from decimal import Decimal, InvalidOperation
+
 ############## Fraud checks tool ##############
 rag_path = Path(__file__).parent.parent / "policy_doc/"
 
@@ -262,46 +264,73 @@ class BenchmarkingToolkit:
             }
             return cls._market_prices
 
-@tool
-def item_cost_price_benchmarking_in_local_market(
+
+async def aitem_cost_price_benchmarking_in_local_market(
     vehicle_name_and_model_and_damaged_part: Annotated[str, "search term"],
     quoted_cost: Annotated[str, "quoted cost"],
 ) -> str:
     """Benchmarks quoted cost for vehicle repairs against local market prices."""
-    
-    toolkit = BenchmarkingToolkit()
-    
     try:
-        async def async_task():
-            async with CostBenchmarking(
-                    email="sam@masteryhive.ai",
-                    password="JLg8m4aQ8n46nhC"
-                ) as benchmarking:
-                    result = await benchmarking.analyze_market_price(
-                        f"{vehicle_name_and_model_and_damaged_part} tokunbo",
-                        quoted_cost
-                    )
-                    print(result)
-            quoted_cost_value = toolkit.parse_quoted_cost(quoted_cost)
-            market_prices = await toolkit.fetch_prices(vehicle_name_and_model_and_damaged_part)
-            
-            async with toolkit.get_benchmarking() as benchmarking:
-                tokunbo_analysis = await benchmarking.analyze_market_price(
-                    f"{vehicle_name_and_model_and_damaged_part} tokunbo",
-                    quoted_cost_value
-                )
-                brand_new_analysis = await benchmarking.analyze_market_price(
-                    f"{vehicle_name_and_model_and_damaged_part} brand new",
-                    quoted_cost_value
-                )
-                
-            return f"FAIRLY USED (Tokunbo):\n{tokunbo_analysis}\n\nBRAND NEW:\n{brand_new_analysis}"
+        # Validate vehicle_name_and_model_and_damaged_part
+        if not isinstance(vehicle_name_and_model_and_damaged_part, str) or not vehicle_name_and_model_and_damaged_part.strip():
+            raise ToolException("Invalid vehicle_name_and_model_and_damaged_part: must be a non-empty string")
         
-        return asyncio.run(async_task())
+        # Validate quoted_cost
+        try:
+            quoted_cost_value = Decimal(quoted_cost)
+        except (InvalidOperation, TypeError):
+            raise ToolException("Invalid quoted_cost: must be a valid decimal number")
+        
+        async with CostBenchmarking(
+                email="sam@masteryhive.ai",
+                password="JLg8m4aQ8n46nhC"
+        ) as benchmarking:
+            # Define conditions
+            conditions = ["fairly used", "brand new"]
+            
+            # Create tasks for each condition
+            tasks = [
+                benchmarking.analyze_market_price(
+                    f"{vehicle_name_and_model_and_damaged_part} {condition}", 
+                    quoted_cost_value
+                ) 
+                for condition in conditions
+            ]
+            
+            # Run tasks concurrently
+            results = await asyncio.gather(*tasks)
+            
+            # Format results
+            formatted_results = "\n\n".join([
+                f"{condition.upper()}:\n{result}" 
+                for condition, result in zip(conditions, results)
+            ])
+            print(formatted_results)
+            return formatted_results
+    
+    except ToolException as e:
+        system_logger.error(f"Validation error: {e}")
+        return ToolException(str(e))
     except Exception as e:
         system_logger.error(f"Error in benchmarking: {e}")
-        return "An error occurred while benchmarking the cost. Please try again."
+        return ToolException("An error occurred while benchmarking the cost. Please try again.")
 
+@tool
+def item_cost_price_benchmarking_in_local_market(
+    vehicle_name_and_model_and_damaged_part: str,
+    quoted_cost: str,
+) -> str:
+    """Synchronous wrapper for the async benchmarking function."""
+    print(
+            vehicle_name_and_model_and_damaged_part, 
+            quoted_cost
+        )
+    return asyncio.run(
+        item_cost_price_benchmarking_in_local_market(
+            vehicle_name_and_model_and_damaged_part, 
+            quoted_cost
+        )
+    )
 
 @tool
 def item_pricing_evaluator(

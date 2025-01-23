@@ -52,15 +52,15 @@ class CostBenchmarking:
         return self.format_analysis_result(analysis, quoted_price)
 
 
-async def main():
-    async with CostBenchmarking(
-        email="sam@masteryhive.ai",
-        password="JLg8m4aQ8n46nhC"
-    ) as benchmarking:
-        result = await benchmarking.analyze_market_price(
-            "hyundai sonata side mirror tokunbo",
-            49000
-        )
-        print(result)
+# async def main():
+#     async with CostBenchmarking(
+#         email="sam@masteryhive.ai",
+#         password="JLg8m4aQ8n46nhC"
+#     ) as benchmarking:
+#         result = await benchmarking.analyze_market_price(
+#             "hyundai sonata side mirror tokunbo",
+#             49000
+#         )
+#         print(result)
     
-asyncio.run(main())
+# asyncio.run(main())
