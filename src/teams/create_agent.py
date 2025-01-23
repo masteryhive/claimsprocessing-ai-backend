@@ -51,7 +51,7 @@ class FraudTeamAgentState(TypedDict):
 
     agent_history: Annotated[Sequence[BaseMessage], operator.add]
 
-    claim_form_fraud_investigator_result: str
+    claims_form_fraud_investigator_result: str
 
     vehicle_fraud_investigator_result: str
     

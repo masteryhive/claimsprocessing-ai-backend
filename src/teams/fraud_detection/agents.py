@@ -64,8 +64,8 @@ vehicle_fraud_investigator_agent = create_tool_agent(
     llm=llm,
     tools=[
         validate_if_this_is_a_real_vehicle,
-        # check_NIID_database_,
-        # ssim,
+        check_niid_database,
+        ssim,
     ],
     system_prompt=_load_prompt_template()[
         "VEHICLE_FRAUD_INVESTIGATOR_AGENT_SYSTEM_PROMPT"
@@ -75,7 +75,7 @@ vehicle_fraud_investigator_agent = create_tool_agent(
 damage_cost_fraud_investigator_agent = create_tool_agent(
     llm=llm,
     tools=[
-        #item_cost_price_benchmarking_in_local_market,
+        item_cost_price_benchmarking_in_local_market,
           # item_pricing_evaluator
            ],
     system_prompt=_load_prompt_template()[

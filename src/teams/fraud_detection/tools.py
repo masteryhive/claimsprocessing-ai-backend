@@ -17,6 +17,13 @@ rag_path = Path(__file__).parent.parent / "policy_doc/"
 
 
 @tool
+def search(query: str):
+    """Call to surf the web."""
+    print(query)
+    # This is a placeholder, but don't tell the LLM that...
+    return ["The answer to your question lies within."]
+
+@tool
 def verify_this_claimant_exists_as_a_customer(
     policyNumber: Annotated[str, "claimant's policy number."],
     email: Annotated[str, "claimant's email."],
@@ -114,8 +121,8 @@ def validate_if_this_is_a_real_vehicle(
     # Simulate a check for ghost claims
     return {"status": "clear", "message": "This vehicle is valid."}
 
-
-async def acheck_NIID_database_(
+@tool
+def check_niid_database(
     registrationNumber: Annotated[str, "The registration number of the vehicle."],
     chasisNumber: Annotated[str, "The chassis number of the vehicle."]
 ):
@@ -123,11 +130,26 @@ async def acheck_NIID_database_(
     this tool calls the NIID database to see if the vehicle has been insured using the registrationNumber and verifies that the vehicle chasis matches NIID internal database records.
     """
     niid_data = {}
-    extractor = InsuranceDataExtractor(registrationNumber.strip().lower())
-    niid_data = await extractor.run()
+    try:
+        # Validate chasisNumber
+        if not isinstance(chasisNumber, str) or not chasisNumber.strip():
+            raise ToolException("Invalid chasisNumber: must be a non-empty string")
+        
+        # Validate registrationNumber
+        if not isinstance(registrationNumber, str) or not registrationNumber.strip():
+            raise ToolException("Invalid registrationNumber: must be a non-empty string")
+    
+    except ToolException as e:
+        raise e
+
+    async def async_task():
+        extractor = InsuranceDataExtractor(registrationNumber.strip().lower())
+        return await extractor.run()
+
+    niid_data = asyncio.run(async_task())
 
     if niid_data.get("status") == "success":
-        niid_data["check_NIID_database_result"]={"existing_insurance_check_message": "Yes, this vehicle has an existing insurance record in the NIID database"}
+        niid_data["check_NIID_database_result"]={"existing_insurance_check_message": f"Yes, this vehicle has an existing insurance record in the NIID database with this certificate: {niid_data.get("data")["InsuranceCerticateNumber"]}"}
     else:
         niid_data["check_NIID_database_result"]={"existing_insurance_check_message": "No, this vehicle does not have an existing insurance record in the NIID database"}
     if (
@@ -148,9 +170,9 @@ async def acheck_NIID_database_(
         niid_data["check_NIID_database_result"].update({"chasis_check_message":
             "No, this vehicle has no record in NIID internal database records, therefore chasis number can not be checked against NIID record."}
         )
+
     return niid_data["check_NIID_database_result"]
 
-check_NIID_database_ = StructuredTool.from_function(coroutine=acheck_NIID_database_)
 
 @tool
 def ssim(
@@ -240,8 +262,8 @@ class BenchmarkingToolkit:
             }
             return cls._market_prices
 
-
-async def aitem_cost_price_benchmarking_in_local_market(
+@tool
+def item_cost_price_benchmarking_in_local_market(
     vehicle_name_and_model_and_damaged_part: Annotated[str, "search term"],
     quoted_cost: Annotated[str, "quoted cost"],
 ) -> str:
@@ -249,89 +271,90 @@ async def aitem_cost_price_benchmarking_in_local_market(
     toolkit = BenchmarkingToolkit()
     
     try:
-        quoted_cost_value = toolkit.parse_quoted_cost(quoted_cost)
-        market_prices = await toolkit.fetch_prices(vehicle_name_and_model_and_damaged_part)
-        
-        async with toolkit.get_benchmarking() as benchmarking:
-            tokunbo_analysis = await benchmarking.analyze_market_price(
-                f"{vehicle_name_and_model_and_damaged_part} tokunbo",
-                quoted_cost_value
-            )
-            brand_new_analysis = await benchmarking.analyze_market_price(
-                f"{vehicle_name_and_model_and_damaged_part} brand new",
-                quoted_cost_value
-            )
+        async def async_task():
+            quoted_cost_value = toolkit.parse_quoted_cost(quoted_cost)
+            market_prices = await toolkit.fetch_prices(vehicle_name_and_model_and_damaged_part)
             
-        return f"FAIRLY USED (Tokunbo):\n{tokunbo_analysis}\n\nBRAND NEW:\n{brand_new_analysis}"
-    
+            async with toolkit.get_benchmarking() as benchmarking:
+                tokunbo_analysis = await benchmarking.analyze_market_price(
+                    f"{vehicle_name_and_model_and_damaged_part} tokunbo",
+                    quoted_cost_value
+                )
+                brand_new_analysis = await benchmarking.analyze_market_price(
+                    f"{vehicle_name_and_model_and_damaged_part} brand new",
+                    quoted_cost_value
+                )
+                
+            return f"FAIRLY USED (Tokunbo):\n{tokunbo_analysis}\n\nBRAND NEW:\n{brand_new_analysis}"
+        
+        return asyncio.run(async_task())
     except Exception as e:
         system_logger.error(f"Error in benchmarking: {e}")
         return "An error occurred while benchmarking the cost. Please try again."
 
 
-item_cost_price_benchmarking_in_local_market = StructuredTool.from_function(coroutine=aitem_cost_price_benchmarking_in_local_market)
-
-
-async def item_pricing_evaluator(
+@tool
+def item_pricing_evaluator(
     vehicle_name_and_model_and_damaged_part: Annotated[str, "search term"]
 ) -> str:
     """Evaluates cost ranges for vehicle parts in the local market."""
     toolkit = BenchmarkingToolkit()
     
     try:
-        if not toolkit._market_prices:
-            await toolkit.fetch_prices(vehicle_name_and_model_and_damaged_part)
-            
-        async with toolkit.get_benchmarking() as benchmarking:
-            tokunbo_range = benchmarking.analyzer.get_expected_price_range(
-                toolkit._market_prices["tokunbo"]
+        async def async_task():
+            if not toolkit._market_prices:
+                await toolkit.fetch_prices(vehicle_name_and_model_and_damaged_part)
+                
+            async with toolkit.get_benchmarking() as benchmarking:
+                tokunbo_range = benchmarking.analyzer.get_expected_price_range(
+                    toolkit._market_prices["tokunbo"]
+                )
+                brand_new_range = benchmarking.analyzer.get_expected_price_range(
+                    toolkit._market_prices["brand_new"]
+                )
+                
+            return (
+                f"FAIRLY USED (Tokunbo):\nExpected price range: {tokunbo_range}\n\n"
+                f"BRAND NEW:\nExpected price range: {brand_new_range}"
             )
-            brand_new_range = benchmarking.analyzer.get_expected_price_range(
-                toolkit._market_prices["brand_new"]
-            )
-            
-        return (
-            f"FAIRLY USED (Tokunbo):\nExpected price range: {tokunbo_range}\n\n"
-            f"BRAND NEW:\nExpected price range: {brand_new_range}"
-        )
-    
+        return asyncio.run(async_task())
     except Exception as e:
         system_logger.error(f"Error in price evaluation: {e}")
         return "Price evaluation unavailable at this time"
 
 
-################### other checks ################
-@tool
-def claimant_location_check(claimant_id: str, location: str):
-    """
-    Check claimant's location.
-    """
-    # Simulate a location check
-    if location == "UNKNOWN":
-        return {"status": "suspicious", "message": "Claimant location is unknown."}
-    return {"status": "clear", "message": "Claimant location verified."}
+# ################### other checks ################
+# @tool
+# def claimant_location_check(claimant_id: str, location: str):
+#     """
+#     Check claimant's location.
+#     """
+#     # Simulate a location check
+#     if location == "UNKNOWN":
+#         return {"status": "suspicious", "message": "Claimant location is unknown."}
+#     return {"status": "clear", "message": "Claimant location verified."}
 
 
-@tool
-def weather_traffic_conditions_check(date: str, location: str):
-    """
-    Check weather and traffic conditions.
-    """
-    # Simulate a weather and traffic conditions check
-    if date == "2023-10-01" and location == "HIGH_TRAFFIC":
-        return {
-            "status": "suspicious",
-            "message": "Unusual traffic conditions on the date.",
-        }
-    return {"status": "clear", "message": "Normal weather and traffic conditions."}
+# @tool
+# def weather_traffic_conditions_check(date: str, location: str):
+#     """
+#     Check weather and traffic conditions.
+#     """
+#     # Simulate a weather and traffic conditions check
+#     if date == "2023-10-01" and location == "HIGH_TRAFFIC":
+#         return {
+#             "status": "suspicious",
+#             "message": "Unusual traffic conditions on the date.",
+#         }
+#     return {"status": "clear", "message": "Normal weather and traffic conditions."}
 
 
-@tool
-def drivers_license_status_check(
-    driver_license_number: Annotated[str, "claimant's driver license number."]
-):
-    """
-    Check the driver's license status.
-    """
-    # Simulate a driver's license status check
-    return {"status": "clear", "message": "Driver's license is valid."}
+# @tool
+# def drivers_license_status_check(
+#     driver_license_number: Annotated[str, "claimant's driver license number."]
+# ):
+#     """
+#     Check the driver's license status.
+#     """
+#     # Simulate a driver's license status check
+#     return {"status": "clear", "message": "Driver's license is valid."}
