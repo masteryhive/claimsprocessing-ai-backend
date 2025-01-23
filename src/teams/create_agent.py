@@ -12,6 +12,64 @@ from langchain_core.messages import BaseMessage
 from langchain.agents import AgentExecutor, create_tool_calling_agent
 from langchain_core.output_parsers import JsonOutputParser
 
+class ClaimFormScreeningTeamAgentState(TypedDict):
+    messages: Annotated[list, add_messages]
+
+    claim_form_json: Annotated[Sequence[BaseMessage], operator.add]
+    # The 'next' field indicates where to route to next
+    next: str
+
+    agent_history: Annotated[Sequence[BaseMessage], operator.add]
+
+    document_verifier_result: str
+
+    supporting_document_verifier_result: str
+
+class PolicyReviewTeamAgentState(TypedDict):
+    messages: Annotated[list, add_messages]
+
+    claim_form_json: Annotated[Sequence[BaseMessage], operator.add]
+    # The 'next' field indicates where to route to next
+    next: str
+
+    agent_history: Annotated[Sequence[BaseMessage], operator.add]
+
+    policy_essential_data_retriever_result: str
+
+    policy_period_verifier_result: str
+
+    insurance_policy_verifier_result:str
+
+
+class FraudTeamAgentState(TypedDict):
+    messages: Annotated[list, add_messages]
+
+    claim_form_json: Annotated[Sequence[BaseMessage], operator.add]
+    # The 'next' field indicates where to route to next 
+    next: str
+
+    agent_history: Annotated[Sequence[BaseMessage], operator.add]
+
+    claim_form_fraud_investigator_result: str
+
+    vehicle_fraud_investigator_result: str
+    
+    damage_cost_fraud_investigator_result: str
+
+    fraud_risk_analyst_result: str
+
+class SettlementOfferTeamAgentState(TypedDict):
+    messages: Annotated[list, add_messages]
+
+    claim_form_json: Annotated[Sequence[BaseMessage], operator.add]
+    # The 'next' field indicates where to route to next
+    next: str
+
+    agent_history: Annotated[Sequence[BaseMessage], operator.add]
+
+    offer_analyst_result: str
+
+
 # The agent state is the input to each node in the graph
 class AgentState(TypedDict):
     # The annotation tells the graph that new messages will always
