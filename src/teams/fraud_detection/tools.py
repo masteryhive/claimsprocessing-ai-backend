@@ -278,7 +278,7 @@ async def aitem_cost_price_benchmarking_in_local_market(
                 validator(item[0], item[1])
                 new_item = [f"{item[0]} {condition}", float(item[1])]
                 updated_parsed_list.append(new_item)
-        print(updated_parsed_list)
+                
         async with CostBenchmarking(
             email="sam@masteryhive.ai",
             password="JLg8m4aQ8n46nhC",
