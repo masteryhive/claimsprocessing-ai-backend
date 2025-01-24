@@ -84,5 +84,5 @@ workflow.add_edge("Supervisor", agent1)
 workflow.add_conditional_edges("Supervisor", lambda state: state["next"])
 
 report_graph = workflow.compile()
-# if env_config.env == "local":
-#     save_graph_mermaid(report_graph, output_file="display/summary_langgraph.png")
+if env_config.env == "local":
+    save_graph_mermaid(report_graph, output_file="display/summary_langgraph.png")
