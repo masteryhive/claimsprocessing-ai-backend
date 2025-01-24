@@ -15,6 +15,7 @@ class InsuranceDataExtractor:
 
     async def _perform_extraction(self, page:Page):
         await page.goto(self.url)
+        await page.wait_for_load_state('load')
         await page.locator("#ContentPlaceHolder1_drpOption").select_option("Single")
         await page.locator("#ContentPlaceHolder1_rblNumber_1").click()
         await page.locator("#ContentPlaceHolder1_txtNumber").fill(self.registration_number)
@@ -22,11 +23,11 @@ class InsuranceDataExtractor:
         # await page.locator("#ContentPlaceHolder1_btnSearch").click()
         await expect(page.locator("#ContentPlaceHolder1_btnSearch")).to_be_visible()
         await page.locator("#ContentPlaceHolder1_btnSearch").click(timeout=60000)
-        await page.wait_for_load_state("networkidle")  # Wait for network activity to settle
+        await page.wait_for_load_state('load')
         await asyncio.sleep(5)
         # Capture into Image
-        screenshot_bytes = await page.screenshot()
-        system_logger.info(message=base64.b64encode(screenshot_bytes).decode())
+        # screenshot_bytes = await page.screenshot()
+        # system_logger.info(message=base64.b64encode(screenshot_bytes).decode())
 
         try:
             await page.locator("#ContentPlaceHolder1_lblPolicyNo").is_visible()

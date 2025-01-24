@@ -1,9 +1,11 @@
+import ast
 import asyncio
 from datetime import datetime
 import json
 from pathlib import Path
-from langchain_core.tools import tool,StructuredTool,ToolException
-from typing import Annotated,Optional, Dict, List, Any
+from langchain_core.tools import tool, StructuredTool, ToolException
+from typing import Annotated, Optional, Dict, List, Any
+from src.teams.fraud_detection.helper import analysis_result_formatter
 from src.teams.resources.ssim import structural_similarity_index_measure
 from src.rag.context_stuffing import process_query
 from src.pipelines.local_markets.jiji.cost_benchmarking import CostBenchmarking
@@ -16,7 +18,6 @@ from decimal import Decimal, InvalidOperation
 
 ############## Fraud checks tool ##############
 rag_path = Path(__file__).parent.parent / "policy_doc/"
-
 
 
 @tool
@@ -56,7 +57,7 @@ def investigate_if_this_claimant_is_attempting_a_rapid_policy_claim(
                 "properties": {
                     "From": {
                         "type": "string",
- "description": "The start date of the policy period, typically found in sections labeled 'policy period' or 'coverage dates'. Input date should be interpreted in DD/MM/YYYY format (e.g., 06/11/2024) and converted to format 'Month DD, YYYY' (e.g., November 6, 2024)",
+                        "description": "The start date of the policy period, typically found in sections labeled 'policy period' or 'coverage dates'. Input date should be interpreted in DD/MM/YYYY format (e.g., 06/11/2024) and converted to format 'Month DD, YYYY' (e.g., November 6, 2024)",
                     },
                 },
                 "required": ["From"],
@@ -76,7 +77,7 @@ def investigate_if_this_claimant_is_attempting_a_rapid_policy_claim(
         response_schema=response_schema,
     )
 
-    def calc(date_claim_filed:str, resp:str):
+    def calc(date_claim_filed: str, resp: str):
         # Extract the date from the response
         start_date_str = json.loads(resp)["PolicyPeriod"]["From"]
         date_claim_filed_dt = None
@@ -117,10 +118,11 @@ def validate_if_this_is_a_real_vehicle(
     # Simulate a check for ghost claims
     return {"status": "clear", "message": "This vehicle is valid."}
 
+
 @tool
 def check_niid_database(
     registrationNumber: Annotated[str, "The registration number of the vehicle."],
-    chasisNumber: Annotated[str, "The chassis number of the vehicle."]
+    chasisNumber: Annotated[str, "The chassis number of the vehicle."],
 ):
     """
     this tool calls the NIID database to see if the vehicle has been insured using the registrationNumber and verifies that the vehicle chasis matches NIID internal database records.
@@ -130,11 +132,13 @@ def check_niid_database(
         # Validate chasisNumber
         if not isinstance(chasisNumber, str) or not chasisNumber.strip():
             raise ToolException("Invalid chasisNumber: must be a non-empty string")
-        
+
         # Validate registrationNumber
         if not isinstance(registrationNumber, str) or not registrationNumber.strip():
-            raise ToolException("Invalid registrationNumber: must be a non-empty string")
-    
+            raise ToolException(
+                "Invalid registrationNumber: must be a non-empty string"
+            )
+
     except ToolException as e:
         raise e
 
@@ -145,26 +149,38 @@ def check_niid_database(
     niid_data = asyncio.run(async_task())
 
     if niid_data.get("status") == "success":
-        niid_data["check_NIID_database_result"]={"existing_insurance_check_message": f"Yes, this vehicle has an existing insurance record in the NIID database with this certificate: {niid_data.get("data")["InsuranceCerticateNumber"]}"}
+        niid_data["check_NIID_database_result"] = {
+            "existing_insurance_check_message": f"Yes, this vehicle has an existing insurance record in the NIID database with this certificate: {niid_data.get("data")["InsuranceCerticateNumber"]}"
+        }
     else:
-        niid_data["check_NIID_database_result"]={"existing_insurance_check_message": "No, this vehicle does not have an existing insurance record in the NIID database"}
+        niid_data["check_NIID_database_result"] = {
+            "existing_insurance_check_message": "No, this vehicle does not have an existing insurance record in the NIID database"
+        }
     if (
         niid_data.get("status") == "success"
-        and niid_data.get("data")["ChassisNumber"].lower() == chasisNumber.strip().lower()
+        and niid_data.get("data")["ChassisNumber"].lower()
+        == chasisNumber.strip().lower()
     ):
-        niid_data["check_NIID_database_result"].update({"chasis_check_message":
-            "Yes, this vehicle chasis number matches NIID internal database records"}
+        niid_data["check_NIID_database_result"].update(
+            {
+                "chasis_check_message": "Yes, this vehicle chasis number matches NIID internal database records"
+            }
         )
     elif (
         niid_data.get("status") == "success"
-        and niid_data.get("data")["ChassisNumber"].lower() != chasisNumber.strip().lower()
+        and niid_data.get("data")["ChassisNumber"].lower()
+        != chasisNumber.strip().lower()
     ):
-        niid_data["check_NIID_database_result"].update({"chasis_check_message":
-         "No, this vehicle chasis number does not match NIID internal database records"}
+        niid_data["check_NIID_database_result"].update(
+            {
+                "chasis_check_message": "No, this vehicle chasis number does not match NIID internal database records"
+            }
         )
     else:
-        niid_data["check_NIID_database_result"].update({"chasis_check_message":
-            "No, this vehicle has no record in NIID internal database records, therefore chasis number can not be checked against NIID record."}
+        niid_data["check_NIID_database_result"].update(
+            {
+                "chasis_check_message": "No, this vehicle has no record in NIID internal database records, therefore chasis number can not be checked against NIID record."
+            }
         )
 
     return niid_data["check_NIID_database_result"]
@@ -172,9 +188,14 @@ def check_niid_database(
 
 @tool
 def ssim(
-    prelossImageUrl: Annotated[str,"The URL of the pre-loss condition image."], 
-    damageConditionImageUrl: Annotated[str,"The URL of the vehicle showing the damage condition for this claim."],
-    incidentDetails: Annotated[str,'A description of the incident that happened to the user, e.g., "A reckless driver hit my car from behind and broke my rear lights."']
+    prelossImageUrl: Annotated[str, "The URL of the pre-loss condition image."],
+    damageConditionImageUrl: Annotated[
+        str, "The URL of the vehicle showing the damage condition for this claim."
+    ],
+    incidentDetails: Annotated[
+        str,
+        'A description of the incident that happened to the user, e.g., "A reckless driver hit my car from behind and broke my rear lights."',
+    ],
 ) -> str:
     """
     Use this tool to verify if the damages in the claim being filed for this vehicle matches its pre-loss condition using Structural Similarity Index (SSIM).
@@ -189,16 +210,27 @@ def ssim(
     """
     # Validate inputs
     if not prelossImageUrl or not damageConditionImageUrl or not incidentDetails:
-        raise ToolException("All inputs (prelossImageUrl, damageConditionImageUrl, and incidentDetails) must be provided")
+        raise ToolException(
+            "All inputs (prelossImageUrl, damageConditionImageUrl, and incidentDetails) must be provided"
+        )
 
     prelossImageUrl = prelossImageUrl.strip()
-    damageConditionImageUrl = damageConditionImageUrl.strip() 
+    damageConditionImageUrl = damageConditionImageUrl.strip()
     incidentDetails = incidentDetails.strip()
 
     if not prelossImageUrl or not damageConditionImageUrl or not incidentDetails:
         raise ToolException("All inputs must contain non-empty strings")
     try:
-        ssim_data = [{"prelossUrl": prelossImageUrl.replace("https://storage.googleapis.com","gs://"), "claimUrl": damageConditionImageUrl.replace("https://storage.googleapis.com/","gs://")}]
+        ssim_data = [
+            {
+                "prelossUrl": prelossImageUrl.replace(
+                    "https://storage.googleapis.com", "gs://"
+                ),
+                "claimUrl": damageConditionImageUrl.replace(
+                    "https://storage.googleapis.com/", "gs://"
+                ),
+            }
+        ]
         resp = structural_similarity_index_measure(incidentDetails, ssim_data)
         return resp
     except Exception as e:
@@ -208,76 +240,89 @@ def ssim(
 ############## damage cost fraud ##################
 
 market_prices = {}
+
+
 async def aitem_cost_price_benchmarking_in_local_market(
-    vehicle_name_and_model_and_damaged_part: Annotated[str, "search term"],
-    quoted_cost: Annotated[str, "quoted cost"],
+    list_of_vehicle_name_and_model_and_damaged_part: List[list],
 ) -> str:
     """Benchmarks quoted cost for vehicle repairs against local market prices."""
     global market_prices
     try:
-        # Validate vehicle_name_and_model_and_damaged_part
-        if not isinstance(vehicle_name_and_model_and_damaged_part, str) or not vehicle_name_and_model_and_damaged_part.strip():
-            raise ToolException("Invalid vehicle_name_and_model_and_damaged_part: must be a non-empty string")
-        
-        # Validate quoted_cost
-        try:
-            quoted_cost_value = float(quoted_cost)
-        except (InvalidOperation, TypeError):
-            raise ToolException("Invalid quoted_cost: must be a valid decimal number")
-        
-        async with CostBenchmarking(
-                email="sam@masteryhive.ai",
-                password="JLg8m4aQ8n46nhC"
-        ) as benchmarking:
-            # Define conditions
-            conditions = ["fairly used", "brand new"]
-            
-            # Create tasks for each condition
-            tasks = [
-                benchmarking.analyze_market_price(
-                    f"{vehicle_name_and_model_and_damaged_part} {condition}", 
-                    quoted_cost_value
-                ) 
-                for condition in conditions
-            ]
-            
-            # Run tasks concurrently
-            results = await asyncio.gather(*tasks)
-            condition_result = []
-            for condition, result in zip(conditions, results):
-                market_prices.update({
-                     condition.replace(" ","_"):result
-                 })
-                condition_result.append(f"{condition.upper()}:\n{result}")
-            # Format results
-            formatted_results = "\n\n".join(condition_result)
 
+        def validator(vehicle_name_and_model_and_damaged_part: str, quoted_cost: str):
+            # Validate vehicle_name_and_model_and_damaged_part
+            if (
+                not isinstance(vehicle_name_and_model_and_damaged_part, str)
+                or not vehicle_name_and_model_and_damaged_part.strip()
+            ):
+                raise ToolException(
+                    "Invalid vehicle_name_and_model_and_damaged_part: must be a non-empty string"
+                )
+
+            # Validate quoted_cost
+            try:
+                quoted_cost_value = float(quoted_cost)
+            except (InvalidOperation, TypeError):
+                raise ToolException(
+                    "Invalid quoted_cost: must be a valid decimal number"
+                )
+
+        parsed_list = ast.literal_eval(list_of_vehicle_name_and_model_and_damaged_part)
+        updated_parsed_list: List[list] = []
+
+        # Define conditions
+        conditions = ["fairly used", "brand new"]
+
+        for item in parsed_list:
+            for condition in conditions:
+                validator(item[0], item[1])
+                new_item = [f"{item[0]} {condition}", float(item[1])]
+                updated_parsed_list.append(new_item)
+        print(updated_parsed_list)
+        async with CostBenchmarking(
+            email="sam@masteryhive.ai",
+            password="JLg8m4aQ8n46nhC",
+            max_concurrency=len(updated_parsed_list),
+        ) as benchmarking:
+
+            # Create tasks for each condition
+            results = await benchmarking.concurrent_analyze(updated_parsed_list)
+            formatted_results= analysis_result_formatter(conditions,updated_parsed_list,results)
             return formatted_results
-    
+
     except ToolException as e:
         system_logger.error(f"Validation error: {e}")
         return ToolException(str(e))
     except Exception as e:
         system_logger.error(f"Error in benchmarking: {e}")
-        return ToolException("An error occurred while benchmarking the cost. Please try again.")
+        return ToolException(
+            "An error occurred while benchmarking the cost. Please try again."
+        )
+
 
 @tool
 def item_cost_price_benchmarking_in_local_market(
-    vehicleMake_and_vehicleModel_and_yearOfManufacture_and_damaged_part: Annotated[str, "search term.e.g Hyundai sonata 2019 side mirror"],
-    quoted_cost: Annotated[str, "quoted cost"],
+    the_vehicleMake_and_vehicleModel_and_yearOfManufacture_and_damaged_part_list: Annotated[
+        str,
+        "search term, it MUST be a nested list of the vehicle make vehicle model manufacture year and the damaged part against the quoted cost for the damaged part. e.g '[['hyundai sonata 2015 side mirror',49000],['hyundai sonata 2015 door handle',23000]]'",
+    ],
 ) -> str:
     """Synchronous wrapper for the async benchmarking function."""
-  
-    system_logger.info(f"{vehicleMake_and_vehicleModel_and_yearOfManufacture_and_damaged_part}-{quoted_cost}")
+
+    system_logger.info(
+        f"{the_vehicleMake_and_vehicleModel_and_yearOfManufacture_and_damaged_part_list}"
+    )
     # async_item_cost_price_benchmarking_in_local_market = StructuredTool.from_function(coroutine=aitem_cost_price_benchmarking_in_local_market)
     # asyncio.run(async_item_cost_price_benchmarking_in_local_market.ainvoke({"vehicleMake_and_vehicleModel_and_yearOfManufacture_and_damaged_part":vehicleMake_and_vehicleModel_and_yearOfManufacture_and_damaged_part,
     #                                                             "quoted_cost":quoted_cost}))
+
     return asyncio.run(
         aitem_cost_price_benchmarking_in_local_market(
-            vehicleMake_and_vehicleModel_and_yearOfManufacture_and_damaged_part, 
-            quoted_cost
+            the_vehicleMake_and_vehicleModel_and_yearOfManufacture_and_damaged_part_list
         )
     )
+
+
 
 @tool
 def item_pricing_evaluator(
@@ -286,21 +331,23 @@ def item_pricing_evaluator(
     """Evaluates cost ranges for vehicle parts in the local market."""
 
     try:
+
         async def async_task():
             async with CostBenchmarking(
-                email="sam@xxxx",
-                password="xxxx") as benchmarking:
+                email="sam@xxxx", password="xxxx"
+            ) as benchmarking:
                 tokunbo_range = benchmarking.analyzer.get_expected_price_range(
                     market_prices["fairly_used"]
                 )
                 brand_new_range = benchmarking.analyzer.get_expected_price_range(
                     market_prices["brand_new"]
                 )
-                
+
             return (
                 f"FAIRLY USED (Tokunbo):\nExpected price range: {tokunbo_range}\n\n"
                 f"BRAND NEW:\nExpected price range: {brand_new_range}"
             )
+
         return asyncio.run(async_task())
     except Exception as e:
         system_logger.error(f"Error in price evaluation: {e}")

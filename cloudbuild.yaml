@@ -1,4 +1,8 @@
 steps:
+  # Run pytest
+  - name: 'gcr.io/cloud-builders/python'
+    args: ['pytest', 'tests/']
+
   # Step 1: Build the Docker image and tag it as mastery-hive-cv-extractor
   - name: 'gcr.io/cloud-builders/docker'
     args: ['build', '-t', 'gcr.io/$PROJECT_ID/$_SERVICE_NAME:$COMMIT_SHA', '.']

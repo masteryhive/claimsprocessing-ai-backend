@@ -2,7 +2,12 @@
 from abc import ABC, abstractmethod
 from typing import List, Dict, Any, Optional
 from dataclasses import dataclass, field
+from typing_extensions import TypedDict
 
+class MarketData(TypedDict):
+    prices: List[float]
+    metadata: Dict[str, Any]
+    
 @dataclass
 class PriceAnalysis:
     is_realistic: bool
@@ -25,7 +30,7 @@ class IBrowser(ABC):
         pass
     
     @abstractmethod
-    async def login(self, page: Any) -> bool:
+    async def _perform_login(self, page: Any) -> bool:
         raise NotImplementedError
 
 class IPriceAnalyzer(ABC):
@@ -39,5 +44,5 @@ class IPriceAnalyzer(ABC):
 
 class IMarketDataFetcher(ABC):
     @abstractmethod
-    async def fetch_market_data(self, page: Any, search_term: str) -> List[float]:
+    async def fetch_market_data(self, page: Any, search_term: str) -> MarketData:
         pass

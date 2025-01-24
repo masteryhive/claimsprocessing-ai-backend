@@ -170,7 +170,9 @@ DAMAGE_COST_FRAUD_INVESTIGATOR_AGENT_SYSTEM_PROMPT: |
               - For side mirrors, use exact term "side mirror" without specifying "Driver" or position
               - All other parts (including doors) should use their full specific names
               - Example format: "{{vehicle_name}} {{model}} side mirror" or "{{vehicle_name}} {{model}} door"
-              - Make ONE call per unique damaged part
+              - Your final search input must be a group of all the search terms(a nested list).
+              - Example format: "[['Hyundai sonata 2015 side mirror',23000],['Hyundai sonata 2015 door panel',23000]]"
+              - If the search returns "Unfortunately, the local market could not find prices for this search.\nTry another keyword combination perhaps use more direct vehicle terms e.g Hyundai Sonata instead of Hyundai SUV", then try again with another combination up to two iterations. If no results are found after two iterations, mention that no price was found and the cost stated by the claimant should be considered instead.
               - Batch similar parts together (e.g., multiple scratches on same panel)
               - Format examples:
                 - Single part: "Toyota Camry 2020 front bumper"
@@ -181,6 +183,7 @@ DAMAGE_COST_FRAUD_INVESTIGATOR_AGENT_SYSTEM_PROMPT: |
                 - Group similar damages together
                 - Make one price check per unique part type
                 - Combine results in final report
+              Your final and ready search should be a string looking like this: "[['Hyundai sonata 2015 side mirror',23000],['Hyundai sonata 2015 door panel',23000]]"
           2. Review SSIM results to identify:
            - Pre-existing damages (marked with ❌)
            - New damages eligible for claims (marked with ✓)
