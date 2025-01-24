@@ -204,9 +204,9 @@ def call_summary_team(state: AgentState) -> AgentState:
         f"Settlement Offer Team Result:\n{settlement_offer_team_data[-1]}"
     )
     response = report_graph.invoke(
+      
         {
-            # "messages": [state["messages"][-1]],
-            "messages": [AIMessage(content=(team_mates))],
+            "messages": [HumanMessage(content=(state["messages"][-1].content + "\n"+team_mates))],
             "agent_history": state["agent_history"],
             "claim_form_json": state["claim_form_json"],
         }
