@@ -150,7 +150,7 @@ PROCESS_CLERK_PROMPT: |
   </instruction>
 
   [TEMPLATE]
-  Claim Processing Summary - ID: {{claim_id}}
+  Claim Processing Summary
   {{review_summary}}
 
   Claim Document Processing Summary:
