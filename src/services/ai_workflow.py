@@ -74,14 +74,14 @@ class ClaimsProcessingBaseService(ClaimsProcessingServicer):
     def ViewLogs(self, request, context):
         """Retrieve log files based on the log type."""
         try:
-            log_type = request.log_type.lower()
+            log_type = str(request.logType).lower()
             if log_type not in ["error", "info"]:
                 context.abort(
                     StatusCode.INVALID_ARGUMENT,
                     f"Invalid log_type: {log_type}. Must be 'error' or 'info'."
                 )
             log_data = system_logger.view_logs(log_type=log_type)
-            return LogViewResponse(logs=log_data)
+            return LogViewResponse(log_text=log_data)
         except Exception as e:
             raise GrpcException(
                 status_code=StatusCode.INTERNAL,

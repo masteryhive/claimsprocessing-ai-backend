@@ -195,7 +195,7 @@ class Logger:
         except Exception as e:
             print(f"Failed to clear logs: {str(e)}", file=sys.stderr)
 
-    async def view_logs(self,log_type: str)->str:
+    def view_logs(self,log_type: str)->str:
         """
         Read and return the contents of the specified log file in plain text.
 
@@ -205,7 +205,16 @@ class Logger:
         Returns:
             PlainTextResponse: The contents of the log file or an error message.
         """
-        log_file = self.log_files.get(log_type.lower())
+
+        match log_type.lower():
+            case "error":
+                log_file = self.log_files.get(LogLevel.ERROR)
+            case "info":
+                log_file = self.log_files.get(LogLevel.INFO)
+            case "warning":
+                log_file = self.log_files.get(LogLevel.WARNING)
+            case _:
+                log_file = None
 
         if not log_file:
             return f"Invalid log type: {log_type}. Valid types are: info, warning, error."

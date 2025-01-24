@@ -15,11 +15,11 @@ message HealthCheckResponse {
 }
 
 message LogViewRequest {
-  string log_type = 1; // Accepts "error" or "info"
+  string logType = 1; // Accepts "error" or "info"
 }
 
 message LogViewResponse {
-  repeated string logs = 1; // List of log messages
+   string log_text = 1;
 }
 
 service ClaimsProcessing {
