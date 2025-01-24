@@ -1,5 +1,5 @@
 import operator
-from typing import Annotated, Sequence, Any
+from typing import Annotated, Optional, Sequence, Any
 from typing_extensions import TypedDict
 from langchain_google_vertexai import ChatVertexAI
 from langchain_core.prompts import (
@@ -70,7 +70,18 @@ class SettlementOfferTeamAgentState(TypedDict):
 
     offer_analyst_result: str
 
+# class AgentState(TypedDict):
+#     messages: Annotated[Sequence[BaseMessage], operator.add]
+#     claim_form_json: Annotated[Sequence[BaseMessage], operator.add]
+#     next: str
+#     agent_history: Annotated[Sequence[BaseMessage], operator.add]
 
+#     # Optional team-specific states
+#     claim_screening_team: Optional[ClaimFormScreeningTeamAgentState] = None
+#     policy_review_team: Optional[PolicyReviewTeamAgentState] = None
+#     fraud_team: Optional[FraudTeamAgentState] = None
+#     settlement_offer_team: Optional[SettlementOfferTeamAgentState] = None
+    
 # The agent state is the input to each node in the graph
 class AgentState(TypedDict):
     # The annotation tells the graph that new messages will always
@@ -82,6 +93,12 @@ class AgentState(TypedDict):
     next: str
 
     agent_history: Annotated[Sequence[BaseMessage], operator.add]
+
+    # Optional team-specific states
+    claim_screening_team_summary: str
+    policy_review_team_summary: str
+    fraud_team_summary: str
+    settlement_offer_team_summary: str
 
 
 def create_supervisor_node(system_prompt:str,llm:ChatVertexAI,SupervisorOutput:type,members:list):

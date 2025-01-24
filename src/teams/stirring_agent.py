@@ -21,7 +21,6 @@ from langgraph.graph import StateGraph, START, END
 from langchain_core.messages import HumanMessage, AIMessage
 
 
-
 members = [
     "claim_form_screening_team",
     "policy_review_team",
@@ -127,7 +126,8 @@ def call_doc_team(state: AgentState) -> AgentState:
     return {
         "messages": [
             HumanMessage(content=response["messages"][1].content, name=members[0])
-        ]
+        ],
+        "claim_screening_team_summary": [AIMessage(content=response["messages"][1].content)],
     }
 
 
@@ -141,10 +141,9 @@ def call_pol_team(state: AgentState) -> AgentState:
     )
     return {
         "messages": [
-            HumanMessage(
-                content=response["messages"][-1].content, name=members[1]
-            )
-        ]
+            HumanMessage(content=response["messages"][-1].content, name=members[1])
+        ],
+        "policy_review_team_summary": [AIMessage(content=response["messages"][1].content)],
     }
 
 
@@ -159,7 +158,8 @@ def call_fraud_team(state: AgentState) -> AgentState:
     return {
         "messages": [
             HumanMessage(content=response["messages"][-1].content, name=members[2])
-        ]
+        ],
+        "fraud_team_summary": [AIMessage(content=response["messages"][1].content)],
     }
 
 
@@ -174,14 +174,39 @@ def call_settlement_offer_team(state: AgentState) -> AgentState:
     return {
         "messages": [
             HumanMessage(content=response["messages"][-1].content, name=members[3])
-        ]
+        ],
+        "settlement_offer_team_summary": [AIMessage(content=response["messages"][1].content)],
     }
 
 
 def call_summary_team(state: AgentState) -> AgentState:
+    # read the last message in the message history.
+    claim_screening_team_data = [
+        c.content for c in state["claim_screening_team_summary"] if isinstance(c, AIMessage)
+    ]
+    policy_review_team_data = [
+        c.content for c in state["policy_review_team_summary"] if isinstance(c, AIMessage)
+    ]
+    fraud_team_data = [
+        c.content for c in state["fraud_team_summary"] if isinstance(c, AIMessage)
+    ]
+    settlement_offer_team_data = [
+        c.content for c in state["settlement_offer_team_summary"] if isinstance(c, AIMessage)
+    ]
+
+    team_mates = (
+        "Create a report using this operations summaries from the teams. Pay extra attention to the fraud score.\n"
+        "CLAIMS OPERATIONS SUMMARIES FROM DIFFERENT TEAMS\n"
+        "==============================================================\n\n"
+        f"\n\nClaim Screening Team Result:\n{claim_screening_team_data[-1]}\n\n"
+        f"Policy Review Team Result:\n{policy_review_team_data[-1]}\n\n"
+        f"Fraud Team Result:\n{fraud_team_data[-1]}\n\n"
+        f"Settlement Offer Team Result:\n{settlement_offer_team_data[-1]}"
+    )
     response = report_graph.invoke(
         {
-            "messages": [state["messages"][-1]],
+            # "messages": [state["messages"][-1]],
+            "messages": [AIMessage(content=(team_mates))],
             "agent_history": state["agent_history"],
             "claim_form_json": state["claim_form_json"],
         }
