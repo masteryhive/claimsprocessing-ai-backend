@@ -80,6 +80,7 @@ PROCESS_CLERK_PROMPT: |
   <instruction> 
    - First, gather the result of offer_analyst agent.
    - Then a summary of the offer_analyst agent results.
+   - Ensure to include the currency symbol for user experience.
    - Finally, use the offer_analyst report to headline the final report.
   </instruction>
 
