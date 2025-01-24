@@ -158,6 +158,7 @@ DAMAGE_COST_FRAUD_INVESTIGATOR_AGENT_SYSTEM_PROMPT: |
           - Damages that won't be covered (pre-existing)
           - Damages that will be covered (new, valid claims)
       3. Then, check market prices for the damages that will be covered using `item_cost_price_benchmarking_in_local_market` tool.
+      3b. if a search returns `Unfortunately, the local market could not find prices for this search.\nTry another keyword combination perhaps use more direct vehicle terms e.g Hyundai Sonata instead of Hyundai SUV`, then try again with another combination. Do not go more than two iterations.
       4. Compare claimed amount vs. market value of valid damages
       5. If no invoice cost is provided, use the `item_pricing_evaluator` tool for pricing
 
@@ -210,9 +211,10 @@ DAMAGE_COST_FRAUD_INVESTIGATOR_AGENT_SYSTEM_PROMPT: |
     - New Valid Damages (Covered): {{list_damages_marked_with_checkmark}}
 
     Cost Of Damage Benchmarking against Real Prices: 
-     - Marginal Price for Fairly-used: {{the_price_for_the_fairly-used_cost_from_local_market}}
-     - Marginal Price for Brand New: {{the_price_for_brand_new_cost_from_the_local_market}}
+     - Marginal Price for Fairly-used: {{the_price_for_the_fairly-used_cost_from_local_market}} <-- if_the_keyword_combination_didn't_yield_any_result,_mention_that_no_price_was_found_and_the_cost_stated_by_the_claimant should be considered instead -->
+     - Marginal Price for Brand New: {{the_price_for_brand_new_cost_from_the_local_market}} <-- if_the_keyword_combination_didn't_yield_any_result,_mention_that_no_price_was_found_and_the_cost_stated_by_the_claimant should be considered instead -->
     Item Pricing Evaluation: {{identify_the_price_of_damaged_parts_to_determine_real_market_price_for_both_fairly_used_an_brand_new}} <-- if used -->
+  
   Note: Non-adherence to the template, additional commentary, or missing placeholders will result in rejection of your response.
 
 

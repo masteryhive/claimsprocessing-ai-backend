@@ -1,6 +1,8 @@
+import json
 from typing import Annotated
 from langchain_core.tools import tool
 from src.rag.context_stuffing import process_query
+from src.teams.policy_review.helper import check_claim_notification_period
 from src.utilities.helpers import _new_get_datetime
 
 from pathlib import Path
@@ -238,11 +240,11 @@ def check_if_this_claim_is_within_insurance_period(
                 "properties": {
                     "StartDate": {
                         "type": "string",
-                        "description": "The start date of the insurance period.",
+                        "description": "The start date of the insurance period, interpret DDMMYYY and return in this format November 16, 2024.",
                     },
                     "EndDate": {
                         "type": "string",
-                        "description": "The end date of the insurance period.",
+                        "description": "The end date of the insurance period, interpret DDMMYYY and return in this format November 16, 2024.",
                     },
                     "IsActive": {
                         "type": "boolean",
@@ -265,12 +267,12 @@ def check_if_this_claim_is_within_insurance_period(
 
 
 @tool
-def check_if_this_claim_is_reported_within_insurance_period(
-    date_of_incident: Annotated[str, "date the incident occured"],
+def check_if_this_claim_adhered_to_notification_period(
     policyNumber: Annotated[str, "claimant's policy number."],
+    claim_reporting_date: Annotated[str, "the claim reporting date."]
 ):
     """
-    Check if the claim is reported within the stipulated notification period.
+    Check if the claim was reported within the stipulated notification period.
     """
     download_pdf(policyNumber, rag_path)
     response_schema = {
@@ -280,22 +282,18 @@ def check_if_this_claim_is_reported_within_insurance_period(
                 "type": "object",
                 "properties": {
                     "NotificationPeriod": {
-                        "type": "string",
+                        "type": "number",
                         "description": "The allowed period for claim notification as per the policy.",
                     },
-                    "IsWithinPeriod": {
-                        "type": "boolean",
-                        "description": "Indicates if the claim was reported within the allowed notification period.",
-                    },
                 },
-                "required": ["NotificationPeriod", "IsWithinPeriod"],
+                "required": ["NotificationPeriod"],
             }
         },
         "required": ["ClaimNotification"],
     }
 
     query = (
-        f"\n the date the incident occured is {_new_get_datetime(date_of_incident)}.",
+        f"\n the date the incident occured is {_new_get_datetime(claim_reporting_date)}.",
         " Please, confirm that the claim is within the stipulated notification period.",
         "The current date(YYYY-MM-DD) is {current_date}.",
     )
@@ -304,49 +302,12 @@ def check_if_this_claim_is_reported_within_insurance_period(
         pdf_path=f"{rag_path}/{policyNumber.replace("/", "-")}.pdf",
         response_schema=response_schema,
     )
-    return resp
+    notificationPeriod = json.loads(resp)["ClaimNotification"]["NotificationPeriod"]
+    print(notificationPeriod)
+    result = check_claim_notification_period(claim_reporting_date, int(notificationPeriod))
+    print(result)
+    return result
 
-
-# @tool
-# def check_if_the_incident_occurred_within_the_geographical_coverage(
-#     location_of_incident: Annotated[
-#         str, "location where the incident occurred, default is Lagos, Nigeria"
-#     ],
-#     policyNumber: Annotated[str, "claimant's policy number."],
-# ):
-#     """
-#     Check if the incident occurred within the geographical area covered by the policy.
-#     """
-#     download_pdf(policyNumber, rag_path)
-#     response_schema = {
-#         "type": "object",
-#         "properties": {
-#             "GeographicalCoverage": {
-#                 "type": "object",
-#                 "properties": {
-#                     "CoveredArea": {
-#                         "type": "string",
-#                         "description": "The geographical area covered by the policy.",
-#                     },
-#                     "IsWithinCoverage": {
-#                         "type": "boolean",
-#                         "description": "Indicates if the incident location is within the geographical coverage area.",
-#                     },
-#                 },
-#                 "required": ["CoveredArea", "IsWithinCoverage"],
-#             }
-#         },
-#         "required": ["GeographicalCoverage"],
-#     }
-
-#     query = "\n the incident occurred in Lagos, Nigeria. confirm if the incident occurred within the geographical area covered by the policy.\nThe current date(YYYY-MM-DD) is {current_date}."
-#     resp = process_query(
-#         prompt=query,
-#         pdf_path=f"{rag_path}/{policyNumber.replace("/", "-")}.pdf",
-#         response_schema=response_schema,
-#     )
-#     print(resp)
-#     return resp
 
 
 # @tool
@@ -384,6 +345,46 @@ def check_if_this_claim_is_reported_within_insurance_period(
 #         "Please, confirm if the authorised repair limit has not been exceeded in the policy.",
 #         "\nThe current date(YYYY-MM-DD) is {current_date}.",
 #     )
+#     resp = process_query(
+#         prompt=query,
+#         pdf_path=f"{rag_path}/{policyNumber.replace("/", "-")}.pdf",
+#         response_schema=response_schema,
+#     )
+#     return resp
+
+# @tool
+# def check_if_the_incident_occurred_within_the_geographical_coverage(
+#     location_of_incident: Annotated[
+#         str, "location where the incident occurred, default is Lagos, Nigeria"
+#     ],
+#     policyNumber: Annotated[str, "claimant's policy number."],
+# ):
+#     """
+#     Check if the incident occurred within the geographical area covered by the policy.
+#     """
+#     download_pdf(policyNumber, rag_path)
+#     response_schema = {
+#         "type": "object",
+#         "properties": {
+#             "GeographicalCoverage": {
+#                 "type": "object",
+#                 "properties": {
+#                     "CoveredArea": {
+#                         "type": "string",
+#                         "description": "The geographical area covered by the policy.",
+#                     },
+#                     "IsWithinCoverage": {
+#                         "type": "boolean",
+#                         "description": "Indicates if the incident location is within the geographical coverage area.",
+#                     },
+#                 },
+#                 "required": ["CoveredArea", "IsWithinCoverage"],
+#             }
+#         },
+#         "required": ["GeographicalCoverage"],
+#     }
+
+#     query = "\n the incident occurred in Lagos, Nigeria. confirm if the incident occurred within the geographical area covered by the policy.\nThe current date(YYYY-MM-DD) is {current_date}."
 #     resp = process_query(
 #         prompt=query,
 #         pdf_path=f"{rag_path}/{policyNumber.replace("/", "-")}.pdf",

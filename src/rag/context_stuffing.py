@@ -18,6 +18,12 @@ model = GenerativeModel(MODEL_NAME)
 BLOCK_LEVEL = HarmBlockThreshold.BLOCK_ONLY_HIGH
 
 def _get_datetime():
+    """
+    Get the current date and time in the format "Month Day Year".
+    
+    Returns:
+        str: The current date and time in the format "Month Day Year".
+    """
     now = datetime.now()
     return now.strftime("%B %d %Y")
 

@@ -61,7 +61,7 @@ def comms_node(state):
                 )
             
     input = {
-        "messages": [state["messages"][-1]+team_mates],
+       "messages": [AIMessage(content=(team_mates))],
         "agent_history": state["agent_history"],
         "claim_form_json":state["claim_form_json"]
     }
@@ -109,5 +109,5 @@ settlement_offer_builder.add_edge(agent1, agentX)
 settlement_offer_builder.add_edge(agentX, END)
 
 settlement_offer_graph = settlement_offer_builder.compile()
-# if env_config.env == "local":
-#     save_graph_mermaid(fraud_detection_graph, output_file="display/fraud_langgraph.png")
+if env_config.env == "local":
+    save_graph_mermaid(settlement_offer_graph, output_file="display/settlement_offer_graph.png")

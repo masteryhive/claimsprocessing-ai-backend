@@ -47,7 +47,9 @@ def _load_prompt_template() -> str:
 
 insurance_policy_essential_data_agent = create_tool_agent(
     llm=llm,
-    tools=[retrieve_all_essential_details_from_policy],
+    tools=[
+        retrieve_all_essential_details_from_policy
+        ],
     system_prompt=_load_prompt_template()["INSURANCE_CLAIM_POLICY_DATA"],
 )
 
@@ -55,7 +57,7 @@ insurance_policy_period_verifier_agent = create_tool_agent(
     llm=llm,
     tools=[
         check_if_this_claim_is_within_insurance_period,
-        check_if_this_claim_is_reported_within_insurance_period,
+       check_if_this_claim_adhered_to_notification_period,
     ],
     system_prompt=_load_prompt_template()["PERIOD_VERIFICATION"],
 )
@@ -87,7 +89,7 @@ def comms_node(state):
                 )
             
     input = {
-        "messages": [state["messages"][-1]+team_mates],
+        "messages": [AIMessage(content=(team_mates))],
         "agent_history": state["agent_history"],
         "claim_form_json":state["claim_form_json"]
     }
@@ -116,13 +118,6 @@ policy_review_supervisor_node = create_supervisor_node(
 )
 
 
-# def router(state) -> Literal[*options]:
-#     # This is the router
-#     if state.get("next"):
-#         return state.get("next")
-#     else:
-#         return '__end__'
-
 policy_review_builder = StateGraph(PolicyReviewTeamAgentState)
 
 insurance_policy_essential_data_node = functools.partial(
@@ -147,14 +142,10 @@ policy_review_builder.add_edge("supervisor", agent1)
 policy_review_builder.add_edge(agent1, agent2)
 policy_review_builder.add_edge(agent2, agent3)
 policy_review_builder.add_edge(agent3, agentX)
+# policy_review_builder.add_edge(agent2, agentX)
+# policy_review_builder.add_edge(agent3, agentX)
 policy_review_builder.add_edge(agentX, END)
-# policy_review_builder.add_conditional_edges(  ## sup choice to go to email, or LLM or bye based on result of function decide_next_node
-#     "supervisor",
-#     router,
-#     {members[0]:members[0],members[1]:members[1],
-#          "__end__": END
-#     },
-# )
+
 policy_review_graph = policy_review_builder.compile()
-# if env_config.env == "local":
-#     save_graph_mermaid(policy_review_graph, output_file="display/policy_langgraph.png")
+if env_config.env == "local":
+    save_graph_mermaid(policy_review_graph, output_file="display/policy_langgraph.png")

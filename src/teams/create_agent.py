@@ -22,9 +22,9 @@ class ClaimFormScreeningTeamAgentState(TypedDict):
 
     agent_history: Annotated[Sequence[BaseMessage], operator.add]
 
-    document_verifier_result: str
+    claim_form_checker_result: str
 
-    supporting_document_verifier_result: str
+    supporting_evidence_checker_result: str
 
 class PolicyReviewTeamAgentState(TypedDict):
     messages: Annotated[list, add_messages]
@@ -39,7 +39,7 @@ class PolicyReviewTeamAgentState(TypedDict):
 
     policy_period_verifier_result: str
 
-    insurance_policy_verifier_result:str
+    insurance_policy_verifier_result: str
 
 
 class FraudTeamAgentState(TypedDict):

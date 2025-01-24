@@ -22,9 +22,7 @@ members = [agent1, agent2, agentX]
 def _load_prompt_template() -> str:
     """Load the instruction prompt template from YAML file."""
     try:
-        prompt_path = Path(
-            "src/teams/document_processing/prompts/instruction.yaml"
-        )
+        prompt_path = Path("src/teams/document_processing/prompts/instruction.yaml")
         if not prompt_path.exists():
             raise FileNotFoundError(f"Prompt template not found at {prompt_path}")
         yaml_data = load_yaml_file(prompt_path)
@@ -65,17 +63,24 @@ document_processing_clerk_agent = summarizer(
 
 def comms_node(state):
     # read the last message in the message history.
-    doc_content = [c.content for c in state["document_verifier_result"] if isinstance(c,AIMessage)]
-    supporting_doc_content = [c.content for c in state["supporting_document_verifier_result"] if isinstance(c,AIMessage)]
+    doc_content = [
+        c.content for c in state["claim_form_checker_result"] if isinstance(c, AIMessage)
+    ]
+    supporting_doc_content = [
+        c.content
+        for c in state["supporting_evidence_checker_result"]
+        if isinstance(c, AIMessage)
+    ]
 
-    team_mates = (f"\n\nDocument Verification Result:\n{doc_content[-1]}\n\n"
-                         f"Supporting Document Verification Result:\n{supporting_doc_content[-1]}"
-                         f"the claimants form in JSON format: {state["claim_form_json"]}"
-                )
+    team_mates = (
+        f"\n\nDocument Verification Result:\n{doc_content[-1]}\n\n"
+        f"Supporting Document Verification Result:\n{supporting_doc_content[-1]}"
+        f"the claimants form in JSON format: {state["claim_form_json"]}"
+    )
     input = {
-        "messages": [state["messages"][-1]+team_mates],
+        "messages": [AIMessage(content=(team_mates))],
         "agent_history": state["agent_history"],
-        "claim_form_json":state["claim_form_json"]
+        "claim_form_json": state["claim_form_json"],
     }
     result = document_processing_clerk_agent.invoke(input)
     # respond back to the user.
@@ -102,13 +107,6 @@ document_check_supervisor_node = create_supervisor_node(
 )
 
 
-# def router(state) -> Literal[*options]:
-#     # This is the router
-#     if state.get("next"):
-#         return state.get("next")
-#     else:
-#         return '__end__'
-
 document_check_builder = StateGraph(ClaimFormScreeningTeamAgentState)
 
 claims_document_verifier_node = functools.partial(
@@ -127,16 +125,11 @@ document_check_builder.add_node(agentX, comms_node)
 document_check_builder.set_entry_point("supervisor")
 # We want our workers to ALWAYS "report back" to the supervisor when done
 document_check_builder.add_edge("supervisor", agent1)
-document_check_builder.add_edge(agent1, agent2)
+document_check_builder.add_edge("supervisor", agent2)
+document_check_builder.add_edge(agent1, agentX)
 document_check_builder.add_edge(agent2, agentX)
 document_check_builder.add_edge(agentX, END)
-# document_check_builder.add_conditional_edges(  ## sup choice to go to email, or LLM or bye based on result of function decide_next_node
-#     "supervisor",
-#     router,
-#     {members[0]:members[0],members[1]:members[1],
-#          "__end__": END
-#     },
-# )
+
 document_check_graph = document_check_builder.compile()
-# if env_config.env == "local":
-#     save_graph_mermaid(document_check_graph, output_file="display/doc_langgraph.png")
+if env_config.env == "local":
+    save_graph_mermaid(document_check_graph, output_file="display/doc_langgraph.png")

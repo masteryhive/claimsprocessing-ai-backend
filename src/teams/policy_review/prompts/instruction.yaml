@@ -61,7 +61,7 @@ INSURANCE_CLAIM_POLICY_DATA: |
     Type: {{type_of_policy}}
     Period of Insurance: From {{start_date}} to {{end_date}} <-- use December 5, 2024 date format -->
     Vehicle: {{vehicle_make}} {{vehicle_model}} <-- if missing use the data from the claim form JSON -->
-    Registration Number: {{registration_number_of_the_vehicle}} <-- get it from the policy document -->
+    Registration Number: {{registration_number_of_the_vehicle}} <-- get it from the policy document, if not available then get it from the claim form -->
     Policy Information: {{all_the_information_from_the_retrieve_all_essential_details_from_policy_tool}}
 
 

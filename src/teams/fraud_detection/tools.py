@@ -263,20 +263,18 @@ async def aitem_cost_price_benchmarking_in_local_market(
 
 @tool
 def item_cost_price_benchmarking_in_local_market(
-    vehicle_name_and_model_and_damaged_part: str,
-    quoted_cost: str,
+    vehicleMake_and_vehicleModel_and_yearOfManufacture_and_damaged_part: Annotated[str, "search term.e.g Hyundai sonata 2019 side mirror"],
+    quoted_cost: Annotated[str, "quoted cost"],
 ) -> str:
     """Synchronous wrapper for the async benchmarking function."""
-    print(
-            vehicle_name_and_model_and_damaged_part, 
-            quoted_cost
-        )
+  
+    system_logger.info(f"{vehicleMake_and_vehicleModel_and_yearOfManufacture_and_damaged_part}-{quoted_cost}")
     # async_item_cost_price_benchmarking_in_local_market = StructuredTool.from_function(coroutine=aitem_cost_price_benchmarking_in_local_market)
-    # asyncio.run(async_item_cost_price_benchmarking_in_local_market.ainvoke({"vehicle_name_and_model_and_damaged_part":vehicle_name_and_model_and_damaged_part,
+    # asyncio.run(async_item_cost_price_benchmarking_in_local_market.ainvoke({"vehicleMake_and_vehicleModel_and_yearOfManufacture_and_damaged_part":vehicleMake_and_vehicleModel_and_yearOfManufacture_and_damaged_part,
     #                                                             "quoted_cost":quoted_cost}))
     return asyncio.run(
         aitem_cost_price_benchmarking_in_local_market(
-            vehicle_name_and_model_and_damaged_part, 
+            vehicleMake_and_vehicleModel_and_yearOfManufacture_and_damaged_part, 
             quoted_cost
         )
     )

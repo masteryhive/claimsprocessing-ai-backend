@@ -11,7 +11,7 @@ from src.teams.create_agent import *
 from langgraph.graph import END, StateGraph, START
 from src.utilities.helpers import load_yaml_file
 from src.config.appconfig import env_config
-from langchain_core.messages import AIMessage
+from langchain_core.messages import AIMessage,HumanMessage
 
 
 agent1 = "claims_form_fraud_investigator"  # New agent added
@@ -65,7 +65,6 @@ vehicle_fraud_investigator_agent = create_tool_agent(
     tools=[
         validate_if_this_is_a_real_vehicle,
         check_niid_database,
-
     ],
     system_prompt=_load_prompt_template()[
         "VEHICLE_FRAUD_INVESTIGATOR_AGENT_SYSTEM_PROMPT"
@@ -74,11 +73,11 @@ vehicle_fraud_investigator_agent = create_tool_agent(
 
 damage_cost_fraud_investigator_agent = create_tool_agent(
     llm=llm,
-    tools=[        
+    tools=[
         ssim,
         item_cost_price_benchmarking_in_local_market,
-          # item_pricing_evaluator
-           ],
+        # item_pricing_evaluator
+    ],
     system_prompt=_load_prompt_template()[
         "DAMAGE_COST_FRAUD_INVESTIGATOR_AGENT_SYSTEM_PROMPT"
     ],
@@ -98,20 +97,39 @@ fraud_detection_clerk_agent = summarizer(
 
 def comms_node(state):
     # read the last message in the message history.
-    claim_form_fraud = [c.content for c in state["claims_form_fraud_investigator_result"] if isinstance(c,AIMessage)]
-    vehicle_fraud = [c.content for c in state["vehicle_fraud_investigator_result"] if isinstance(c,AIMessage)]
-    damage_cost_fraud = [c.content for c in state["damage_cost_fraud_investigator_result"] if isinstance(c,AIMessage)]
-    fraud_risk = [c.content for c in state["fraud_risk_analyst_result"] if isinstance(c,AIMessage)]
-    # print(vehicle_fraud)
-    team_mates =(f"\n\nClaim Form Fraud Investigation Result:\n{claim_form_fraud[-1]}\n\n"
-                         f"Vehicle Fraud Investigation Result:\n{vehicle_fraud[-1]}\n\n"
-                         f"Damage Cost Fraud Investigation Result:\n{damage_cost_fraud[-1]}\n\n"
-                         f"Fraud Risk Analysis Result:\n{fraud_risk[-1]}"
-                         f"the claimants form in JSON format: {state["claim_form_json"]}")
+
+    claim_form_fraud = [
+        c.content
+        for c in state["claims_form_fraud_investigator_result"]
+        if isinstance(c, AIMessage)
+    ]
+    vehicle_fraud = [
+        c.content
+        for c in state["vehicle_fraud_investigator_result"]
+        if isinstance(c, AIMessage)
+    ]
+    damage_cost_fraud = [
+        c.content
+        for c in state["damage_cost_fraud_investigator_result"]
+        if isinstance(c, AIMessage)
+    ]
+    fraud_risk = [
+        c.content
+        for c in state["fraud_risk_analyst_result"]
+        if isinstance(c, AIMessage)
+    ]
+
+    team_mates = (
+        f"\n\nClaim Form Fraud Investigation Result:\n{claim_form_fraud[-1]}\n\n"
+        f"Vehicle Fraud Investigation Result:\n{vehicle_fraud[-1]}\n\n"
+        f"Damage Cost Fraud Investigation Result:\n{damage_cost_fraud[-1]}\n\n"
+        f"Fraud Risk Analysis Result:\n{fraud_risk[-1]}"
+        f"the claimants form in JSON format: {state["claim_form_json"]}"
+    )
     input = {
-        "messages": [state["messages"][-1]+team_mates],
+        "messages": [AIMessage(content=(team_mates))],
         "agent_history": state["agent_history"],
-        "claim_form_json":state["claim_form_json"]
+        "claim_form_json": state["claim_form_json"],
     }
 
     result = fraud_detection_clerk_agent.invoke(input)
@@ -166,8 +184,10 @@ fraud_detection_builder.add_node(agentX, comms_node)
 fraud_detection_builder.set_entry_point("supervisor")
 # We want our workers to ALWAYS "report back" to the supervisor when done
 fraud_detection_builder.add_edge("supervisor", agent1)
-fraud_detection_builder.add_edge(agent1, agent2)
-fraud_detection_builder.add_edge(agent2, agent3)
+fraud_detection_builder.add_edge("supervisor", agent2)
+fraud_detection_builder.add_edge("supervisor", agent3)
+fraud_detection_builder.add_edge(agent1, agent4)
+fraud_detection_builder.add_edge(agent2, agent4)
 fraud_detection_builder.add_edge(agent3, agent4)
 fraud_detection_builder.add_edge(agent4, agentX)
 fraud_detection_builder.add_edge(agentX, END)

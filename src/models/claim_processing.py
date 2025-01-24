@@ -75,6 +75,7 @@ class TheftClaimData(BaseModel):
     lastServiceDate: str
     totalMileage: str
     vehicleMake: str
+    vehicleModel: str
     claimType: str
     registrationNumber: str
     claimantName: str
