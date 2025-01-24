@@ -135,6 +135,7 @@ def start_process_manager(id: int):
             try:
                 # Process claim workflow
                 team_summaries: UpdateClaimsReportModel = UpdateClaimsReportModel()
+                endworkflow:bool  = False
                 for s in super_graph.stream(
                     {
                         "messages": [
@@ -154,7 +155,7 @@ def start_process_manager(id: int):
                     # interrupt_after=call_summary_team
                 ):
                     if "__end__" not in s:
-                        team_summaries = control_workflow(
+                        team_summaries,endworkflow = control_workflow(
                             db,
                             claim_data.model_dump(),
                             claim_id,
@@ -162,11 +163,13 @@ def start_process_manager(id: int):
                             task,
                             s,
                             team_summaries,
+                            endworkflow
                         )
 
-                        if "summary_team" in s:
+                        if endworkflow:
                             system_logger.info(message="Summary team has completed processing.")
                             break
+
             except Exception as e:
                 system_logger.error(f"Workflow processing failed: {str(e)}")
                 raise ClaimProcessingError(f"Failed to process workflow: {str(e)}")

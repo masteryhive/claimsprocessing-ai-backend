@@ -1,3 +1,4 @@
+import base64
 from ._base import IMarketDataFetcher
 from bs4 import BeautifulSoup
 from playwright.async_api import Page, expect
@@ -16,7 +17,10 @@ class JijiMarketDataFetcher(IMarketDataFetcher):
             search_url = f"https://jiji.ng/lagos/search?query={search_term}&filter_id_verify=Verified%20sellers&sort=new"
             await page.goto(search_url)
             await asyncio.sleep(2)
-            await page.screenshot(path=f"webpage_{str(uuid4().hex)}.png")
+            # await page.screenshot(path=f"webpage_{str(uuid4().hex)}.png")
+            # Capture into Image
+            screenshot_bytes = await page.screenshot()
+            system_logger.info(message=base64.b64encode(screenshot_bytes).decode())
             try:
                 await expect(page.get_by_text("Search in categories", exact=True)).to_be_visible()
                 soup = BeautifulSoup(await page.content(), "html.parser")

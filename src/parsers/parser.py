@@ -37,7 +37,7 @@ def extract_claim_summary(data:str, discoveries: list) -> CreateClaimsReport:
                 "aiRecommendation": [
                     recommendation.strip() for recommendation in ai_recommendation
                 ],
-                "discoveries": discoveries + ["<br/><br/>" + "<br/>".join(report_discoveries)],
+                "discoveries": discoveries + ["<br/>" + "<br/>".join(report_discoveries)],
                   "operationStatus": (
                     operationStatus.group(1).strip()
                     if operationStatus

@@ -97,6 +97,7 @@ def control_workflow(
     task: Task,
     process_call: Dict[str, Any],
     team_summaries: UpdateClaimsReportModel,
+    endworkflow:bool
 ) -> UpdateClaimsReportModel:
     """Main function to handle workflow."""
     if "__end__" in process_call:
@@ -107,6 +108,7 @@ def control_workflow(
 
     if agent == "summary_team":
         team_summaries = handle_summary_team(process_call, claim_id, team_summaries, db, task)
+        endworkflow = True
     elif agent == "supervisor":
         next_agent = process_call["supervisor"]["next"]
         print(f"{Fore.MAGENTA}🔄 Task Assignment:{Style.RESET_ALL}")
@@ -115,7 +117,7 @@ def control_workflow(
         messages = process_call[agent]["messages"]
         team_summaries = handle_agent_response(agent, messages,claim, team_summaries, claim_id, db)
 
-    return team_summaries
+    return team_summaries, endworkflow
 
 
 def handle_summary_team(
