@@ -20,14 +20,14 @@ class PriceAnalyzer(IPriceAnalyzer):
         
         return [x for x in prices if lower_bound <= x <= upper_bound]
 
-    def analyze_price_realism(self, market_prices: List[float], quoted_price: Decimal) -> PriceAnalysis:
+    def analyze_price_realism(self, market_prices: List[float], quoted_price: float) -> PriceAnalysis:
         prices = np.array(self._remove_outliers(market_prices))
         
         mean_price = np.mean(prices)
         median_price = np.median(prices)
         std_dev = np.std(prices)
         
-        z_score = (quoted_price - Decimal(mean_price)) / Decimal(std_dev) if std_dev != 0 else 0
+        z_score = (quoted_price - mean_price) / std_dev if std_dev != 0 else 0
         percentile = np.sum(prices <= quoted_price) / len(prices) * 100
         
         q1, q3 = np.percentile(prices, [25, 75])
@@ -35,7 +35,7 @@ class PriceAnalyzer(IPriceAnalyzer):
         lower_bound = q1 - self.iqr_threshold * iqr
         upper_bound = q3 + self.iqr_threshold * iqr
         
-        is_outlier = quoted_price < Decimal(lower_bound) or quoted_price > Decimal(upper_bound)
+        is_outlier = quoted_price < lower_bound or quoted_price > upper_bound
         is_realistic = abs(z_score) < self.z_threshold if std_dev != 0 else True
         
         return PriceAnalysis(

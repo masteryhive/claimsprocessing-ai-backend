@@ -1,7 +1,7 @@
 import re
 
 
-def extract_from_settlement_offer(text: str, discoveries: dict):
+def extract_from_settlement_offer(text: str, discoveries: list):
     # Extract justification if present
     justification = ""
     settlement_text = text
@@ -14,5 +14,5 @@ def extract_from_settlement_offer(text: str, discoveries: dict):
 
     return {
         "settlementOffer": settlement_text.replace("\n", "<br/>"),
-        "discoveries": [justification]+discoveries,
+        "discoveries": [justification+"<br/>"]+discoveries,
     }

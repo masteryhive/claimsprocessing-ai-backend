@@ -221,7 +221,7 @@ async def aitem_cost_price_benchmarking_in_local_market(
         
         # Validate quoted_cost
         try:
-            quoted_cost_value = Decimal(quoted_cost)
+            quoted_cost_value = float(quoted_cost)
         except (InvalidOperation, TypeError):
             raise ToolException("Invalid quoted_cost: must be a valid decimal number")
         
