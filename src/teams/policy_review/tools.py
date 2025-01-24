@@ -303,9 +303,7 @@ def check_if_this_claim_adhered_to_notification_period(
         response_schema=response_schema,
     )
     notificationPeriod = json.loads(resp)["ClaimNotification"]["NotificationPeriod"]
-    print(notificationPeriod)
     result = check_claim_notification_period(claim_reporting_date, int(notificationPeriod))
-    print(result)
     return result
 
 
