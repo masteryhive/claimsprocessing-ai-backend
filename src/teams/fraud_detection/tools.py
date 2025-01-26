@@ -6,7 +6,10 @@ from pathlib import Path
 from langchain_core.tools import tool, StructuredTool, ToolException
 from typing import Annotated, Optional, Dict, List, Any
 from src.services.call_automation import AutomationServiceLogic, MarketSearchModel
-from src.teams.fraud_detection.helper import AnalysisModelResultList, analysis_result_formatter
+from src.teams.fraud_detection.helper import (
+    AnalysisModelResultList,
+    analysis_result_formatter,
+)
 from src.teams.resources.ssim import structural_similarity_index_measure
 from src.rag.context_stuffing import process_query
 from src.pipelines.niid_check import InsuranceDataExtractor
@@ -142,11 +145,8 @@ def check_niid_database(
     except ToolException as e:
         raise e
 
-    async def async_task():
-        extractor = InsuranceDataExtractor(registrationNumber.strip().lower())
-        return await extractor.run()
-
-    niid_data = asyncio.run(async_task())
+    client = AutomationServiceLogic()
+    niid_data = client._run_niid_check(registrationNumber=registrationNumber)
 
     if niid_data.get("status") == "success":
         niid_data["check_NIID_database_result"] = {
@@ -242,10 +242,24 @@ def ssim(
 market_prices = {}
 
 
-async def aitem_cost_price_benchmarking_in_local_market(
-    list_of_vehicle_name_and_model_and_damaged_part: List[list],
+@tool
+def item_cost_price_benchmarking_in_local_market(
+    the_vehicleMake_and_vehicleModel_and_yearOfManufacture_and_damaged_part_list: Annotated[
+        str,
+        """the search term for the local market
+*Instruction*
+- It MUST be a nested list of the vehicle make vehicle model manufacture year and the damaged part against the quoted cost for the damaged part. e.g '[['hyundai sonata 2015 side mirror',49000],['hyundai sonata 2015 door handle',23000]]'
+
+Bad search term(add driver):
+❌ "[['Hyundai sonata 2015 driver side mirror',23000],['Hyundai sonata 2015 door panel',23000]]"
+
+Good search term(no content and good nested list):
+✅ "[['Hyundai sonata 2015 side mirror',23000],['Hyundai sonata 2015 door panel',23000]]"
+""",
+    ],
 ) -> str:
     """Benchmarks quoted cost for vehicle repairs against local market prices."""
+
     global market_prices
     try:
 
@@ -267,7 +281,9 @@ async def aitem_cost_price_benchmarking_in_local_market(
                     "Invalid quoted_cost: must be a valid decimal number"
                 )
 
-        parsed_list = ast.literal_eval(list_of_vehicle_name_and_model_and_damaged_part)
+        parsed_list = ast.literal_eval(
+            the_vehicleMake_and_vehicleModel_and_yearOfManufacture_and_damaged_part_list
+        )
         updated_parsed_list: List[list] = []
 
         # Define conditions
@@ -278,7 +294,7 @@ async def aitem_cost_price_benchmarking_in_local_market(
                 validator(item[0], item[1])
                 new_item = [f"{item[0]} {condition}", float(item[1])]
                 updated_parsed_list.append(new_item)
-                
+
             marketSearchModel = MarketSearchModel(
                 email="sam@masteryhive.ai",
                 login_required=True,
@@ -286,13 +302,12 @@ async def aitem_cost_price_benchmarking_in_local_market(
                 searchTerms=str(updated_parsed_list),
                 target_market="jiji",
             )
+
             client = AutomationServiceLogic()
             results = client._run_market_search(marketSearchModel=marketSearchModel)
-            print(results)
-            print()
+
             analysisModelResultList = AnalysisModelResultList(**results)
-            print(analysisModelResultList)
-            print()
+
             formatted_results = analysis_result_formatter(
                 conditions, updated_parsed_list, analysisModelResultList.analysisResult
             )
@@ -300,34 +315,16 @@ async def aitem_cost_price_benchmarking_in_local_market(
             return formatted_results
 
     except ToolException as e:
-        system_logger.error(f"Validation error: {e}")
+        system_logger.error(error=f"Validation error: {e}")
         return ToolException(str(e))
     except Exception as e:
-        system_logger.error(f"Error in benchmarking: {e}")
+        system_logger.error(error=f"Error in benchmarking: {e}")
         return ToolException(
             "An error occurred while benchmarking the cost. Please try again."
         )
 
 
-@tool
-def item_cost_price_benchmarking_in_local_market(
-    the_vehicleMake_and_vehicleModel_and_yearOfManufacture_and_damaged_part_list: Annotated[
-        str,
-        "search term, it MUST be a nested list of the vehicle make vehicle model manufacture year and the damaged part against the quoted cost for the damaged part. e.g '[['hyundai sonata 2015 side mirror',49000],['hyundai sonata 2015 door handle',23000]]'",
-    ],
-) -> str:
-    """Synchronous wrapper for the async benchmarking function."""
-
-    system_logger.info(
-        f"{the_vehicleMake_and_vehicleModel_and_yearOfManufacture_and_damaged_part_list}"
-    )
-
-    return asyncio.run(
-        aitem_cost_price_benchmarking_in_local_market(
-            the_vehicleMake_and_vehicleModel_and_yearOfManufacture_and_damaged_part_list
-        )
-    )
-
+# print(item_cost_price_benchmarking_in_local_market.invoke({"the_vehicleMake_and_vehicleModel_and_yearOfManufacture_and_damaged_part_list":"[['toyota camry headlight brand new',467880]]"}))
 
 
 @tool

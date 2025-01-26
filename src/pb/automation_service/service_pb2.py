@@ -24,7 +24,7 @@ _sym_db = _symbol_database.Default()
 
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\rservice.proto\"w\n\x12LocalMarketRequest\x12\x13\n\x0bsearchTerms\x18\x01 \x01(\t\x12\x14\n\x0ctargetMarket\x18\x02 \x01(\t\x12\r\n\x05\x65mail\x18\x03 \x01(\t\x12\x10\n\x08password\x18\x04 \x01(\t\x12\x15\n\rloginRequired\x18\x05 \x01(\x08\"4\n\x0e\x41nalysisResult\x12\x0e\n\x06result\x18\x01 \x01(\t\x12\x12\n\npriceRange\x18\x02 \x01(\t\">\n\x13LocalMarketResponse\x12\'\n\x0e\x61nalysisResult\x18\x01 \x03(\x0b\x32\x0f.AnalysisResult\"\r\n\x0bHomeRequest\"z\n\x0cHomeResponse\x12\x17\n\x0f\x61pplicationName\x18\x01 \x01(\t\x12\x18\n\x10\x61pplicationOwner\x18\x02 \x01(\t\x12\x1b\n\x13\x61pplicationEngineer\x18\x03 \x01(\t\x12\x1a\n\x12\x61pplicationVersion\x18\x04 \x01(\t\"\x14\n\x12HealthCheckRequest\"%\n\x13HealthCheckResponse\x12\x0e\n\x06status\x18\x01 \x01(\t2\xaf\x01\n\x11\x41utomationService\x12\x39\n\x0cMarketSearch\x12\x13.LocalMarketRequest\x1a\x14.LocalMarketResponse\x12#\n\x04Home\x12\x0c.HomeRequest\x1a\r.HomeResponse\x12:\n\x0bHealthCheck\x12\x13.HealthCheckRequest\x1a\x14.HealthCheckResponse\"\x00\x62\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\rservice.proto\"w\n\x12LocalMarketRequest\x12\x13\n\x0bsearchTerms\x18\x01 \x01(\t\x12\x14\n\x0ctargetMarket\x18\x02 \x01(\t\x12\r\n\x05\x65mail\x18\x03 \x01(\t\x12\x10\n\x08password\x18\x04 \x01(\t\x12\x15\n\rloginRequired\x18\x05 \x01(\x08\"4\n\x0e\x41nalysisResult\x12\x0e\n\x06result\x18\x01 \x01(\t\x12\x12\n\npriceRange\x18\x02 \x01(\t\">\n\x13LocalMarketResponse\x12\'\n\x0e\x61nalysisResult\x18\x01 \x03(\x0b\x32\x0f.AnalysisResult\"\r\n\x0bHomeRequest\"z\n\x0cHomeResponse\x12\x17\n\x0f\x61pplicationName\x18\x01 \x01(\t\x12\x18\n\x10\x61pplicationOwner\x18\x02 \x01(\t\x12\x1b\n\x13\x61pplicationEngineer\x18\x03 \x01(\t\x12\x1a\n\x12\x61pplicationVersion\x18\x04 \x01(\t\"\x14\n\x12HealthCheckRequest\"%\n\x13HealthCheckResponse\x12\x0e\n\x06status\x18\x01 \x01(\t\"!\n\x0eLogViewRequest\x12\x0f\n\x07logType\x18\x01 \x01(\t\"#\n\x0fLogViewResponse\x12\x10\n\x08log_text\x18\x01 \x01(\t\".\n\x10NIIDCheckRequest\x12\x1a\n\x12registrationNumber\x18\x01 \x01(\t\"\xc8\x02\n\x08NIIDData\x12 \n\x18InsuranceCerticateNumber\x18\x01 \x01(\t\x12\x1d\n\x15NewRegistrationNumber\x18\x02 \x01(\t\x12\x1a\n\x12RegistrationNumber\x18\x03 \x01(\t\x12\x13\n\x0bTypeOfCover\x18\x04 \x01(\t\x12\x13\n\x0bVehicleType\x18\x05 \x01(\t\x12\x13\n\x0bVehicleMake\x18\x06 \x01(\t\x12\x14\n\x0cVehicleModel\x18\x07 \x01(\t\x12\r\n\x05\x43olor\x18\x08 \x01(\t\x12\x15\n\rChassisNumber\x18\t \x01(\t\x12\x11\n\tIssueDate\x18\n \x01(\t\x12\x12\n\nExpiryDate\x18\x0b \x01(\t\x12\x15\n\rLicenseStatus\x18\x0c \x01(\t\x12\x12\n\nUploadDate\x18\r \x01(\t\x12\x12\n\nUploadTime\x18\x0e \x01(\t\"M\n\x11NIIDCheckResponse\x12\x0e\n\x06status\x18\x01 \x01(\t\x12\x0f\n\x07message\x18\x02 \x01(\t\x12\x17\n\x04\x64\x61ta\x18\x03 \x01(\x0b\x32\t.NIIDData2\x94\x02\n\x11\x41utomationService\x12\x39\n\x0cMarketSearch\x12\x13.LocalMarketRequest\x1a\x14.LocalMarketResponse\x12\x32\n\tNIIDCheck\x12\x11.NIIDCheckRequest\x1a\x12.NIIDCheckResponse\x12#\n\x04Home\x12\x0c.HomeRequest\x1a\r.HomeResponse\x12:\n\x0bHealthCheck\x12\x13.HealthCheckRequest\x1a\x14.HealthCheckResponse\"\x00\x12/\n\x08ViewLogs\x12\x0f.LogViewRequest\x1a\x10.LogViewResponse\"\x00\x62\x06proto3')
 
 _globals = globals()
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, _globals)
@@ -45,6 +45,16 @@ if not _descriptor._USE_C_DESCRIPTORS:
   _globals['_HEALTHCHECKREQUEST']._serialized_end=415
   _globals['_HEALTHCHECKRESPONSE']._serialized_start=417
   _globals['_HEALTHCHECKRESPONSE']._serialized_end=454
-  _globals['_AUTOMATIONSERVICE']._serialized_start=457
-  _globals['_AUTOMATIONSERVICE']._serialized_end=632
+  _globals['_LOGVIEWREQUEST']._serialized_start=456
+  _globals['_LOGVIEWREQUEST']._serialized_end=489
+  _globals['_LOGVIEWRESPONSE']._serialized_start=491
+  _globals['_LOGVIEWRESPONSE']._serialized_end=526
+  _globals['_NIIDCHECKREQUEST']._serialized_start=528
+  _globals['_NIIDCHECKREQUEST']._serialized_end=574
+  _globals['_NIIDDATA']._serialized_start=577
+  _globals['_NIIDDATA']._serialized_end=905
+  _globals['_NIIDCHECKRESPONSE']._serialized_start=907
+  _globals['_NIIDCHECKRESPONSE']._serialized_end=984
+  _globals['_AUTOMATIONSERVICE']._serialized_start=987
+  _globals['_AUTOMATIONSERVICE']._serialized_end=1263
 # @@protoc_insertion_point(module_scope)

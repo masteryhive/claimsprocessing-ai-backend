@@ -23,21 +23,17 @@ class AutomationServiceLogic:
             )
         else:
             system_logger.error(error="Failed to establish connection")
+    
+    def _run_niid_check(self, registrationNumber: str):
+        if AutomationServiceClient().wait_for_ready():
+            return AutomationServiceClient().niid_check(
+                registrationNumber=registrationNumber
+            )
+        else:
+            system_logger.error(error="Failed to establish connection")
 
     def _run_healthcheck(self) -> str:
         if AutomationServiceClient().wait_for_ready():
             return AutomationServiceClient().health_check()
         else:
             system_logger.error(error="Failed to establish connection")
-
-
-# m = MarketSearchModel(
-#     email="sam@masteryhive.ai",
-#     login_required=True,
-#     password="JLg8m4aQ8n46nhC",
-#     searchTerms="[['toyota camry headlight tokunbo',467880],['toyota camry headlight brand new',467880]]",
-#     target_market="jiji"
-# )
-# client = AutomationServiceLogic()
-# result = client._run_market_search(marketSearchModel=m)
-# print(result)

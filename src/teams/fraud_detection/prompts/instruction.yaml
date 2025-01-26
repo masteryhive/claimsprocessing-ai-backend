@@ -293,7 +293,7 @@ PROCESS_CLERK_PROMPT: |
   - Fraud Threshold score: {{fraud_score_from_the_fraud_risk_analyst}}
   - Damaged Part Repair Price From Local Market: 
     - Marginal Price for Fairly-used parts: {{the_fairly-used_item_cost_price_benchmark_from_the_local_market}} <-- add currency symbol -->
-    - Marginal Price for Brand Ne parts: {{the_brand_new_item_cost_price_benchmark_from_the_local_market}}  <-- add currency symbol -->
+    - Marginal Price for Brand New parts: {{the_brand_new_item_cost_price_benchmark_from_the_local_market}}  <-- add currency symbol -->
   - Key Concerns Identified: {{a_detailed_list_of_leading_indicators_from_which_the_fraud_is_suspected}}
 
   PreLoss Comparison:

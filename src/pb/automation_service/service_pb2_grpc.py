@@ -39,6 +39,11 @@ class AutomationServiceStub(object):
                 request_serializer=service__pb2.LocalMarketRequest.SerializeToString,
                 response_deserializer=service__pb2.LocalMarketResponse.FromString,
                 _registered_method=True)
+        self.NIIDCheck = channel.unary_unary(
+                '/AutomationService/NIIDCheck',
+                request_serializer=service__pb2.NIIDCheckRequest.SerializeToString,
+                response_deserializer=service__pb2.NIIDCheckResponse.FromString,
+                _registered_method=True)
         self.Home = channel.unary_unary(
                 '/AutomationService/Home',
                 request_serializer=service__pb2.HomeRequest.SerializeToString,
@@ -49,12 +54,23 @@ class AutomationServiceStub(object):
                 request_serializer=service__pb2.HealthCheckRequest.SerializeToString,
                 response_deserializer=service__pb2.HealthCheckResponse.FromString,
                 _registered_method=True)
+        self.ViewLogs = channel.unary_unary(
+                '/AutomationService/ViewLogs',
+                request_serializer=service__pb2.LogViewRequest.SerializeToString,
+                response_deserializer=service__pb2.LogViewResponse.FromString,
+                _registered_method=True)
 
 
 class AutomationServiceServicer(object):
     """Missing associated documentation comment in .proto file."""
 
     def MarketSearch(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def NIIDCheck(self, request, context):
         """Missing associated documentation comment in .proto file."""
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
@@ -72,6 +88,12 @@ class AutomationServiceServicer(object):
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
+    def ViewLogs(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
 
 def add_AutomationServiceServicer_to_server(servicer, server):
     rpc_method_handlers = {
@@ -79,6 +101,11 @@ def add_AutomationServiceServicer_to_server(servicer, server):
                     servicer.MarketSearch,
                     request_deserializer=service__pb2.LocalMarketRequest.FromString,
                     response_serializer=service__pb2.LocalMarketResponse.SerializeToString,
+            ),
+            'NIIDCheck': grpc.unary_unary_rpc_method_handler(
+                    servicer.NIIDCheck,
+                    request_deserializer=service__pb2.NIIDCheckRequest.FromString,
+                    response_serializer=service__pb2.NIIDCheckResponse.SerializeToString,
             ),
             'Home': grpc.unary_unary_rpc_method_handler(
                     servicer.Home,
@@ -89,6 +116,11 @@ def add_AutomationServiceServicer_to_server(servicer, server):
                     servicer.HealthCheck,
                     request_deserializer=service__pb2.HealthCheckRequest.FromString,
                     response_serializer=service__pb2.HealthCheckResponse.SerializeToString,
+            ),
+            'ViewLogs': grpc.unary_unary_rpc_method_handler(
+                    servicer.ViewLogs,
+                    request_deserializer=service__pb2.LogViewRequest.FromString,
+                    response_serializer=service__pb2.LogViewResponse.SerializeToString,
             ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
@@ -118,6 +150,33 @@ class AutomationService(object):
             '/AutomationService/MarketSearch',
             service__pb2.LocalMarketRequest.SerializeToString,
             service__pb2.LocalMarketResponse.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def NIIDCheck(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/AutomationService/NIIDCheck',
+            service__pb2.NIIDCheckRequest.SerializeToString,
+            service__pb2.NIIDCheckResponse.FromString,
             options,
             channel_credentials,
             insecure,
@@ -172,6 +231,33 @@ class AutomationService(object):
             '/AutomationService/HealthCheck',
             service__pb2.HealthCheckRequest.SerializeToString,
             service__pb2.HealthCheckResponse.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def ViewLogs(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/AutomationService/ViewLogs',
+            service__pb2.LogViewRequest.SerializeToString,
+            service__pb2.LogViewResponse.FromString,
             options,
             channel_credentials,
             insecure,
