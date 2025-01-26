@@ -5,6 +5,7 @@ import json
 from pathlib import Path
 from langchain_core.tools import tool, StructuredTool, ToolException
 from typing import Annotated, Optional, Dict, List, Any
+from src.services.call_automation import AutomationServiceLogic, MarketSearchModel
 from src.teams.fraud_detection.helper import analysis_result_formatter
 from src.teams.resources.ssim import structural_similarity_index_measure
 from src.rag.context_stuffing import process_query
@@ -279,14 +280,24 @@ async def aitem_cost_price_benchmarking_in_local_market(
                 new_item = [f"{item[0]} {condition}", float(item[1])]
                 updated_parsed_list.append(new_item)
                 
-        async with CostBenchmarking(
-            email="sam@masteryhive.ai",
-            password="JLg8m4aQ8n46nhC",
-            max_concurrency=len(updated_parsed_list),
-        ) as benchmarking:
+        # async with CostBenchmarking(
+        #     email="sam@masteryhive.ai",
+        #     password="JLg8m4aQ8n46nhC",
+        #     max_concurrency=len(updated_parsed_list),
+        # ) as benchmarking:
 
-            # Create tasks for each condition
-            results = await benchmarking.concurrent_analyze(updated_parsed_list)
+        #     # Create tasks for each condition
+        #     results = await benchmarking.concurrent_analyze(updated_parsed_list)
+            marketSearchModel = MarketSearchModel(
+                email="sam@masteryhive.ai",
+                login_required=True,
+                password="JLg8m4aQ8n46nhC",
+                searchTerms=str(updated_parsed_list),
+                target_market="jiji"
+            )
+            client = AutomationServiceLogic()
+            results = client._run_market_search(marketSearchModel=marketSearchModel)
+            print(results)
             formatted_results= analysis_result_formatter(conditions,updated_parsed_list,results)
             return formatted_results
 

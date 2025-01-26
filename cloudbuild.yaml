@@ -1,7 +1,13 @@
 steps:
   # Run pytest
-  - name: 'gcr.io/cloud-builders/python'
-    args: ['pytest', 'tests/']
+  - name: 'ubuntu:20.04'
+    entrypoint: 'bash'
+    args:
+      - '-c'
+      - |
+        apt-get update && apt-get install -y python3-pip
+        pip3 install pytest grpcio grpcio-tools grpc-interceptor python-dotenv pydantic
+        pytest tests/
 
   # Step 1: Build the Docker image and tag it as mastery-hive-cv-extractor
   - name: 'gcr.io/cloud-builders/docker'
@@ -24,7 +30,7 @@ steps:
       - --region
       - $_REGION
       - --allow-unauthenticated
-      - '--set-env-vars=APP_ENV=$_APP_ENV,REGION=$_REGION,PROJECT_ID=$PROJECT_ID,PYTHON_ENV=$_PYTHON_ENV,AUTH_USER=$_AUTH_USER,AUTH_PASSWORD=$_AUTH_PASSWORD,GOOGLE_API_KEY=$_GOOGLE_API_KEY,DB_HOST=$_DB_HOST,DB_DATABASE=$_DB_DATABASE,DB_PASSWORD=$_DB_PASSWORD,DB_USER=$_DB_USER,DB_PORT=$_DB_PORT,STAGING_BUCKET=$_STAGING_BUCKET,AMQP=$_AMQP,AMQP_QUEUE=$_AMQP_QUEUE,APP_BACKEND_API=$_APP_BACKEND_API'
+      - '--set-env-vars=APP_ENV=$_APP_ENV,REGION=$_REGION,PROJECT_ID=$PROJECT_ID,PYTHON_ENV=$_PYTHON_ENV,AUTH_USER=$_AUTH_USER,AUTH_PASSWORD=$_AUTH_PASSWORD,GOOGLE_API_KEY=$_GOOGLE_API_KEY,DB_HOST=$_DB_HOST,DB_DATABASE=$_DB_DATABASE,DB_PASSWORD=$_DB_PASSWORD,DB_USER=$_DB_USER,DB_PORT=$_DB_PORT,STAGING_BUCKET=$_STAGING_BUCKET,AMQP=$_AMQP,AMQP_QUEUE=$_AMQP_QUEUE,APP_BACKEND_API=$_APP_BACKEND_API,AUTOMATION_SERVICE_API=$_AUTOMATION_SERVICE_API'
       - '--port'
       - '8080'
       - '--max-instances'

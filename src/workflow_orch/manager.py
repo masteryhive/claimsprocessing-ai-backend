@@ -128,7 +128,7 @@ def start_process_manager(id: int):
                 task.status = TaskStatus.RUNNING
                 db.commit()
                 db.refresh(task)
-                update_claim_status_database(claim_id, status=TaskStatus.RUNNING)
+                # update_claim_status_database(claim_id, status=TaskStatus.RUNNING)
             except Exception as e:
                 system_logger.error(f"Status update failed: {str(e)}")
                 raise ClaimProcessingError(f"Failed to update status: {str(e)}")

@@ -19,8 +19,7 @@ class EnvConfig:
         self.database = os.getenv("DB_DATABASE")
         self.user = os.getenv("DB_USER")
         self.password = os.getenv("DB_PASSWORD")
-        self.amqp = os.getenv("AMQP")
-        self.amqp_queue = os.getenv("AMQP_QUEUE")
+        self.automation_service_api = os.getenv("AUTOMATION_SERVICE_API")
         
 
         
