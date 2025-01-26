@@ -6,10 +6,9 @@ from pathlib import Path
 from langchain_core.tools import tool, StructuredTool, ToolException
 from typing import Annotated, Optional, Dict, List, Any
 from src.services.call_automation import AutomationServiceLogic, MarketSearchModel
-from src.teams.fraud_detection.helper import analysis_result_formatter
+from src.teams.fraud_detection.helper import AnalysisModelResultList, analysis_result_formatter
 from src.teams.resources.ssim import structural_similarity_index_measure
 from src.rag.context_stuffing import process_query
-from src.pipelines.local_markets.jiji.cost_benchmarking import CostBenchmarking
 from src.pipelines.niid_check import InsuranceDataExtractor
 from src.utilities.pdf_handlers import download_pdf
 from typing_extensions import Annotated
@@ -280,25 +279,24 @@ async def aitem_cost_price_benchmarking_in_local_market(
                 new_item = [f"{item[0]} {condition}", float(item[1])]
                 updated_parsed_list.append(new_item)
                 
-        # async with CostBenchmarking(
-        #     email="sam@masteryhive.ai",
-        #     password="JLg8m4aQ8n46nhC",
-        #     max_concurrency=len(updated_parsed_list),
-        # ) as benchmarking:
-
-        #     # Create tasks for each condition
-        #     results = await benchmarking.concurrent_analyze(updated_parsed_list)
             marketSearchModel = MarketSearchModel(
                 email="sam@masteryhive.ai",
                 login_required=True,
                 password="JLg8m4aQ8n46nhC",
                 searchTerms=str(updated_parsed_list),
-                target_market="jiji"
+                target_market="jiji",
             )
             client = AutomationServiceLogic()
             results = client._run_market_search(marketSearchModel=marketSearchModel)
             print(results)
-            formatted_results= analysis_result_formatter(conditions,updated_parsed_list,results)
+            print()
+            analysisModelResultList = AnalysisModelResultList(**results)
+            print(analysisModelResultList)
+            print()
+            formatted_results = analysis_result_formatter(
+                conditions, updated_parsed_list, analysisModelResultList.analysisResult
+            )
+            print(formatted_results)
             return formatted_results
 
     except ToolException as e:
@@ -323,9 +321,6 @@ def item_cost_price_benchmarking_in_local_market(
     system_logger.info(
         f"{the_vehicleMake_and_vehicleModel_and_yearOfManufacture_and_damaged_part_list}"
     )
-    # async_item_cost_price_benchmarking_in_local_market = StructuredTool.from_function(coroutine=aitem_cost_price_benchmarking_in_local_market)
-    # asyncio.run(async_item_cost_price_benchmarking_in_local_market.ainvoke({"vehicleMake_and_vehicleModel_and_yearOfManufacture_and_damaged_part":vehicleMake_and_vehicleModel_and_yearOfManufacture_and_damaged_part,
-    #                                                             "quoted_cost":quoted_cost}))
 
     return asyncio.run(
         aitem_cost_price_benchmarking_in_local_market(
@@ -343,23 +338,24 @@ def item_pricing_evaluator(
 
     try:
 
-        async def async_task():
-            async with CostBenchmarking(
-                email="sam@xxxx", password="xxxx"
-            ) as benchmarking:
-                tokunbo_range = benchmarking.analyzer.get_expected_price_range(
-                    market_prices["fairly_used"]
-                )
-                brand_new_range = benchmarking.analyzer.get_expected_price_range(
-                    market_prices["brand_new"]
-                )
+        # async def async_task():
+        #     async with CostBenchmarking(
+        #         email="sam@xxxx", password="xxxx"
+        #     ) as benchmarking:
+        #         tokunbo_range = benchmarking.analyzer.get_expected_price_range(
+        #             market_prices["fairly_used"]
+        #         )
+        #         brand_new_range = benchmarking.analyzer.get_expected_price_range(
+        #             market_prices["brand_new"]
+        #         )
 
-            return (
-                f"FAIRLY USED (Tokunbo):\nExpected price range: {tokunbo_range}\n\n"
-                f"BRAND NEW:\nExpected price range: {brand_new_range}"
-            )
+        #     return (
+        #         f"FAIRLY USED (Tokunbo):\nExpected price range: {tokunbo_range}\n\n"
+        #         f"BRAND NEW:\nExpected price range: {brand_new_range}"
+        #     )
 
-        return asyncio.run(async_task())
+        # return asyncio.run(async_task())
+        print("no result")
     except Exception as e:
         system_logger.error(f"Error in price evaluation: {e}")
         return "Price evaluation unavailable at this time"
