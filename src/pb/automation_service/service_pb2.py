@@ -24,7 +24,7 @@ _sym_db = _symbol_database.Default()
 
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\rservice.proto\"w\n\x12LocalMarketRequest\x12\x13\n\x0bsearchTerms\x18\x01 \x01(\t\x12\x14\n\x0ctargetMarket\x18\x02 \x01(\t\x12\r\n\x05\x65mail\x18\x03 \x01(\t\x12\x10\n\x08password\x18\x04 \x01(\t\x12\x15\n\rloginRequired\x18\x05 \x01(\x08\"\x90\x01\n\x13LocalMarketResponse\x12:\n\x04\x64\x61ta\x18\x01 \x03(\x0b\x32,.LocalMarketResponse.LocalMarketResponseData\x1a=\n\x17LocalMarketResponseData\x12\x0e\n\x06result\x18\x01 \x01(\t\x12\x12\n\npriceRange\x18\x02 \x01(\t\"\r\n\x0bHomeRequest\"z\n\x0cHomeResponse\x12\x17\n\x0f\x61pplicationName\x18\x01 \x01(\t\x12\x18\n\x10\x61pplicationOwner\x18\x02 \x01(\t\x12\x1b\n\x13\x61pplicationEngineer\x18\x03 \x01(\t\x12\x1a\n\x12\x61pplicationVersion\x18\x04 \x01(\t\"\x14\n\x12HealthCheckRequest\"%\n\x13HealthCheckResponse\x12\x0e\n\x06status\x18\x01 \x01(\t2\xaf\x01\n\x11\x41utomationService\x12\x39\n\x0cMarketSearch\x12\x13.LocalMarketRequest\x1a\x14.LocalMarketResponse\x12#\n\x04Home\x12\x0c.HomeRequest\x1a\r.HomeResponse\x12:\n\x0bHealthCheck\x12\x13.HealthCheckRequest\x1a\x14.HealthCheckResponse\"\x00\x62\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\rservice.proto\"w\n\x12LocalMarketRequest\x12\x13\n\x0bsearchTerms\x18\x01 \x01(\t\x12\x14\n\x0ctargetMarket\x18\x02 \x01(\t\x12\r\n\x05\x65mail\x18\x03 \x01(\t\x12\x10\n\x08password\x18\x04 \x01(\t\x12\x15\n\rloginRequired\x18\x05 \x01(\x08\"4\n\x0e\x41nalysisResult\x12\x0e\n\x06result\x18\x01 \x01(\t\x12\x12\n\npriceRange\x18\x02 \x01(\t\">\n\x13LocalMarketResponse\x12\'\n\x0e\x61nalysisResult\x18\x01 \x03(\x0b\x32\x0f.AnalysisResult\"\r\n\x0bHomeRequest\"z\n\x0cHomeResponse\x12\x17\n\x0f\x61pplicationName\x18\x01 \x01(\t\x12\x18\n\x10\x61pplicationOwner\x18\x02 \x01(\t\x12\x1b\n\x13\x61pplicationEngineer\x18\x03 \x01(\t\x12\x1a\n\x12\x61pplicationVersion\x18\x04 \x01(\t\"\x14\n\x12HealthCheckRequest\"%\n\x13HealthCheckResponse\x12\x0e\n\x06status\x18\x01 \x01(\t2\xaf\x01\n\x11\x41utomationService\x12\x39\n\x0cMarketSearch\x12\x13.LocalMarketRequest\x1a\x14.LocalMarketResponse\x12#\n\x04Home\x12\x0c.HomeRequest\x1a\r.HomeResponse\x12:\n\x0bHealthCheck\x12\x13.HealthCheckRequest\x1a\x14.HealthCheckResponse\"\x00\x62\x06proto3')
 
 _globals = globals()
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, _globals)
@@ -33,18 +33,18 @@ if not _descriptor._USE_C_DESCRIPTORS:
   DESCRIPTOR._loaded_options = None
   _globals['_LOCALMARKETREQUEST']._serialized_start=17
   _globals['_LOCALMARKETREQUEST']._serialized_end=136
-  _globals['_LOCALMARKETRESPONSE']._serialized_start=139
-  _globals['_LOCALMARKETRESPONSE']._serialized_end=283
-  _globals['_LOCALMARKETRESPONSE_LOCALMARKETRESPONSEDATA']._serialized_start=222
-  _globals['_LOCALMARKETRESPONSE_LOCALMARKETRESPONSEDATA']._serialized_end=283
-  _globals['_HOMEREQUEST']._serialized_start=285
-  _globals['_HOMEREQUEST']._serialized_end=298
-  _globals['_HOMERESPONSE']._serialized_start=300
-  _globals['_HOMERESPONSE']._serialized_end=422
-  _globals['_HEALTHCHECKREQUEST']._serialized_start=424
-  _globals['_HEALTHCHECKREQUEST']._serialized_end=444
-  _globals['_HEALTHCHECKRESPONSE']._serialized_start=446
-  _globals['_HEALTHCHECKRESPONSE']._serialized_end=483
-  _globals['_AUTOMATIONSERVICE']._serialized_start=486
-  _globals['_AUTOMATIONSERVICE']._serialized_end=661
+  _globals['_ANALYSISRESULT']._serialized_start=138
+  _globals['_ANALYSISRESULT']._serialized_end=190
+  _globals['_LOCALMARKETRESPONSE']._serialized_start=192
+  _globals['_LOCALMARKETRESPONSE']._serialized_end=254
+  _globals['_HOMEREQUEST']._serialized_start=256
+  _globals['_HOMEREQUEST']._serialized_end=269
+  _globals['_HOMERESPONSE']._serialized_start=271
+  _globals['_HOMERESPONSE']._serialized_end=393
+  _globals['_HEALTHCHECKREQUEST']._serialized_start=395
+  _globals['_HEALTHCHECKREQUEST']._serialized_end=415
+  _globals['_HEALTHCHECKRESPONSE']._serialized_start=417
+  _globals['_HEALTHCHECKRESPONSE']._serialized_end=454
+  _globals['_AUTOMATIONSERVICE']._serialized_start=457
+  _globals['_AUTOMATIONSERVICE']._serialized_end=632
 # @@protoc_insertion_point(module_scope)

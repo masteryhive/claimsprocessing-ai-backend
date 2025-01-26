@@ -1,7 +1,15 @@
 from typing import List
 
+from pydantic import BaseModel
 
-def analysis_result_formatter(conditions:list, updated_parsed_list:List[list],results:list)->str:
+class AnalysisModelResult(BaseModel):
+    result: str
+    priceRange:str
+
+class AnalysisModelResultList(BaseModel):
+    analysisResult: List[AnalysisModelResult]
+    
+def analysis_result_formatter(conditions:list, updated_parsed_list:List[list],results:List[AnalysisModelResult])->str:
     condition_result = []
 
     # Group items by base description (before condition)
@@ -10,7 +18,7 @@ def analysis_result_formatter(conditions:list, updated_parsed_list:List[list],re
         base_desc = parsed_list[0].split(f' {conditions[0]}')[0].split(f' {conditions[1]}')[0]
         if base_desc not in grouped_items:
             grouped_items[base_desc] = []
-        grouped_items[base_desc].append((parsed_list[0], result))
+        grouped_items[base_desc].append((parsed_list[0], result.result))
 
     # Process grouped items
     for i, (base_desc, items) in enumerate(grouped_items.items(), 1):
@@ -19,6 +27,6 @@ def analysis_result_formatter(conditions:list, updated_parsed_list:List[list],re
             condition = conditions[0].upper() if conditions[0] in item else conditions[1].upper()
             group_results.append(f"{base_desc} - {condition}:\n{result}")
         
-        condition_result.append(f"{i}. " + "\n==========\n".join(group_results))
+        condition_result.append(f"{i}. " + "\n\n==========\n\n".join(group_results))
     
     return "\n\n".join(condition_result)

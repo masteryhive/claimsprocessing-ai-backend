@@ -31,13 +31,13 @@ class AutomationServiceLogic:
             system_logger.error(error="Failed to establish connection")
 
 
-m = MarketSearchModel(
-    email="sam@masteryhive.ai",
-    login_required=True,
-    password="JLg8m4aQ8n46nhC",
-    searchTerms="[['toyota camry headlight tokunbo',467880],['toyota camry headlight brand new',467880]]",
-    target_market="jiji"
-)
-client = AutomationServiceLogic()
-result = client._run_market_search(marketSearchModel=m)
-print(result)
+# m = MarketSearchModel(
+#     email="sam@masteryhive.ai",
+#     login_required=True,
+#     password="JLg8m4aQ8n46nhC",
+#     searchTerms="[['toyota camry headlight tokunbo',467880],['toyota camry headlight brand new',467880]]",
+#     target_market="jiji"
+# )
+# client = AutomationServiceLogic()
+# result = client._run_market_search(marketSearchModel=m)
+# print(result)
