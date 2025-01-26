@@ -12,12 +12,10 @@ from src.teams.fraud_detection.helper import (
 )
 from src.teams.resources.ssim import structural_similarity_index_measure
 from src.rag.context_stuffing import process_query
-from src.pipelines.niid_check import InsuranceDataExtractor
 from src.utilities.pdf_handlers import download_pdf
 from typing_extensions import Annotated
-from contextlib import asynccontextmanager
 from src.error_trace.errorlogger import system_logger
-from decimal import Decimal, InvalidOperation
+from decimal import  InvalidOperation
 
 ############## Fraud checks tool ##############
 rag_path = Path(__file__).parent.parent / "policy_doc/"
@@ -311,7 +309,7 @@ Good search term(no content and good nested list):
             formatted_results = analysis_result_formatter(
                 conditions, updated_parsed_list, analysisModelResultList.analysisResult
             )
-            print(formatted_results)
+
             return formatted_results
 
     except ToolException as e:
