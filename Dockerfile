@@ -63,6 +63,10 @@ COPY --from=builder /app/pyproject.toml /app/poetry.lock* /app/
 # Copy the application code into the container
 COPY . /app
 
+
+# Create the logs directory and set appropriate permissions
+RUN mkdir -p /app/logs && chmod -R 777 /app/logs
+
 EXPOSE 8080
 
 # Use startup file for production
