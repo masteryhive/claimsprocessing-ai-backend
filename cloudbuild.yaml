@@ -1,6 +1,6 @@
 steps:
   # Run pytest
-  - name: 'ubuntu:20.04'
+  - name: 'python:3.10-slim'
     entrypoint: 'bash'
     args:
       - '-c'
