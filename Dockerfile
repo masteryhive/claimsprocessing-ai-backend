@@ -49,15 +49,6 @@ FROM python:3.12-slim
 # Set the working directory in the container
 WORKDIR /app
 
-
-RUN apt-get update && apt-get install -y \
-    libx11-dev \
-    libxkbfile-dev \
-    libsecret-1-dev \
-    libnss3 \
-    fonts-liberation \
-    && rm -rf /var/lib/apt/lists/*
-
 # Set environment variables for the runtime stage
 ENV ENV="production" \
     PYTHONUNBUFFERED=1
