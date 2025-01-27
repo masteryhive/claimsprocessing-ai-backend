@@ -4,31 +4,12 @@ FROM python:3.12-slim AS builder
 # Set the working directory in the container
 WORKDIR /app
 
-# Install system dependencies and Chrome
-RUN apt-get update && apt-get install -y \
-    wget \
-    && wget https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb \
-    && apt-get install -y ./google-chrome-stable_current_amd64.deb \
-    && rm google-chrome-stable_current_amd64.deb \
-    && apt-get clean \
-    && rm -rf /var/lib/apt/lists/*
-
-RUN apt-get install -y \
-    libx11-dev \
-    libxkbfile-dev \
-    libsecret-1-dev \
-    libnss3 \
-    fonts-liberation \
-    && rm -rf /var/lib/apt/lists/*
-
 # Set environment variables for the build stage
 ENV PIP_DISABLE_PIP_VERSION_CHECK=on \
     PIP_NO_CACHE_DIR=off \
     PYTHONUNBUFFERED=1
 
-RUN pip install "poetry" "pytest-playwright" "playwright"
-
-RUN playwright install
+RUN pip install "poetry"
 
 # Copy requirements to install dependencies in the builder stage
 # COPY requirements.txt .
