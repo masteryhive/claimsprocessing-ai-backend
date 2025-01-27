@@ -49,14 +49,6 @@ FROM python:3.12-slim
 # Set the working directory in the container
 WORKDIR /app
 
-# Install system dependencies and Chrome
-RUN apt-get update && apt-get install -y \
-    wget \
-    && wget https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb \
-    && apt-get install -y ./google-chrome-stable_current_amd64.deb \
-    && rm google-chrome-stable_current_amd64.deb \
-    && apt-get clean \
-    && rm -rf /var/lib/apt/lists/*
 
 RUN apt-get update && apt-get install -y \
     libx11-dev \
@@ -76,12 +68,6 @@ COPY --from=builder /usr/local/bin /usr/local/bin
 
 # Copy the pyproject.toml and poetry.lock files from the builder stage
 COPY --from=builder /app/pyproject.toml /app/poetry.lock* /app/
-
-# Install Playwright browsers
-RUN poetry run playwright install chromium \
-    && poetry run playwright install-deps chromium
-
-RUN playwright install
 
 # Copy the application code into the container
 COPY . /app
