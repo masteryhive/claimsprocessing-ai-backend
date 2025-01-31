@@ -14,7 +14,7 @@ class AutomationServiceClient(object):
 
         # Format the URL properly for gRPC (remove https:// if present)
         target = env_config.automation_service_api
-        target = "localhost:4000"
+        # target = "localhost:4000"
         if target.startswith("https://"):
             target = target.replace("https://", "")
 

@@ -3,6 +3,7 @@ import asyncio
 from datetime import datetime
 import json
 from pathlib import Path
+import threading
 from langchain_core.tools import tool, ToolException
 from typing import Annotated,List
 from src.pipelines.cost_benchmarking import AnalysisModelResultList, CostBenchmarking
@@ -120,6 +121,70 @@ def validate_if_this_is_a_real_vehicle(
     return {"status": "clear", "message": "This vehicle is valid."}
 
 
+# @tool
+# def check_niid_database(
+#     registrationNumber: Annotated[str, "The registration number of the vehicle."],
+#     chasisNumber: Annotated[str, "The chassis number of the vehicle."],
+# ):
+#     """
+#     this tool calls the NIID database to see if the vehicle has been insured using the registrationNumber and verifies that the vehicle chasis matches NIID internal database records.
+#     """
+#     niid_data = {}
+#     try:
+#         # Validate chasisNumber
+#         if not isinstance(chasisNumber, str) or not chasisNumber.strip():
+#             raise ToolException("Invalid chasisNumber: must be a non-empty string")
+
+#         # Validate registrationNumber
+#         if not isinstance(registrationNumber, str) or not registrationNumber.strip():
+#             raise ToolException(
+#                 "Invalid registrationNumber: must be a non-empty string"
+#             )
+
+#     except ToolException as e:
+#         raise e
+
+#     client = AutomationServiceLogic()
+#     niid_data = client._run_niid_check(registrationNumber=registrationNumber)
+
+#     if niid_data.get("status") == "success":
+#         niid_data["check_NIID_database_result"] = {
+#             "existing_insurance_check_message": f"Yes, this vehicle has an existing insurance record in the NIID database with this certificate: {niid_data.get("data")["InsuranceCerticateNumber"]}"
+#         }
+#     else:
+#         niid_data["check_NIID_database_result"] = {
+#             "existing_insurance_check_message": "No, this vehicle does not have an existing insurance record in the NIID database"
+#         }
+#     if (
+#         niid_data.get("status") == "success"
+#         and niid_data.get("data")["ChassisNumber"].lower()
+#         == chasisNumber.strip().lower()
+#     ):
+#         niid_data["check_NIID_database_result"].update(
+#             {
+#                 "chasis_check_message": "Yes, this vehicle chasis number matches NIID internal database records"
+#             }
+#         )
+#     elif (
+#         niid_data.get("status") == "success"
+#         and niid_data.get("data")["ChassisNumber"].lower()
+#         != chasisNumber.strip().lower()
+#     ):
+#         niid_data["check_NIID_database_result"].update(
+#             {
+#                 "chasis_check_message": "No, this vehicle chasis number does not match NIID internal database records"
+#             }
+#         )
+#     else:
+#         niid_data["check_NIID_database_result"].update(
+#             {
+#                 "chasis_check_message": "No, this vehicle has no record in NIID internal database records, therefore chasis number can not be checked against NIID record."
+#             }
+#         )
+
+#     return niid_data["check_NIID_database_result"]
+
+
 @tool
 def check_niid_database(
     registrationNumber: Annotated[str, "The registration number of the vehicle."],
@@ -142,46 +207,58 @@ def check_niid_database(
 
     except ToolException as e:
         raise e
+    
+    def run_autiomation_niid_check(registrationNumber:str,niid:dict):
+        try:
+            client = AutomationServiceLogic()
+            niid_data = client._run_niid_check(registrationNumber=registrationNumber)
+            print(registrationNumber)
+            if niid_data.get("status") == "success":
+                niid_data["check_NIID_database_result"] = {
+                    "existing_insurance_check_message": f"Yes, this vehicle has an existing insurance record in the NIID database with this certificate: {niid_data.get("data")["InsuranceCerticateNumber"]}"
+                }
+            else:
+                niid_data["check_NIID_database_result"] = {
+                    "existing_insurance_check_message": "No, this vehicle does not have an existing insurance record in the NIID database"
+                }
+            if (
+                niid_data.get("status") == "success"
+                and niid_data.get("data")["ChassisNumber"].lower()
+                == chasisNumber.strip().lower()
+            ):
+                niid_data["check_NIID_database_result"].update(
+                    {
+                        "chasis_check_message": "Yes, this vehicle chasis number matches NIID internal database records"
+                    }
+                )
+            elif (
+                niid_data.get("status") == "success"
+                and niid_data.get("data")["ChassisNumber"].lower()
+                != chasisNumber.strip().lower()
+            ):
+                niid_data["check_NIID_database_result"].update(
+                    {
+                        "chasis_check_message": "No, this vehicle chasis number does not match NIID internal database records"
+                    }
+                )
+            else:
+                niid_data["check_NIID_database_result"].update(
+                    {
+                        "chasis_check_message": "No, this vehicle has no record in NIID internal database records, therefore chasis number can not be checked against NIID record."
+                    }
+                )
 
-    client = AutomationServiceLogic()
-    niid_data = client._run_niid_check(registrationNumber=registrationNumber)
-
-    if niid_data.get("status") == "success":
-        niid_data["check_NIID_database_result"] = {
-            "existing_insurance_check_message": f"Yes, this vehicle has an existing insurance record in the NIID database with this certificate: {niid_data.get("data")["InsuranceCerticateNumber"]}"
-        }
-    else:
-        niid_data["check_NIID_database_result"] = {
-            "existing_insurance_check_message": "No, this vehicle does not have an existing insurance record in the NIID database"
-        }
-    if (
-        niid_data.get("status") == "success"
-        and niid_data.get("data")["ChassisNumber"].lower()
-        == chasisNumber.strip().lower()
-    ):
-        niid_data["check_NIID_database_result"].update(
-            {
-                "chasis_check_message": "Yes, this vehicle chasis number matches NIID internal database records"
-            }
-        )
-    elif (
-        niid_data.get("status") == "success"
-        and niid_data.get("data")["ChassisNumber"].lower()
-        != chasisNumber.strip().lower()
-    ):
-        niid_data["check_NIID_database_result"].update(
-            {
-                "chasis_check_message": "No, this vehicle chasis number does not match NIID internal database records"
-            }
-        )
-    else:
-        niid_data["check_NIID_database_result"].update(
-            {
-                "chasis_check_message": "No, this vehicle has no record in NIID internal database records, therefore chasis number can not be checked against NIID record."
-            }
-        )
-
-    return niid_data["check_NIID_database_result"]
+            return niid_data["check_NIID_database_result"]
+        except Exception as e:
+            print(e)
+    print(registrationNumber)
+    thread = threading.Thread(target=lambda: run_autiomation_niid_check(registrationNumber,niid_data))
+    thread.start()
+    thread.join()
+    # Get result from the thread
+    result = thread.result() if hasattr(thread, 'result') else None
+    print(result)
+    return result
 
 
 @tool
