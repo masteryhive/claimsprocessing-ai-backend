@@ -3,11 +3,11 @@ import asyncio
 from datetime import datetime
 import json
 from pathlib import Path
-from langchain_core.tools import tool, StructuredTool, ToolException
-from typing import Annotated, Optional, Dict, List, Any
-from src.services.call_automation import AutomationServiceLogic, MarketSearchModel
+from langchain_core.tools import tool, ToolException
+from typing import Annotated,List
+from src.pipelines.cost_benchmarking import AnalysisModelResultList, CostBenchmarking
+from src.services.call_automation import AutomationServiceLogic
 from src.teams.fraud_detection.helper import (
-    AnalysisModelResultList,
     analysis_result_formatter,
 )
 from src.teams.resources.ssim import structural_similarity_index_measure
@@ -242,7 +242,7 @@ market_prices = {}
 
 @tool
 def item_cost_price_benchmarking_in_local_market(
-    the_vehicleMake_and_vehicleModel_and_yearOfManufacture_and_damaged_part_list: Annotated[
+    the_vehicleMake_and_vehicleModel_and_vehicleBody_and_yearOfManufacture_and_damaged_part_list: Annotated[
         str,
         """the search term for the local market
 *Instruction*
@@ -280,37 +280,43 @@ Good search term(no content and good nested list):
                 )
 
         parsed_list = ast.literal_eval(
-            the_vehicleMake_and_vehicleModel_and_yearOfManufacture_and_damaged_part_list
+            the_vehicleMake_and_vehicleModel_and_vehicleBody_and_yearOfManufacture_and_damaged_part_list
         )
         updated_parsed_list: List[list] = []
 
         # Define conditions
         conditions = ["fairly used", "brand new"]
-
         for item in parsed_list:
+            results = []
             for condition in conditions:
-                validator(item[0], item[1])
-                new_item = [f"{item[0]} {condition}", float(item[1])]
-                updated_parsed_list.append(new_item)
+                validator(item[0], item[-1])
+                updated_parsed_list.append([" ".join([item[0],condition]),item[1],item[2]])
+                make,model,body = item[0].split(" ")
+                year = item[1]
+                part = item[2]
+                quoted_price = item[-1]
+                cbm = CostBenchmarking(make, model,body, int(year),part,quoted_price,condition)
+                analysis = cbm.run_analysis()
+                if analysis is None:
+                    continue
+                results.append(analysis)
 
-            marketSearchModel = MarketSearchModel(
-                email="sam@masteryhive.ai",
-                login_required=True,
-                password="JLg8m4aQ8n46nhC",
-                searchTerms=str(updated_parsed_list),
-                target_market="jiji",
-            )
+            analysisModelResultList = AnalysisModelResultList(analysisResult=results)
 
-            client = AutomationServiceLogic()
-            results = client._run_market_search(marketSearchModel=marketSearchModel)
-
-            analysisModelResultList = AnalysisModelResultList(**results)
-
+            # Fill in missing results with values from other condition
+            if len(analysisModelResultList.analysisResult) == 2:
+                if analysisModelResultList.analysisResult[0].result == "no result" and analysisModelResultList.analysisResult[0].priceRange == "no price range":
+                    analysisModelResultList.analysisResult[0].result = analysisModelResultList.analysisResult[1].result
+                    analysisModelResultList.analysisResult[0].priceRange = analysisModelResultList.analysisResult[1].priceRange
+                elif analysisModelResultList.analysisResult[1].result == "no result" and analysisModelResultList.analysisResult[1].priceRange == "no price range":
+                    analysisModelResultList.analysisResult[1].result = analysisModelResultList.analysisResult[0].result
+                    analysisModelResultList.analysisResult[1].priceRange = analysisModelResultList.analysisResult[0].priceRange            
+            
             formatted_results = analysis_result_formatter(
                 conditions, updated_parsed_list, analysisModelResultList.analysisResult
             )
 
-            return formatted_results
+        return formatted_results
 
     except ToolException as e:
         system_logger.error(error=f"Validation error: {e}")
@@ -322,35 +328,34 @@ Good search term(no content and good nested list):
         )
 
 
-# print(item_cost_price_benchmarking_in_local_market.invoke({"the_vehicleMake_and_vehicleModel_and_yearOfManufacture_and_damaged_part_list":"[['toyota camry headlight brand new',467880]]"}))
+# print(item_cost_price_benchmarking_in_local_market.invoke({"the_vehicleMake_and_vehicleModel_and_yearOfManufacture_and_damaged_part_list":"[['hyundai elantra sedan',2014, 'side mirror',467880]]"}))
 
 
 @tool
 def item_pricing_evaluator(
-    vehicle_name_and_model_and_damaged_part: Annotated[str, "search term"]
+    vehicleMake: Annotated[str, "vehicle manufacturer name"],
+    vehicleModel: Annotated[str, "vehicle model name"], 
+    vehicleBody: Annotated[str, "vehicle body type"],
+    yearOfManufacture: Annotated[int, "year vehicle was manufactured"],
+    damagedPart: Annotated[str, "the part of the vehicle that was damaged"]
 ) -> str:
     """Evaluates cost ranges for vehicle parts in the local market."""
 
     try:
-
-        # async def async_task():
-        #     async with CostBenchmarking(
-        #         email="sam@xxxx", password="xxxx"
-        #     ) as benchmarking:
-        #         tokunbo_range = benchmarking.analyzer.get_expected_price_range(
-        #             market_prices["fairly_used"]
-        #         )
-        #         brand_new_range = benchmarking.analyzer.get_expected_price_range(
-        #             market_prices["brand_new"]
-        #         )
-
-        #     return (
-        #         f"FAIRLY USED (Tokunbo):\nExpected price range: {tokunbo_range}\n\n"
-        #         f"BRAND NEW:\nExpected price range: {brand_new_range}"
-        #     )
-
-        # return asyncio.run(async_task())
-        print("no result")
+        results = {}
+        conditions = ["fairly used", "brand new"]
+        for condition in conditions:
+            cbm = CostBenchmarking(vehicleMake, vehicleModel,vehicleBody, int(yearOfManufacture),damagedPart,"",condition)
+            damage_cost = cbm._fetch_query()
+            if damage_cost is None:
+                results.update({
+                    " ".join([damagedPart,condition]):damage_cost
+                })
+                continue
+            results.update({
+                    " ".join([damagedPart,condition]):damage_cost
+                })
+        return results
     except Exception as e:
         system_logger.error(f"Error in price evaluation: {e}")
         return "Price evaluation unavailable at this time"

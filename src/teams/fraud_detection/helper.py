@@ -1,15 +1,9 @@
 from typing import List
-
 from pydantic import BaseModel
+from src.pipelines.cost_benchmarking import AnalysisModel
 
-class AnalysisModelResult(BaseModel):
-    result: str
-    priceRange:str
-
-class AnalysisModelResultList(BaseModel):
-    analysisResult: List[AnalysisModelResult]
     
-def analysis_result_formatter(conditions:list, updated_parsed_list:List[list],results:List[AnalysisModelResult])->str:
+def analysis_result_formatter(conditions:list, updated_parsed_list:List[list],results:List[AnalysisModel])->str:
     condition_result = []
 
     # Group items by base description (before condition)
