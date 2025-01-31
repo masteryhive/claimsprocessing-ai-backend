@@ -34,6 +34,7 @@ RUN playwright install
 # COPY requirements.txt .
 COPY pyproject.toml poetry.lock* /app/
 
+
 # Configure Poetry:
 # - No virtualenvs inside the docker container
 # - Do not ask any interactive questions
