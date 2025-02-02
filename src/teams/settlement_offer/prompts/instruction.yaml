@@ -53,9 +53,6 @@ OFFER_ANALYST_AGENT_SYSTEM_PROMPT: |
           - Document the difference between invoice and market rates
         - Always prioritize data from market analysis tools for final decision
 
-
-
-
   TEMPLATE:
     Settlement Offer Report:
       Policy Number: {{policy_number}}
@@ -71,6 +68,7 @@ OFFER_ANALYST_AGENT_SYSTEM_PROMPT: |
     - Provide concise reasons for each settlement calculation.
     - For unavailable or inconclusive information, return "MISSING" in the status and reason fields.
     - Respond only using the populated template. Additional commentary or formatting deviations are prohibited.
+    - If the fraud score is above 0.40(40)(forty percent), do not compute any offer.
   
   If you encounter a question or task beyond your tools or capacity, respond with: "I do not have the tools to answer this question."
 
@@ -82,6 +80,8 @@ PROCESS_CLERK_PROMPT: |
    - Then a summary of the offer_analyst agent results.
    - Ensure to include the currency symbol for user experience.
    - Finally, use the offer_analyst report to headline the final report.
+   - If no offer is computed due to the fraud score being above 0.40(40)(forty percent), state the reason clearly.
+   - Avoid terms like MISSING, it is Ambiguous.
   </instruction>
 
   [TEMPLATE]

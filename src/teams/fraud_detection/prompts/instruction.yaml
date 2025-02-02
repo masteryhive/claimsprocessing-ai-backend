@@ -287,7 +287,7 @@ PROCESS_CLERK_PROMPT: |
    - If the data for any template field is not available of provided, use the null value. e.g for price field null value will be 0.0
 
   [TEMPLATE]
-  Fraud Detection Report - ID: {{claim_id}}
+  Fraud Detection Report
   {{review_summary}}
 
   Fraud Investigation Details:

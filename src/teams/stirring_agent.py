@@ -241,11 +241,11 @@ super_builder.add_edge(START, "supervisor")
 # We want our teams to ALWAYS "report back" to the top-level supervisor when done
 super_builder.add_edge("supervisor", members[0])
 super_builder.add_edge(members[0], members[1])
-super_builder.add_edge(members[1], members[2])
+super_builder.add_edge(members[1], members[2]) 
 super_builder.add_edge(members[2], members[3])
 super_builder.add_edge(members[3], members[4])
 super_builder.add_edge(members[4], END)
 
 super_graph = super_builder.compile()
-# if env_config.env == "local":
-#     save_graph_mermaid(super_graph, output_file="display/super_langgraph.png")
+if env_config.env == "local":
+    save_graph_mermaid(super_graph, output_file="display/super_langgraph.png")
