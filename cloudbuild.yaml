@@ -6,7 +6,7 @@ steps:
       - '-c'
       - |
         apt-get update && apt-get install -y python3-pip
-        pip3 install pytest grpcio grpcio-tools grpc-interceptor python-dotenv pydantic
+        pip3 install pytest grpcio grpcio-tools grpc-interceptor python-dotenv pydantic numpy
         pytest tests/
 
   # Step 1: Build the Docker image and tag it as mastery-hive-cv-extractor
