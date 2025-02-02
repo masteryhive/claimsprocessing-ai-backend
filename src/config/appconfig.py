@@ -1,6 +1,6 @@
 # Load .env file using:
 from dotenv import load_dotenv
-load_dotenv()
+load_dotenv(override=True)
 import os
 
 class EnvConfig:

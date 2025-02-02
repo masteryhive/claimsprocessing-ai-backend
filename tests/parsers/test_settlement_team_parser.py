@@ -35,7 +35,6 @@ Marginal Price for Brand New parts: ₦0"""
 
     discoveries = ["Previous finding"]
     result = extract_from_settlement_offer(text, discoveries)
-    print(result)
     assert result["settlementOffer"] == text.replace("\n","<br/>")
     assert isinstance(result["discoveries"],list)
 

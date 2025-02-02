@@ -1,3 +1,4 @@
+import asyncio
 from pydantic import BaseModel
 from src.error_trace.errorlogger import system_logger
 from src.services.dependencies.automation import AutomationServiceClient
@@ -24,16 +25,27 @@ class AutomationServiceLogic:
         else:
             system_logger.error(error="Failed to establish connection")
     
-    def _run_niid_check(self, registrationNumber: str):
-        if AutomationServiceClient().wait_for_ready():
-            return AutomationServiceClient().niid_check(
-                registrationNumber=registrationNumber
-            )
-        else:
-            system_logger.error(error="Failed to establish connection")
+    async def _run_niid_check(self, registrationNumber: str):
+        async with AutomationServiceClient() as client:
+            # First check health status
+            health_status = await client.health_check()
+            if health_status['status'] != "healthy":
+                system_logger.error(error="Health check failed before NIID check")
+                return {"error": "Service health check failed"}
+                
+            return await client.niid_check(registrationNumber=registrationNumber)
+        
+    async def _run_healthcheck(self) -> str:
+        async with AutomationServiceClient() as client:
+            return await client.health_check()
 
-    def _run_healthcheck(self) -> str:
-        if AutomationServiceClient().wait_for_ready():
-            return AutomationServiceClient().health_check()
-        else:
-            system_logger.error(error="Failed to establish connection")
+
+# async def r():
+#     client = AutomationServiceLogic()
+#     result = await client._run_healthcheck()
+#     print(result)
+
+
+
+
+# asyncio.run(r())

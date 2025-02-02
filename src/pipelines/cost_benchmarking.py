@@ -55,7 +55,7 @@ class CostBenchmarking():
         self.quoted_price = quoted_price
         self.analyzer = PriceAnalyzer()
 
-    def _fetch_query(self)->int:
+    def _fetch_query(self)->dict:
         """
         Fetch the market price for the specified vehicle part.
 
@@ -108,4 +108,5 @@ class CostBenchmarking():
         price_range = self.analyzer.get_expected_price_range(marketdata_interval)
         analysis = self.analyzer.analyze_price_realism(marketdata_interval, self.quoted_price)
         final_result = self._format_analysis_result(analysis, self.quoted_price)
+
         return AnalysisModel(result=final_result, priceRange=price_range)

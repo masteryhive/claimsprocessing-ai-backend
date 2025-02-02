@@ -1,13 +1,11 @@
-import ast
-import asyncio
+import ast, asyncio, json
 from datetime import datetime
-import json
 from pathlib import Path
-import threading
 from langchain_core.tools import tool, ToolException
-from typing import Annotated,List
+from typing import Annotated, List
 from src.pipelines.cost_benchmarking import AnalysisModelResultList, CostBenchmarking
 from src.services.call_automation import AutomationServiceLogic
+from src.services.dependencies.automation import AutomationServiceClient
 from src.teams.fraud_detection.helper import (
     analysis_result_formatter,
 )
@@ -16,7 +14,7 @@ from src.rag.context_stuffing import process_query
 from src.utilities.pdf_handlers import download_pdf
 from typing_extensions import Annotated
 from src.error_trace.errorlogger import system_logger
-from decimal import  InvalidOperation
+from decimal import InvalidOperation
 
 ############## Fraud checks tool ##############
 rag_path = Path(__file__).parent.parent / "policy_doc/"
@@ -121,70 +119,6 @@ def validate_if_this_is_a_real_vehicle(
     return {"status": "clear", "message": "This vehicle is valid."}
 
 
-# @tool
-# def check_niid_database(
-#     registrationNumber: Annotated[str, "The registration number of the vehicle."],
-#     chasisNumber: Annotated[str, "The chassis number of the vehicle."],
-# ):
-#     """
-#     this tool calls the NIID database to see if the vehicle has been insured using the registrationNumber and verifies that the vehicle chasis matches NIID internal database records.
-#     """
-#     niid_data = {}
-#     try:
-#         # Validate chasisNumber
-#         if not isinstance(chasisNumber, str) or not chasisNumber.strip():
-#             raise ToolException("Invalid chasisNumber: must be a non-empty string")
-
-#         # Validate registrationNumber
-#         if not isinstance(registrationNumber, str) or not registrationNumber.strip():
-#             raise ToolException(
-#                 "Invalid registrationNumber: must be a non-empty string"
-#             )
-
-#     except ToolException as e:
-#         raise e
-
-#     client = AutomationServiceLogic()
-#     niid_data = client._run_niid_check(registrationNumber=registrationNumber)
-
-#     if niid_data.get("status") == "success":
-#         niid_data["check_NIID_database_result"] = {
-#             "existing_insurance_check_message": f"Yes, this vehicle has an existing insurance record in the NIID database with this certificate: {niid_data.get("data")["InsuranceCerticateNumber"]}"
-#         }
-#     else:
-#         niid_data["check_NIID_database_result"] = {
-#             "existing_insurance_check_message": "No, this vehicle does not have an existing insurance record in the NIID database"
-#         }
-#     if (
-#         niid_data.get("status") == "success"
-#         and niid_data.get("data")["ChassisNumber"].lower()
-#         == chasisNumber.strip().lower()
-#     ):
-#         niid_data["check_NIID_database_result"].update(
-#             {
-#                 "chasis_check_message": "Yes, this vehicle chasis number matches NIID internal database records"
-#             }
-#         )
-#     elif (
-#         niid_data.get("status") == "success"
-#         and niid_data.get("data")["ChassisNumber"].lower()
-#         != chasisNumber.strip().lower()
-#     ):
-#         niid_data["check_NIID_database_result"].update(
-#             {
-#                 "chasis_check_message": "No, this vehicle chasis number does not match NIID internal database records"
-#             }
-#         )
-#     else:
-#         niid_data["check_NIID_database_result"].update(
-#             {
-#                 "chasis_check_message": "No, this vehicle has no record in NIID internal database records, therefore chasis number can not be checked against NIID record."
-#             }
-#         )
-
-#     return niid_data["check_NIID_database_result"]
-
-
 @tool
 def check_niid_database(
     registrationNumber: Annotated[str, "The registration number of the vehicle."],
@@ -193,7 +127,7 @@ def check_niid_database(
     """
     this tool calls the NIID database to see if the vehicle has been insured using the registrationNumber and verifies that the vehicle chasis matches NIID internal database records.
     """
-    niid_data = {}
+
     try:
         # Validate chasisNumber
         if not isinstance(chasisNumber, str) or not chasisNumber.strip():
@@ -207,58 +141,49 @@ def check_niid_database(
 
     except ToolException as e:
         raise e
-    
-    def run_autiomation_niid_check(registrationNumber:str,niid:dict):
-        try:
-            client = AutomationServiceLogic()
-            niid_data = client._run_niid_check(registrationNumber=registrationNumber)
-            print(registrationNumber)
-            if niid_data.get("status") == "success":
-                niid_data["check_NIID_database_result"] = {
-                    "existing_insurance_check_message": f"Yes, this vehicle has an existing insurance record in the NIID database with this certificate: {niid_data.get("data")["InsuranceCerticateNumber"]}"
-                }
-            else:
-                niid_data["check_NIID_database_result"] = {
-                    "existing_insurance_check_message": "No, this vehicle does not have an existing insurance record in the NIID database"
-                }
-            if (
-                niid_data.get("status") == "success"
-                and niid_data.get("data")["ChassisNumber"].lower()
-                == chasisNumber.strip().lower()
-            ):
-                niid_data["check_NIID_database_result"].update(
-                    {
-                        "chasis_check_message": "Yes, this vehicle chasis number matches NIID internal database records"
-                    }
-                )
-            elif (
-                niid_data.get("status") == "success"
-                and niid_data.get("data")["ChassisNumber"].lower()
-                != chasisNumber.strip().lower()
-            ):
-                niid_data["check_NIID_database_result"].update(
-                    {
-                        "chasis_check_message": "No, this vehicle chasis number does not match NIID internal database records"
-                    }
-                )
-            else:
-                niid_data["check_NIID_database_result"].update(
-                    {
-                        "chasis_check_message": "No, this vehicle has no record in NIID internal database records, therefore chasis number can not be checked against NIID record."
-                    }
-                )
 
-            return niid_data["check_NIID_database_result"]
-        except Exception as e:
-            print(e)
-    print(registrationNumber)
-    thread = threading.Thread(target=lambda: run_autiomation_niid_check(registrationNumber,niid_data))
-    thread.start()
-    thread.join()
-    # Get result from the thread
-    result = thread.result() if hasattr(thread, 'result') else None
-    print(result)
-    return result
+    async def _async_niid_call(registrationNumber: str):
+        client = AutomationServiceLogic()
+        niid_data = await client._run_niid_check(registrationNumber=registrationNumber)
+
+        if niid_data.get("status") == "success":
+            niid_data["check_NIID_database_result"] = {
+                "existing_insurance_check_message": f"Yes, this vehicle has an existing insurance record in the NIID database with this certificate: {niid_data.get("data")["InsuranceCerticateNumber"]}"
+            }
+        else:
+            niid_data["check_NIID_database_result"] = {
+                "existing_insurance_check_message": "No, this vehicle does not have an existing insurance record in the NIID database"
+            }
+        if (
+            niid_data.get("status") == "success"
+            and niid_data.get("data")["ChassisNumber"].lower()
+            == chasisNumber.strip().lower()
+        ):
+            niid_data["check_NIID_database_result"].update(
+                {
+                    "chasis_check_message": "Yes, this vehicle chasis number matches NIID internal database records"
+                }
+            )
+        elif (
+            niid_data.get("status") == "success"
+            and niid_data.get("data")["ChassisNumber"].lower()
+            != chasisNumber.strip().lower()
+        ):
+            niid_data["check_NIID_database_result"].update(
+                {
+                    "chasis_check_message": "No, this vehicle chasis number does not match NIID internal database records"
+                }
+            )
+        else:
+            niid_data["check_NIID_database_result"].update(
+                {
+                    "chasis_check_message": "No, this vehicle has no record in NIID internal database records, therefore chasis number can not be checked against NIID record."
+                }
+            )
+
+        return niid_data["check_NIID_database_result"]
+
+    return asyncio.run(_async_niid_call(registrationNumber))
 
 
 @tool
@@ -314,7 +239,6 @@ def ssim(
 
 ############## damage cost fraud ##################
 
-market_prices = {}
 
 
 @tool
@@ -329,13 +253,12 @@ Bad search term(add driver):
 ❌ "[['Hyundai sonata 2015 driver side mirror',23000],['Hyundai sonata 2015 door panel',23000]]"
 
 Good search term(no content and good nested list):
-✅ "[['Hyundai sonata 2015 side mirror',23000],['Hyundai sonata 2015 door panel',23000]]"
+✅ "[['Hyundai sonata sedan', 2015, 'side mirror',23000],['Hyundai sonata sedan', 2015, 'door panel',23000]]"
 """,
     ],
 ) -> str:
     """Benchmarks quoted cost for vehicle repairs against local market prices."""
 
-    global market_prices
     try:
 
         def validator(vehicle_name_and_model_and_damaged_part: str, quoted_cost: str):
@@ -359,40 +282,63 @@ Good search term(no content and good nested list):
         parsed_list = ast.literal_eval(
             the_vehicleMake_and_vehicleModel_and_vehicleBody_and_yearOfManufacture_and_damaged_part_list
         )
+        
         updated_parsed_list: List[list] = []
-
+        analysis_result_list: List = []
         # Define conditions
-        conditions = ["fairly used", "brand new"]
+        conditions = ["tokunbo", "brand new"]
         for item in parsed_list:
             results = []
             for condition in conditions:
                 validator(item[0], item[-1])
-                updated_parsed_list.append([" ".join([item[0],condition]),item[1],item[2]])
-                make,model,body = item[0].split(" ")
+                updated_parsed_list.append(
+                    [" ".join([item[0], condition]), item[1], item[2]]
+                )
+         
+                make, model, body = item[0].split(" ")
                 year = item[1]
                 part = item[2]
                 quoted_price = item[-1]
-                cbm = CostBenchmarking(make, model,body, int(year),part,quoted_price,condition)
+                cbm = CostBenchmarking(
+                    make, model, body, int(year), part, quoted_price, condition
+                )
                 analysis = cbm.run_analysis()
                 if analysis is None:
                     continue
                 results.append(analysis)
 
-            analysisModelResultList = AnalysisModelResultList(analysisResult=results)
-
             # Fill in missing results with values from other condition
-            if len(analysisModelResultList.analysisResult) == 2:
-                if analysisModelResultList.analysisResult[0].result == "no result" and analysisModelResultList.analysisResult[0].priceRange == "no price range":
-                    analysisModelResultList.analysisResult[0].result = analysisModelResultList.analysisResult[1].result
-                    analysisModelResultList.analysisResult[0].priceRange = analysisModelResultList.analysisResult[1].priceRange
-                elif analysisModelResultList.analysisResult[1].result == "no result" and analysisModelResultList.analysisResult[1].priceRange == "no price range":
-                    analysisModelResultList.analysisResult[1].result = analysisModelResultList.analysisResult[0].result
-                    analysisModelResultList.analysisResult[1].priceRange = analysisModelResultList.analysisResult[0].priceRange            
-            
-            formatted_results = analysis_result_formatter(
-                conditions, updated_parsed_list, analysisModelResultList.analysisResult
-            )
+            if len(results) == 2:
+                if (
+                    results[0].result == "no result"
+                    and results[0].priceRange
+                    == "no price range"
+                ):
+                    results[0].result = (
+                        results[1].result
+                    )
+                    results[0].priceRange = (
+                        results[1].priceRange
+                    )
+                elif (
+                    results[1].result == "no result"
+                    and results[1].priceRange
+                    == "no price range"
+                ):
+                    results[1].result = (
+                        results[0].result
+                    )
+                    results[1].priceRange = (
+                        results[0].priceRange
+                    )
+            analysis_result_list.extend(results)
 
+        analysisModelResultList = AnalysisModelResultList(analysisResult=analysis_result_list)
+        
+        formatted_results = analysis_result_formatter(
+            conditions, updated_parsed_list, analysisModelResultList.analysisResult
+        )
+   
         return formatted_results
 
     except ToolException as e:
@@ -405,16 +351,13 @@ Good search term(no content and good nested list):
         )
 
 
-# print(item_cost_price_benchmarking_in_local_market.invoke({"the_vehicleMake_and_vehicleModel_and_yearOfManufacture_and_damaged_part_list":"[['hyundai elantra sedan',2014, 'side mirror',467880]]"}))
-
-
 @tool
 def item_pricing_evaluator(
     vehicleMake: Annotated[str, "vehicle manufacturer name"],
-    vehicleModel: Annotated[str, "vehicle model name"], 
+    vehicleModel: Annotated[str, "vehicle model name"],
     vehicleBody: Annotated[str, "vehicle body type"],
     yearOfManufacture: Annotated[int, "year vehicle was manufactured"],
-    damagedPart: Annotated[str, "the part of the vehicle that was damaged"]
+    damagedPart: Annotated[str, "the part of the vehicle that was damaged"],
 ) -> str:
     """Evaluates cost ranges for vehicle parts in the local market."""
 
@@ -422,16 +365,20 @@ def item_pricing_evaluator(
         results = {}
         conditions = ["fairly used", "brand new"]
         for condition in conditions:
-            cbm = CostBenchmarking(vehicleMake, vehicleModel,vehicleBody, int(yearOfManufacture),damagedPart,"",condition)
+            cbm = CostBenchmarking(
+                vehicleMake,
+                vehicleModel,
+                vehicleBody,
+                int(yearOfManufacture),
+                damagedPart,
+                "",
+                condition,
+            )
             damage_cost = cbm._fetch_query()
             if damage_cost is None:
-                results.update({
-                    " ".join([damagedPart,condition]):damage_cost
-                })
+                results.update({" ".join([damagedPart, condition]): damage_cost})
                 continue
-            results.update({
-                    " ".join([damagedPart,condition]):damage_cost
-                })
+            results.update({" ".join([damagedPart, condition]): damage_cost})
         return results
     except Exception as e:
         system_logger.error(f"Error in price evaluation: {e}")

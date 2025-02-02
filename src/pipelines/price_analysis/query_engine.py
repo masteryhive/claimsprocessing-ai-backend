@@ -1,15 +1,21 @@
 from google.cloud import bigquery
 
-def get_part_price(make: str, model: str, bodyType:str, year: int, part: str, condition:str) -> dict:
+def get_part_price(make: str, model: str, body_type:str, year: int, part: str, condition:str) -> dict:
     """
     Get price details for a specific car part
     """
     client = bigquery.Client()
     dataset_id = "infrastructure-staging-418710.mh_insurance_ai"
+    # Convert all arguments to lowercase for consistency
+    make = make.lower()
+    model = model.lower() 
+    body_type = body_type.lower()
+    part = part.lower()
+    condition = condition.lower()
 
     # Normalize "saloon" to "sedan" for consistency
-    if bodyType == "saloon":
-        bodyType = "sedan"
+    if body_type == "saloon":
+        body_type = "sedan"
 
     with open('src/queries/price_query.sql', 'r') as file:
         query = file.read()
@@ -21,8 +27,9 @@ def get_part_price(make: str, model: str, bodyType:str, year: int, part: str, co
             bigquery.ScalarQueryParameter("make", "STRING", make),
             bigquery.ScalarQueryParameter("model", "STRING", model),
             bigquery.ScalarQueryParameter("year", "INT64", year),
-            bigquery.ScalarQueryParameter("part", "STRING", part),
-            bigquery.ScalarQueryParameter("condition", "STRING", condition)
+            bigquery.ScalarQueryParameter("part_name", "STRING", part),
+            bigquery.ScalarQueryParameter("condition", "STRING", condition),
+            bigquery.ScalarQueryParameter("body_type", "STRING", body_type)
         ]
     )
     
