@@ -338,7 +338,7 @@ Good search term(no content and good nested list):
         formatted_results = analysis_result_formatter(
             conditions, updated_parsed_list, analysisModelResultList.analysisResult
         )
-   
+        print(formatted_results)
         return formatted_results
 
     except ToolException as e:
