@@ -41,6 +41,7 @@ langchain = ">=0.0.350"
 langchain-google-vertexai = ">=0.0.5"
 prometheus-client = "^0.21.1"
 pybreaker = "^1.2.0"
+numpy = "^2.2.2"
 
 [build-system]
 requires = ["poetry-core"]
