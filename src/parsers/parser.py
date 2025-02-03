@@ -3,6 +3,7 @@ import re
 from src.models.claim_processing import CreateClaimsReport
 from src.error_trace.errorlogger import system_logger
 
+# function to extract claim summaries
 def extract_claim_summary(data:str, discoveries: list) -> CreateClaimsReport:
     data = data.strip("xml\n").strip("```")
     fraud_score = re.search(

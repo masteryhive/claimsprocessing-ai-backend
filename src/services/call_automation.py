@@ -2,7 +2,7 @@ from pydantic import BaseModel
 from src.error_trace.errorlogger import system_logger
 from src.services.dependencies.automation import AutomationServiceClient
 
-
+# Base Model for Market Search
 class MarketSearchModel(BaseModel):
     searchTerms: str
     target_market: str
@@ -10,7 +10,7 @@ class MarketSearchModel(BaseModel):
     password: str
     login_required: bool
 
-
+# Class for Automation Logic
 class AutomationServiceLogic:
     def _run_market_search(self, marketSearchModel: MarketSearchModel):
         if AutomationServiceClient().wait_for_ready():

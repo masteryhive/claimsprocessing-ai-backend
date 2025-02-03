@@ -4,7 +4,7 @@ from typing import Any, Dict, List, Optional, TypedDict
 from src.config.appconfig import env_config
 from src.pipelines.config import PriceAnalysis
 
-
+# Interface for market price analysis.
 class IMarketPriceAnalyzer(ABC):
     @abstractmethod
     def analyze_price_realism(

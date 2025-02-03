@@ -8,7 +8,7 @@ from src.utilities.image_handlers import get_preloss
 from src.teams.resources.image_understanding import claims_image_evidence_recognizer
 from src.ai_models.llm import llm_flash
 
-
+#function to downoad pdf
 def download_pdf(
     pdf_url: str, temp_folder: str = "temp", filename: str = str(uuid.uuid4())
 ) -> str:
@@ -25,7 +25,7 @@ def download_pdf(
 
     return tempFile
 
-
+# Converts a specific page of a PDF into a Base64-encoded PNG image.
 def pdf_page_to_base64(pdf_path: str, page_number: int):
     pdf_document = fitz.open(pdf_path)
     page = pdf_document.load_page(page_number - 1)  # input is one-indexed
@@ -36,7 +36,7 @@ def pdf_page_to_base64(pdf_path: str, page_number: int):
 
     return base64.b64encode(buffer.getvalue()).decode("utf-8")
 
-
+# Function to extract invoice entity
 def invoice_entity_extraction(doc_url: str) -> str:
     temp_file = download_pdf(pdf_url=doc_url)
     base64_image = pdf_page_to_base64(temp_file, 1)

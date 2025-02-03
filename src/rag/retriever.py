@@ -8,6 +8,7 @@ from src.config.appconfig import env_config
 from langchain.retrievers.contextual_compression import ContextualCompressionRetriever
 from src.ai_models.llm import llm
 
+# Retrieves relevant documents from BigQuery and refines them using a reranker.
 def retrieve_from_bigquery(bq_store: BigQueryVectorStore)-> RunnableSerializable[Any, BaseMessage]:
     # Instantiate the VertexAIReranker with the SDK manager
     reranker = VertexAIRank(

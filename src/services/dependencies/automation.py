@@ -6,7 +6,7 @@ from src.pb.automation_service.service_pb2 import HealthCheckRequest, LocalMarke
 from src.pb.automation_service.service_pb2_grpc import AutomationServiceStub
 from src.error_trace.errorlogger import system_logger
 
-
+# gRPC Client for interacting with the Automation Service.
 class AutomationServiceClient(object):
     def __init__(self):
         # Create credentials for secure channel
@@ -33,7 +33,7 @@ class AutomationServiceClient(object):
     def __del__(self):
         if hasattr(self, "channel"):
             self.channel.close()
-
+    #Performs a market search request 
     def market_search(
         self,
         searchTerms: str,
@@ -67,7 +67,7 @@ class AutomationServiceClient(object):
             )
             system_logger.error(error=error_message)
             return {"error": error_message}
-
+    # Initiates a vehicle insurance check (NIID check) using the provided registration number.
     def niid_check(
         self,
         registrationNumber: str,
@@ -93,7 +93,7 @@ class AutomationServiceClient(object):
             )
             system_logger.error(error=error_message)
             return {"error": error_message}
-        
+    # Checks the health status of the Automation Service.  
     def health_check(self):
         try:
             response = self.stub.HealthCheck(HealthCheckRequest())

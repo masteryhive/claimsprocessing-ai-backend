@@ -14,7 +14,7 @@ from vertexai.preview.generative_models import (
     Part
 )
 
-
+# function to fetch image
 async def fetch_image(image_url: str) -> bytes:
     async with httpx.AsyncClient() as client:
         response = await client.get(image_url, timeout=300)

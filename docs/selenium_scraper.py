@@ -29,6 +29,7 @@ class CostBenchmarking:
         self.driver = webdriver.Chrome(options=chrome_options)
         self.url = "https://www.jiji.ng/login.html"
 
+    # function to extract data from market websites 
     def extract_data(self, search_term: str):
         # Navigate to the website
         self.driver.get(self.url)

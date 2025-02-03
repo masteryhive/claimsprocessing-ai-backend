@@ -2,7 +2,7 @@ from pydantic import BaseModel, Field
 from typing import Any, List, Optional, Dict, Union
 from datetime import datetime
 
-
+# class that processess Claims 
 class ProcessClaimTask(BaseModel):
     claim_id: int
     task_id: str
@@ -15,6 +15,7 @@ class ProcessClaimTask(BaseModel):
             }
         }
 
+# Class instance for Vehicle Accident Insurance Claims
 class AccidentClaimData(BaseModel):
     nameOfInsured: str
     policyNumber: str
@@ -50,6 +51,7 @@ class AccidentClaimData(BaseModel):
     dateClaimFiled: str
     repairInvoice:str
 
+# Class instance for Vehicle Theft Insurance Claims
 class TheftClaimData(BaseModel):
     id: int
     nameOfInsured: str
@@ -100,7 +102,7 @@ class TheftClaimData(BaseModel):
     evidenceProvided: List[Any]
     dateClaimFiled: str
 
-
+# Class to create Claim Report from User Information
 class CreateClaimsReport(BaseModel):
     claimId: int = Field(..., description="The unique identifier for the claim.")
     fraudScore: float = Field(default=0.0, description="The calculated fraud score as a percentage.")
@@ -113,6 +115,7 @@ class CreateClaimsReport(BaseModel):
     details: str = Field(default="", description="Detailed information about the claim.")
     discoveries: list = Field(default=[], description="A list of discoveries made during the claim investigation.")
 
+# Class to Update Claim Reports from User Information
 class UpdateClaimsReportModel(BaseModel):
     fraudScore: float = Field(default=0.0, description="The calculated fraud score as a percentage.")
     fraudIndicators: list = Field(default=[], description="A list of indicators suggesting potential fraud.")

@@ -76,7 +76,7 @@ def generate(
 
 
 
-    
+# Retries generating a response until successful.  
 def retry_generate(pdf_document: Part, prompt: str,response_schema:dict):
     predicted = False
     while not predicted:
@@ -94,6 +94,7 @@ def retry_generate(pdf_document: Part, prompt: str,response_schema:dict):
 
     return response
 
+# Processes a query by extracting text from a PDF and generating a response.
 def process_query(prompt: str,  pdf_path:str,response_schema:dict) -> str:
     with open(pdf_path, "rb") as fp:
         pdf_document = Part.from_data(data=fp.read(), mime_type="application/pdf")

@@ -6,11 +6,12 @@ from src.pipelines.config import PriceAnalysis
 from src.pipelines.price_analysis._price_analyzer import PriceAnalyzer
 from src.pipelines.price_analysis.query_engine import get_part_price
 
+#Base Class for Analysis
 class AnalysisModel(BaseModel):
     result: str
     priceRange: str = Field(default="no price range")
 
-
+# Class returns Analysis List 
 class AnalysisModelResultList(BaseModel):
     analysisResult: List[AnalysisModel]
 

@@ -1,5 +1,6 @@
 import re
 
+# function to Extract info from Policies Details
 def extract_from_policy_details(text:str,discoveries:list):
     # Extract Coverage Status
     # coverage_match = re.search(r"Coverage Status:\s*(.+)", text)

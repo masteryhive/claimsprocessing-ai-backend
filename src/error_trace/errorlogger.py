@@ -9,7 +9,7 @@ from typing import Optional, Any
 from enum import Enum
 from src.config.appconfig import env_config
 
-
+# class showing different log levels in the enviroment
 class LogLevel(Enum):
     INFO = "INFO"
     WARNING = "WARNING"

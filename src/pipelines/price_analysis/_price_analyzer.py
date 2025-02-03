@@ -5,13 +5,14 @@ import numpy as np
 from src.pipelines.config import PriceAnalysis
 from src.pipelines.price_analysis.base import IMarketPriceAnalyzer
 
-
+# class to analyze Market Prices
 class PriceAnalyzer(IMarketPriceAnalyzer):
     def __init__(self, outlier_threshold: float = 1.5,z_threshold=2, iqr_threshold=1.5):
         self.outlier_threshold = outlier_threshold
         self.iqr_threshold = iqr_threshold
         self.z_threshold=z_threshold
 
+    # function to remove outliers
     def _remove_outliers(self, prices: List[float]) -> List[float]:
         prices_array = np.array(prices)
         q1 = np.percentile(prices_array, 25)
@@ -23,6 +24,7 @@ class PriceAnalyzer(IMarketPriceAnalyzer):
         
         return [x for x in prices if lower_bound <= x <= upper_bound]
 
+    # function to analyze realistic prices
     def analyze_price_realism(self, market_prices: List[float], quoted_price: float) -> PriceAnalysis:
         prices = np.array(self._remove_outliers(market_prices))
         
@@ -51,7 +53,7 @@ class PriceAnalyzer(IMarketPriceAnalyzer):
             is_outlier=is_outlier,
             price_range={"lower_bound": lower_bound, "upper_bound": upper_bound}
         )
-
+    # generate sutaible price range from market prices
     def get_expected_price_range(self, prices: List[float]) -> str:
         cleaned_prices = self._remove_outliers(prices)
         if not cleaned_prices:

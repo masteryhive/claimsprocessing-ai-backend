@@ -1,6 +1,6 @@
 import re
 
-
+# function to Extract info from Settlement Offers
 def extract_from_settlement_offer(text: str, discoveries: list):
     # Extract justification if present
     justification = ""

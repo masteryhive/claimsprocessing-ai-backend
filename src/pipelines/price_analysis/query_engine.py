@@ -1,5 +1,6 @@
 from google.cloud import bigquery
 
+# function to Get part prices from Google Cloud Big Query
 def get_part_price(make: str, model: str, bodyType:str, year: int, part: str, condition:str) -> dict:
     """
     Get price details for a specific car part

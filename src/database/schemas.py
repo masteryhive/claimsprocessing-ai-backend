@@ -15,7 +15,7 @@ from sqlalchemy import (
 
 Base = declarative_base()
 
-
+#class that holds status operations in the database
 class TaskStatus(str, enum.Enum):
     PENDING = "pending"
     RUNNING = "running"

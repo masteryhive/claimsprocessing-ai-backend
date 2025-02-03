@@ -11,7 +11,7 @@ from prometheus_client import Counter, Histogram, Gauge
 import pybreaker
 from src.error_trace.errorlogger import system_logger
 
-
+# gRPC Service for Claims Processing.
 class ClaimsProcessingBaseService(ClaimsProcessingServicer):
     def __init__(self):
         self.thread_pool = ThreadPoolExecutor(max_workers=10)
@@ -19,7 +19,7 @@ class ClaimsProcessingBaseService(ClaimsProcessingServicer):
         # Start background worker
         self.worker_thread = threading.Thread(target=self._process_queue, daemon=True)
         self.worker_thread.start()
-    
+    # Process Claims
     def ProcessClaim(self, request, context):
         try:
             claim_id = int(request.claimId)

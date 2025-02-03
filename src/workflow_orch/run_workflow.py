@@ -88,7 +88,7 @@ def handle_agent_response(agent: str, messages: list, claim:dict, team_summaries
     except Exception as e:
         system_logger.error(error=e)
 
-
+# function to control workflow
 def control_workflow(
     db: Session,
     claim: dict,
@@ -119,7 +119,7 @@ def control_workflow(
 
     return team_summaries, endworkflow
 
-
+# function to control op of summary team
 def handle_summary_team(
     process_call: Dict[str, Any],
     claim_id: int,

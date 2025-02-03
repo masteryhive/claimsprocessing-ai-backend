@@ -7,7 +7,7 @@ from src.config.appconfig import env_config
 from sqlalchemy.orm import Session
 
 
-
+# function to query database for Claim data using Claim Id
 def get_claim_from_database(claim_id:str) -> dict:
         try:
             # Send a POST request to the endpoint

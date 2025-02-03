@@ -2,6 +2,7 @@ from langchain_google_community import BigQueryVectorStore
 from langchain_google_vertexai import VertexAIEmbeddings
 from src.config.appconfig import env_config
 
+# Configuration for storing and retrieving embeddings using BigQuery.
 BQ_DATASET = "56gftr54"
 BQ_TABLE = "policy_embeddings"
 

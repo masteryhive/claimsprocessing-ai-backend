@@ -1,6 +1,7 @@
 import numpy as np
 from typing import List
 
+# function to remove outliers
 def remove_outliers(prices: List[float], threshold: float = 1.5) -> List[float]:
     """
     Removes outliers from the price list using the IQR method.
@@ -22,6 +23,7 @@ def remove_outliers(prices: List[float], threshold: float = 1.5) -> List[float]:
     
     return [x for x in prices if lower_bound <= x <= upper_bound]
 
+# function to analyze realistic prices
 def analyze_price_realism(market_prices: List[float], quoted_price: float, threshold: float = 1.5) -> dict:
     """
     Analyzes if a quoted price is realistic based on market data using statistical methods.
@@ -76,6 +78,7 @@ def analyze_price_realism(market_prices: List[float], quoted_price: float, thres
         }
     }
 
+# function to  check prices 
 def check_price(market_prices: List[float], quoted_price: float) -> None:
     """
     Helper function to print a human-readable analysis of the price.

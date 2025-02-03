@@ -13,6 +13,7 @@ from langchain.agents import AgentExecutor, create_tool_calling_agent
 from langchain_core.output_parsers import JsonOutputParser
 from langgraph.graph.message import add_messages
 
+# agent for claim form screening
 class ClaimFormScreeningTeamAgentState(TypedDict):
     messages: Annotated[list, add_messages]
 
@@ -26,6 +27,7 @@ class ClaimFormScreeningTeamAgentState(TypedDict):
 
     supporting_evidence_checker_result: str
 
+# agent for Policy Review 
 class PolicyReviewTeamAgentState(TypedDict):
     messages: Annotated[list, add_messages]
 
@@ -41,7 +43,7 @@ class PolicyReviewTeamAgentState(TypedDict):
 
     insurance_policy_verifier_result: str
 
-
+# agent for Fraud Team
 class FraudTeamAgentState(TypedDict):
     messages: Annotated[list, add_messages]
 
@@ -59,6 +61,7 @@ class FraudTeamAgentState(TypedDict):
 
     fraud_risk_analyst_result: str
 
+# agent for Settlement Offer
 class SettlementOfferTeamAgentState(TypedDict):
     messages: Annotated[list, add_messages]
 
@@ -100,7 +103,7 @@ class AgentState(TypedDict):
     fraud_team_summary: str
     settlement_offer_team_summary: str
 
-
+# create supervisor node to monitor members
 def create_supervisor_node(system_prompt:str,llm:ChatVertexAI,SupervisorOutput:type,members:list):
     supervisor_parser = JsonOutputParser(pydantic_object=SupervisorOutput)
     prompt = ChatPromptTemplate.from_messages(

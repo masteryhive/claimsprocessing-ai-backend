@@ -3,6 +3,8 @@ from langchain_community.document_loaders import PyPDFLoader
 
 FOLDER_NAME = "rawtest/ZG"
 
+# Functions for downloading and processing PDFs from a cloud storage bucket.
+# download Pdf
 def download_pdf_from_bucket(bucket_name, folder_name, file_name):
     client = storage.Client()
     bucket = client.bucket(bucket_name)
@@ -11,6 +13,7 @@ def download_pdf_from_bucket(bucket_name, folder_name, file_name):
     blob.download_to_filename(local_path)
     return local_path
 
+# Load and Process Pdf
 def load_and_chunk_pdf(pdf_path):
     loader = PyPDFLoader(pdf_path)
     documents = loader.load()

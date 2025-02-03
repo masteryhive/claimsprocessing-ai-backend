@@ -2,7 +2,7 @@ from typing import List
 from pydantic import BaseModel
 from src.pipelines.cost_benchmarking import AnalysisModel
 
-    
+# Function to format Analysis result list   
 def analysis_result_formatter(conditions:list, updated_parsed_list:List[list],results:List[AnalysisModel])->str:
     condition_result = []
 

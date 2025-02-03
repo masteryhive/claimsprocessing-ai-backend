@@ -1,5 +1,6 @@
 from datetime import datetime, timedelta
 
+# Function tp check claim notification period
 def check_claim_notification_period(claim_report_date_str, notification_period):
     # Parse the claim report date
     claim_report_date = datetime.strptime(claim_report_date_str, "%B %d %Y")
