@@ -65,6 +65,7 @@ vehicle_fraud_investigator_agent = create_tool_agent(
     tools=[
         validate_if_this_is_a_real_vehicle,
         check_niid_database,
+        check_vin,
     ],
     system_prompt=_load_prompt_template()[
         "VEHICLE_FRAUD_INVESTIGATOR_AGENT_SYSTEM_PROMPT"

@@ -35,6 +35,15 @@ class AutomationServiceLogic:
                 
             return await client.niid_check(registrationNumber=registrationNumber)
         
+    async def _run_vin_check(self, VehicleIdentificationNumber: str):
+        async with AutomationServiceClient() as client:
+            # First check health status
+            health_status = await client.health_check()
+            if health_status['status'] != "healthy":
+                system_logger.error(error="Health check failed before VIN check")
+                return {"error": "Service health check failed"}
+            return await client.vin_check(VehicleIdentificationNumber=VehicleIdentificationNumber)
+        
     async def _run_healthcheck(self) -> str:
         async with AutomationServiceClient() as client:
             return await client.health_check()

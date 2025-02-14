@@ -185,6 +185,49 @@ def check_niid_database(
 
     return asyncio.run(_async_niid_call(registrationNumber))
 
+@tool
+def check_vin(
+    VehicleIdentificationNumber: Annotated[str, "The Identification number of the vehicle."],
+):
+    """
+    This tool calls an API to verify the vehicle identification number (VIN) and retrieve vehicle details.
+    """
+
+    try:
+        # Validate VehicleIdentificationNumber
+        if not isinstance(VehicleIdentificationNumber, str) or not VehicleIdentificationNumber.strip():
+            raise ToolException(
+                "Invalid VehicleIdentificationNumber: must be a non-empty string"
+            )
+        
+        if len(VehicleIdentificationNumber) != 17:
+            raise ToolException(
+                "Vehicle Identification Number must contain exactly 17 characters"
+            )
+
+    except ToolException as e:
+        raise e
+
+    async def _async_vin_call(VehicleIdentificationNumber: str):
+        client = AutomationServiceLogic()
+        vin_data = await client._run_vin_check(VehicleIdentificationNumber=VehicleIdentificationNumber)
+
+        if vin_data.get("status") == "success":
+            vehicle_details = vin_data.get("data", {}).get("details", "")
+            return {
+                "status": "success",
+                "message": "VIN check completed successfully",
+                "vehicle_details": vehicle_details,
+                "is_valid": True
+            }
+        else:
+            return {
+                "status": "error",
+                "message": vin_data.get("message", "VIN check failed"),
+                "is_valid": False
+            }
+
+    return asyncio.run(_async_vin_call(VehicleIdentificationNumber))
 
 @tool
 def ssim(

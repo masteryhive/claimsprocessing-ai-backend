@@ -6,6 +6,10 @@ from google.protobuf.json_format import MessageToDict
 from src.pb.automation_service.service_pb2 import HealthCheckRequest, LocalMarketRequest, NIIDCheckRequest
 from src.pb.automation_service.service_pb2_grpc import AutomationServiceStub
 from src.error_trace.errorlogger import system_logger
+import aiohttp
+
+
+
 
 class AutomationServiceClient:
     def __init__(self):
@@ -119,6 +123,34 @@ class AutomationServiceClient:
             error_message = f"Unexpected error in niid_check: {str(e)}"
             system_logger.error(error=error_message)
             return {"error": error_message}
+
+
+    async def vin_check(self, VehicleIdentificationNumber: str):
+        try:
+            system_logger.info(
+                message=f"Starting worker for vin check: {VehicleIdentificationNumber}"
+            )
+            
+            # Call the scraping API service
+            async with aiohttp.ClientSession() as session:
+                async with session.get(f"http://scrapeapi:8000/vin/{VehicleIdentificationNumber}") as response:
+                    if response.status == 200:
+                        vin_data = await response.json()
+                        return {
+                            "status": "success",
+                            "data": vin_data
+                        }
+                    else:
+                        error_message = f"VIN check failed with status {response.status}"
+                        system_logger.error(error=error_message)
+                        return {"status": "error", "message": error_message}
+    
+        except Exception as e:
+            error_message = f"Unexpected error in vin_check: {str(e)}"
+            system_logger.error(error=error_message)
+            return {"status": "error", "message": error_message}
+
+
 
     async def health_check(self):
         try:
