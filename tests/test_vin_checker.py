@@ -111,8 +111,8 @@ class VINValidator:
             result['errors'].append("VIN must be a string")
             return False
 
-        if len(vin) != self.VIN_LENGTH:
-            result['errors'].append(f"VIN must be {self.VIN_LENGTH} characters long")
+        if len(vin) != 17:
+            result['errors'].append(f"VIN must be 17 characters long")
             return False
 
         vin = vin.upper()
