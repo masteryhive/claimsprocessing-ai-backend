@@ -85,7 +85,9 @@ damage_cost_fraud_investigator_agent = create_tool_agent(
 
 fraud_risk_analyst_agent = create_tool_agent(
     llm=llm,
-    tools=[],
+    tools=[
+        drivers_license_status_check,
+    ],
     system_prompt=_load_prompt_template()["FRAUD_RISK_AGENT_SYSTEM_PROMPT"],
 )
 
