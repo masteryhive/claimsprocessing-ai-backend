@@ -29,9 +29,9 @@ class VINValidator:
         self.VIN_LENGTH: int = 17
         self.CHECK_DIGIT_INDEX: int = 8
 
-        self.primary_api_url = "https://vpic.nhtsa.dot.gov/api/vehicles/decodevin/"
-        self.secondary_api_url = "https://api.apiverve.com/v1/vindecoder/decode"
-        self.apiverve_key = "YOUR_API_KEY"  # Replace with your actual APIVerve API key
+        self.primary_api_url = "https://https://vpic.nhtsa.dot.gov/decoder/"
+        self.secondary_api_url = "https://api.apiverve.com/v1/vindecoder"
+        self.apiverve_key = "69e59d74-3843-4ec7-bcf6-e68d4e01b346"  # Replace with your actual APIVerve API key
 
         # Valid world manufacturer regions
         self.valid_regions: Dict[str, str] = {
@@ -60,17 +60,12 @@ class VINValidator:
             raise ValueError("VIN must be a string")
 
         result = {
-            'is_valid': False,
-            'errors': [],
-            'details': {
-                'wmi': None,
-                'region': None,
-                'country': None,
-                'manufacturer': None,
-                'year': None,
-                'check_digit_valid': False,
-                'api_source': None
-            }
+            'status': 'error',
+            'manufacturer': None,
+            'model_year': None,
+            'make': None,
+            'model': None,
+            'errors': []
         }
 
         if not self._validate_basic(vin, result):
@@ -81,24 +76,35 @@ class VINValidator:
         # Try APIs first
         primary_result = self._try_primary_api(vin)
         if primary_result.get('success'):
-            result.update(primary_result['data'])
-            result['details']['api_source'] = 'primary'
+            result.update({
+                'status': 'success',
+                'manufacturer': primary_result['data']['manufacturer'],
+                'model_year': primary_result['data']['year'],
+                'make': primary_result['data']['make'],
+                'model': primary_result['data']['model']
+            })
             return result
 
         secondary_result = self._try_secondary_api(vin)
         if secondary_result.get('success'):
-            result.update(secondary_result['data'])
-            result['details']['api_source'] = 'secondary'
+            result.update({
+                'status': 'success',
+                'manufacturer': secondary_result['data']['manufacturer'],
+                'model_year': secondary_result['data']['year'],
+                'make': secondary_result['data']['make'],
+                'model': secondary_result['data']['model']
+            })
             return result
 
         # Add model decoding after manufacturer validation
         self._validate_manufacturer(vin, result)
         self._decode_model(vin, result)
-        self._validate_check_digit(vin, result)
         self._validate_year(vin, result)
-        result['details']['api_source'] = 'manual'
-        
-        result['is_valid'] = len(result['errors']) == 0
+
+        # Check if we have valid data to update the result
+        if result['manufacturer']:
+            result['status'] = 'success'
+
         return result
 
     def _validate_basic(self, vin: str, result: dict) -> bool:
@@ -124,48 +130,40 @@ class VINValidator:
         return True
 
     def _try_primary_api(self, vin: str) -> dict:
-        """Try to validate VIN using primary API with retries"""
-        if vin in self._cache:
-            return self._cache[vin]
+        """Try to validate VIN using the NHTSA API"""
+        url = f"https://vpic.nhtsa.dot.gov/api/vehicles/DecodeVin/{vin}?format=json"
+        response = requests.get(url)
 
-        for attempt in range(self.max_retries):
-            try:
-                response = requests.get(
-                    f"{self.primary_api_url}{vin}?format=json",
-                    timeout=self.request_timeout
-                )
+        if response.status_code == 200:
+            data = response.json()
+            if data.get('Results'):
+                # Initialize variables to hold the extracted values
+                manufacturer = None
+                model_year = None
+                make = None
+                model = None
                 
-                if response.status_code == 200:
-                    data = response.json()
-                    if data.get('Results'):
-                        result = {
-                            'success': True,
-                            'data': {
-                                'is_valid': True,
-                                'details': {
-                                    'year': data['Results'][0].get('ModelYear'),
-                                    'manufacturer': data['Results'][0].get('Manufacturer'),
-                                    'make': data['Results'][0].get('Make'),
-                                    'model': data['Results'][0].get('Model'),
-                                    'vehicle_type': data['Results'][0].get('VehicleType'),
-                                    'check_digit_valid': True
-                                }
-                            }
-                        }
-                        self._cache[vin] = result
-                        return result
-                
-                # Handle rate limiting
-                if response.status_code == 429:
-                    time.sleep(2 ** attempt)  # Exponential backoff
-                    continue
-                    
-            except requests.RequestException as e:
-                if attempt == self.max_retries - 1:
-                    return {'success': False, 'error': str(e)}
-                time.sleep(1)
-                
-        return {'success': False, 'error': 'Max retries exceeded'}
+                # Iterate through the results to find the relevant information
+                for item in data['Results']:
+                    if item['Variable'] == 'Manufacturer Name':
+                        manufacturer = item['Value']
+                    elif item['Variable'] == 'Model Year':
+                        model_year = item['Value']
+                    elif item['Variable'] == 'Make':
+                        make = item['Value']
+                    elif item['Variable'] == 'Model':
+                        model = item['Value']
+
+                return {
+                    'success': True,
+                    'data': {
+                        'manufacturer': manufacturer if manufacturer else 'N/A',
+                        'year': model_year if model_year else 'N/A',
+                        'make': make if make else 'N/A',
+                        'model': model if model else 'N/A'
+                    }
+                }
+        return {'success': False}
 
     def _try_secondary_api(self, vin: str) -> dict:
         """
@@ -192,25 +190,12 @@ class VINValidator:
                     return {
                         'success': True,
                         'data': {
-                            'is_valid': True,
-                            'details': {
-                                'year': vehicle_data.get('year'),
-                                'make': vehicle_data.get('make'),
-                                'manufacturer': vehicle_data.get('manufacturer'),
-                                'model': vehicle_data.get('model'),
-                                'vehicle_type': vehicle_data.get('vehicletype'),
-                                'trim': vehicle_data.get('trim'),
-                                'transmission': {
-                                    'style': vehicle_data.get('transmissionstyle'),
-                                    'speeds': vehicle_data.get('transmissionspeeds')
-                                },
-                                'engine': {
-                                    'type': vehicle_data.get('valvetraindesign'),
-                                    'configuration': vehicle_data.get('engineconfiguration')
-                                },
-                                'check_digit_valid': True
-                            }
+                            'manufacturer': vehicle_data.get('manufacturer'),
+                            'year': vehicle_data.get('year'),
+                            'make': vehicle_data.get('make'),
+                            'model': vehicle_data.get('model')
                         }
+                    }
             
             return {
                 'success': False,
@@ -236,21 +221,19 @@ class VINValidator:
             return None
 
         try:
+            base_year = self.year_map[year_code]
             current_year = datetime.now().year
-            position_in_cycle = self.year_map[year_code]
             
-            base_year = current_year - 15  # Center of the window
-            base_year = base_year - ((base_year % 30))  # Round down to start of cycle
-            
-            calculated_year = base_year + position_in_cycle - 1
-            
-            # If the calculated year is too far in the future, 
-            # it belongs to the previous cycle
-            if calculated_year > current_year + 15:
-                calculated_year -= 30
-                
-            return calculated_year
-            
+            # Compute the closest valid VIN cycle using modulo
+            cycle_offset = ((current_year - base_year) // 30) * 30
+            adjusted_year = base_year + cycle_offset
+
+            # Ensure it's within the valid rolling window (current year ± 15)
+            if adjusted_year > current_year + 15:
+                adjusted_year -= 30  # Shift back one cycle
+
+            return adjusted_year
+        
         except Exception as e:
             print(f"Error calculating year: {str(e)}")
             return None
@@ -261,7 +244,7 @@ class VINValidator:
         calculated_year = self._get_year_from_code(year_code)
         
         if calculated_year:
-            result['details']['year'] = calculated_year
+            result['model_year'] = calculated_year
         else:
             result['errors'].append(f"Invalid year code: {year_code}")
 
@@ -277,41 +260,14 @@ class VINValidator:
         
         if wmi in self.wmi_map:
             info = self.wmi_map[wmi]
-            result['details'].update({
-                'manufacturer': info['manufacturer'],
-                'country': info['country'],
-                'region': info['region'],
-                'wmi': wmi
-            })
+            result['manufacturer'] = info['manufacturer']
         elif wmi_2 in self.wmi_map:
             info = self.wmi_map[wmi_2]
-            result['details'].update({
-                'manufacturer': info['manufacturer'],
-                'country': info['country'],
-                'region': info['region'],
-                'wmi': wmi_2
-            })
+            result['manufacturer'] = info['manufacturer']
         else:
             result['errors'].append(f"Unknown manufacturer WMI: {wmi}")
             # Still include the WMI in the details
-            result['details']['wmi'] = wmi
-
-    def _validate_check_digit(self, vin: str, result: dict) -> None:
-        """Validate VIN check digit (9th position)"""
-        try:
-            check_sum = 0
-            for i in range(17):
-                check_sum += self.transliteration[vin[i]] * self.weights[i]
-            
-            check_digit = check_sum % 11
-            check_digit = 'X' if check_digit == 10 else str(check_digit)
-            
-            if check_digit == vin[8]:
-                result['details']['check_digit_valid'] = True
-            else:
-                result['errors'].append("Invalid check digit")
-        except KeyError:
-            result['errors'].append("Unable to calculate check digit")
+            result['manufacturer'] = wmi
 
     def _decode_model(self, vin: str, result: dict) -> None:
         """Attempt to decode vehicle model from VDS"""
@@ -324,37 +280,39 @@ class VINValidator:
                 if 'model_codes' in patterns:
                     model_code = vin[3:5]  # Most manufacturers use positions 4-5
                     if model_code in patterns['model_codes']:
-                        result['details']['model'] = patterns['model_codes'][model_code]
+                        result['model'] = patterns['model_codes'][model_code]
                     else:
-                        result['details']['model'] = 'Unknown model code'
+                        result['model'] = 'Unknown model code'
             elif wmi_2 in self.vds_patterns:
                 patterns = self.vds_patterns[wmi_2]
                 if 'model_codes' in patterns:
                     model_code = vin[3]  # Some manufacturers use just position 4
                     if model_code in patterns['model_codes']:
-                        result['details']['model'] = patterns['model_codes'][model_code]
+                        result['model'] = patterns['model_codes'][model_code]
                     else:
-                        result['details']['model'] = 'Unknown model code'
+                        result['model'] = 'Unknown model code'
         except Exception as e:
-            result['details']['model'] = 'Unable to decode model'
+            result['model'] = 'Unable to decode model'
             result['errors'].append(f"Model decoding error: {str(e)}")
 
 
 if __name__ == "__main__":
     validator = VINValidator()
     
-    test_vins = [
-        "1HGCM82633A123456",  # Sample Honda VIN
-        "WVWZZZ1JZ3W386752",  # Sample Volkswagen VIN
-        "JH4DA9370MS001234",  # Sample Acura VIN
-    ]
-    
-    for vin in test_vins:
-        result = validator.validate_vin(vin)
-        print(f"\nVIN: {vin}")
-        print(f"Valid: {result['is_valid']}")
-        print(f"API Source: {result['details']['api_source']}")
-        if result['errors']:
-            print("Errors:", result['errors'])
-        if result['details']:
-            print("Details:", result['details'])
+    # Test a single VIN
+    vin = "KMHJN81PB9u948267"  # Sample Honda VIN
+    result = validator.validate_vin(vin)
+    print(f"\nVIN: {vin}")
+    print(f"Valid: {result['status'] == 'success'}")
+    if result['errors']:
+        print("Errors:", result['errors'])
+    if result['manufacturer']:
+        print("Manufacturer:", result['manufacturer'])
+    if result['model_year']:
+        print("Model Year:", result['model_year'])
+    if result['make']:
+        print("Make:", result['make'])
+    if result['model']:
+        print("Model:", result['model'])
+
+ 

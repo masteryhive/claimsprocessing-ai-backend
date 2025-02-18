@@ -2,7 +2,7 @@ import ast, asyncio, json
 from datetime import datetime
 from pathlib import Path
 from langchain_core.tools import tool, ToolException
-from typing import Annotated, List
+from typing import Annotated, List, Dict, Any, Union
 from src.pipelines.cost_benchmarking import AnalysisModelResultList, CostBenchmarking
 from src.services.call_automation import AutomationServiceLogic
 from src.services.dependencies.automation import AutomationServiceClient
@@ -15,6 +15,8 @@ from src.utilities.pdf_handlers import download_pdf
 from typing_extensions import Annotated
 from src.error_trace.errorlogger import system_logger
 from decimal import InvalidOperation
+from .test_vin_checker import VINValidator  # Import the VINValidator
+from src.models.claim_processing import AccidentClaimData, TheftClaimData  # Import your Pydantic models
 
 ############## Fraud checks tool ##############
 rag_path = Path(__file__).parent.parent / "policy_doc/"
@@ -188,46 +190,49 @@ def check_niid_database(
 @tool
 def check_vin(
     VehicleIdentificationNumber: Annotated[str, "The Identification number of the vehicle."],
+    vehicleMake: Annotated[str, "The Manufacturer of the Vehicle. eg. Hyundai,Honda."],
+    yearOfManufacture: Annotated[str, "The Year the Vehicle was Manufactured."],
+    
+    claim_data: Annotated[Union[AccidentClaimData, TheftClaimData], "Claim data for comparison."]
 ):
     """
-    This tool calls an API to verify the vehicle identification number (VIN) and retrieve vehicle details.
-    """
-
-    try:
-        # Validate VehicleIdentificationNumber
-        if not isinstance(VehicleIdentificationNumber, str) or not VehicleIdentificationNumber.strip():
-            raise ToolException(
-                "Invalid VehicleIdentificationNumber: must be a non-empty string"
-            )
+    This tool calls the VIN validation logic to verify the vehicle identification number (VIN) and retrieve vehicle details.
+    
+    Args:
+        VehicleIdentificationNumber (str): The VIN to validate.
+        claim_data (Union[AccidentClaimData, TheftClaimData]): The claim data to compare against.
         
-        if len(VehicleIdentificationNumber) != 17:
-            raise ToolException(
-                "Vehicle Identification Number must contain exactly 17 characters"
-            )
+    Returns:
+        Dict[str, Any]: Validation results with detailed information.
+    """
+    vin_validator = VINValidator()  # Instantiate the VINValidator
+    result = vin_validator.validate_vin(VehicleIdentificationNumber)  # Validate the VIN
 
-    except ToolException as e:
-        raise e
+    # Initialize comparison status
+    comparison_status = "error"
+    
+    # Compare the results with the claim data
+    if result['status'] == 'success':
+        manufacturer_match = claim_data.vehicleMake.lower() in result['manufacturer'].lower()
+        model_year_match = result['model_year'] == claim_data.yearOfManufacture
+        make_match = result['make'] == claim_data.vehicleMake
+        model_match = result['model'] == claim_data.vehicleModel
 
-    async def _async_vin_call(VehicleIdentificationNumber: str):
-        client = AutomationServiceLogic()
-        vin_data = await client._run_vin_check(VehicleIdentificationNumber=VehicleIdentificationNumber)
+        # Set comparison status to success if any match is found
+        if manufacturer_match and model_year_match and make_match or model_match:
+            comparison_status = "success"
 
-        if vin_data.get("status") == "success":
-            vehicle_details = vin_data.get("data", {}).get("details", "")
-            return {
-                "status": "success",
-                "message": "VIN check completed successfully",
-                "vehicle_details": vehicle_details,
-                "is_valid": True
-            }
-        else:
-            return {
-                "status": "error",
-                "message": vin_data.get("message", "VIN check failed"),
-                "is_valid": False
-            }
-
-    return asyncio.run(_async_vin_call(VehicleIdentificationNumber))
+    # Return the result with comparison status
+    return {
+        "status": comparison_status,
+        "vin_validation": result,
+        "comparison": {
+            "manufacturer_match": manufacturer_match,
+            "model_year_match": model_year_match,
+            "make_match": make_match,
+            "model_match": model_match,
+        }
+    }
 
 @tool
 def ssim(
