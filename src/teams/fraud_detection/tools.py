@@ -192,8 +192,7 @@ def check_vin(
     VehicleIdentificationNumber: Annotated[str, "The Identification number of the vehicle."],
     vehicleMake: Annotated[str, "The Manufacturer of the Vehicle. eg. Hyundai,Honda."],
     yearOfManufacture: Annotated[str, "The Year the Vehicle was Manufactured."],
-    
-    claim_data: Annotated[Union[AccidentClaimData, TheftClaimData], "Claim data for comparison."]
+    vehicleModel: Annotated[str, "The model of the Vehicle. eg. Tucson,Corolla."]
 ):
     """
     This tool calls the VIN validation logic to verify the vehicle identification number (VIN) and retrieve vehicle details.
@@ -207,32 +206,48 @@ def check_vin(
     """
     vin_validator = VINValidator()  # Instantiate the VINValidator
     result = vin_validator.validate_vin(VehicleIdentificationNumber)  # Validate the VIN
-
-    # Initialize comparison status
-    comparison_status = "error"
     
     # Compare the results with the claim data
     if result['status'] == 'success':
-        manufacturer_match = claim_data.vehicleMake.lower() in result['manufacturer'].lower()
-        model_year_match = result['model_year'] == claim_data.yearOfManufacture
-        make_match = result['make'] == claim_data.vehicleMake
-        model_match = result['model'] == claim_data.vehicleModel
+        manufacturer_match = vehicleMake.lower() in result['manufacturer'].lower()
+        model_year_match = result['model_year'] == yearOfManufacture
+        make_match = result['make'] == vehicleMake
+        model_match = result['model'] == vehicleModel
 
-        # Set comparison status to success if any match is found
-        if manufacturer_match and model_year_match and make_match or model_match:
-            comparison_status = "success"
 
-    # Return the result with comparison status
-    return {
-        "status": comparison_status,
+    if manufacturer_match and model_year_match:
+        return {
+        "status": 'success',
         "vin_validation": result,
         "comparison": {
             "manufacturer_match": manufacturer_match,
             "model_year_match": model_year_match,
-            "make_match": make_match,
-            "model_match": model_match,
+            "make_match": True,
+            "model_match": True,
         }
-    }
+        }
+    if manufacturer_match and model_year_match and make_match:
+        return {
+        "status": 'success',
+        "vin_validation": result,
+        "comparison": {
+        "manufacturer_match": manufacturer_match,
+        "model_year_match": model_year_match,
+        "make_match":make_match,
+        "model_match": True,
+        }
+        }
+    if manufacturer_match and model_year_match and model_match:
+        return {
+        "status": 'success',
+        "vin_validation": result,
+        "comparison": {
+        "manufacturer_match": manufacturer_match,
+        "model_year_match": model_year_match,
+        "make_match": True,
+        "model_match": model_match,
+        }
+        }
 
 @tool
 def ssim(

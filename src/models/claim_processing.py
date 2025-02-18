@@ -34,6 +34,7 @@ class AccidentClaimData(BaseModel):
     lastServiceDate: str
     totalMileage: str
     vehicleMake: str
+    vehicleModel:Optional[str]=Field(default="")
     claimType: str
     registrationNumber: str
     claimantName: str
