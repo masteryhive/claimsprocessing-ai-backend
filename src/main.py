@@ -31,7 +31,7 @@ def _wait_forever(server):
         server.stop(None)
 
 
-def _run_server(bind_address):
+def create_server(bind_address):
     interceptors = [ExceptionToStatusInterceptor()]
     if platform.system() == "Windows":
         server = grpc.server(
