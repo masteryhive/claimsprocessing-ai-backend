@@ -14,8 +14,6 @@ from src.services.ai_workflow import ClaimsProcessingBaseService
 
 settings = Settings()
 
-init_vertexai()
-
 _LOGGER = logging.getLogger(__name__)
 _PROCESS_COUNT = multiprocessing.cpu_count()
 _ONE_DAY = datetime.timedelta(days=1)
@@ -31,11 +29,11 @@ def _wait_forever(server):
         server.stop(None)
 
 
-def create_server(bind_address):
+def create_server(bind_address:str):
     interceptors = [ExceptionToStatusInterceptor()]
     if platform.system() == "Windows":
         server = grpc.server(
-            futures.ThreadPoolExecutor(max_workers=10),  # Increased worker threads instead of processes
+            futures.ThreadPoolExecutor(max_workers=1),  # Increased worker threads instead of processes
             interceptors=interceptors
         )
     else:
@@ -70,7 +68,7 @@ def main():
     # Get port from environment or config
     port = int(os.environ.get("PORT", env_config.app_port))
 
-    logging.info(f"⚡️🚀 Starting Claim Processing workflow Server ::{port}...")
+    _LOGGER.info(f"⚡️🚀 Starting Claim Processing workflow Server ::{port}...")
     sys.stdout.flush()
 
     bind_address = "[::]:{}".format(port)
