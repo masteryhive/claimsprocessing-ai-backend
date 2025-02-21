@@ -3,12 +3,7 @@ import datetime
 import logging
 from concurrent import futures
 import multiprocessing
-import os
-import socket
-import sys
-import time
-
-import grpc
+import os,socket,sys,time,grpc,platform
 from src.ai_models.model import init_vertexai
 from grpc_interceptor import ExceptionToStatusInterceptor
 
@@ -28,8 +23,6 @@ _ONE_DAY = datetime.timedelta(days=1)
 class ClaimProcessingService(ClaimsProcessingBaseService):
     pass
 
-port = os.environ.get("PORT", env_config.app_port)
-
 def _wait_forever(server):
     try:
         while True:
@@ -40,44 +33,68 @@ def _wait_forever(server):
 
 def _run_server(bind_address):
     interceptors = [ExceptionToStatusInterceptor()]
-    options = (("grpc.so_reuseport", 1),)
-    server = grpc.server(
-        futures.ThreadPoolExecutor(max_workers=10), interceptors=interceptors,
-          options=options,
-    )
+    if platform.system() == "Windows":
+        server = grpc.server(
+            futures.ThreadPoolExecutor(max_workers=10),  # Increased worker threads instead of processes
+            interceptors=interceptors
+        )
+    else:
+        options = (("grpc.so_reuseport", 1),)
+        server = grpc.server(
+            futures.ThreadPoolExecutor(max_workers=10), interceptors=interceptors,
+            options=options,
+        )
     add_ClaimsProcessingServicer_to_server(ClaimProcessingService(), server)
     server.add_insecure_port(bind_address)
     server.start()
-    _wait_forever(server)
+    try:
+        # Keep the server running
+        _wait_forever(server)
+    except KeyboardInterrupt:
+        server.stop(0)
+        _LOGGER.info("Server stopped gracefully")
     # server.wait_for_termination()
     
 
 
 def main():
-
-    bind_address = "[::]:{}".format(port)
-    _LOGGER.info("Binding to '%s'", bind_address)
-    # logging.basicConfig(level=settings.LOGGING_LEVEL, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-    logging.basicConfig(level=settings.LOGGING_LEVEL, format='%(asctime)s - %(levelname)s - %(message)s')
-    logging.info(f"⚡️🚀 Claim Processing workflow Server Starter::{port}...")
-    sys.stdout.flush()
-    workers = []
-    for _ in range(_PROCESS_COUNT):
-        # NOTE: It is imperative that the worker subprocesses be forked before
-        # any gRPC servers start up. See
-        # https://github.com/grpc/grpc/issues/16001 for more details.
-        worker = multiprocessing.Process(
-            target=_run_server, args=(bind_address,)
-        )
-        worker.start()
-        workers.append(worker)
-    for worker in workers:
-        worker.join()
-            
-if __name__ == "__main__":
     handler = logging.StreamHandler(sys.stdout)
-    formatter = logging.Formatter("[PID %(process)d] %(message)s")
+    formatter = logging.Formatter("%(asctime)s - %(levelname)s - %(message)s")
     handler.setFormatter(formatter)
     _LOGGER.addHandler(handler)
-    _LOGGER.setLevel(logging.INFO)
+    _LOGGER.setLevel(settings.LOGGING_LEVEL)
+
+    # Initialize VertexAI
+    init_vertexai()
+
+    # Get port from environment or config
+    port = int(os.environ.get("PORT", env_config.app_port))
+
+    logging.info(f"⚡️🚀 Starting Claim Processing workflow Server ::{port}...")
+    sys.stdout.flush()
+
+    bind_address = "[::]:{}".format(port)
+
+    if platform.system() == "Windows":
+        # Create and start server
+        worker = multiprocessing.Process(target=create_server, args=(bind_address,))
+        worker.start()
+        worker.join()
+    else:
+        workers = []
+        for _ in range(_PROCESS_COUNT):
+            # NOTE: It is imperative that the worker subprocesses be forked before
+            # any gRPC servers start up. See
+            # https://github.com/grpc/grpc/issues/16001 for more details.
+            worker = multiprocessing.Process(
+                target=create_server, args=(bind_address,)
+            )
+            worker.start()
+            workers.append(worker)
+        for worker in workers:
+            worker.join()
+        _LOGGER.info(f"Server started successfully on port {port}")
+
+            
+if __name__ == "__main__":
     main()
