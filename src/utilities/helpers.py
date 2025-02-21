@@ -13,7 +13,7 @@ def load_yaml_file(file_path):
     Returns:
         dict: The contents of the YAML file as a Python dictionary.
     """
-    with open(file_path, 'r') as file:
+    with open(file_path, 'r', encoding="utf-8") as file:
         data = yaml.safe_load(file)
     return data
 
