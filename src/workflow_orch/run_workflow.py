@@ -137,11 +137,12 @@ def handle_summary_team(
         claim_processing_summary = extract_claim_summary(content[0], team_summaries.discoveries)
         team_summaries=team_summaries.model_copy(update=claim_processing_summary)
         update_claim_report_database(claim_id, team_summaries)
+        update_claim_status_database(claim_id=claim_id, status=claim_processing_summary["operationStatus"])
         # Update task record
         task.status = TaskStatus.COMPLETED
         db.commit()
         db.refresh(task)
-        update_claim_status_database(claim_id=claim_id, status=claim_processing_summary["operationStatus"])
+        
         return team_summaries
     except Exception as e:
         system_logger.error(error=e)
