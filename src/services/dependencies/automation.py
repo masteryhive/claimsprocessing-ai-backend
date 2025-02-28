@@ -102,7 +102,7 @@ class AutomationServiceClient:
                 message=f"Starting worker for niid check: {registrationNumber}"
             )
             
-            timeout = 30  # seconds
+            timeout = 90  # seconds
             response = await self.stub.NIIDCheck(
                 request=NIIDCheckRequest(registrationNumber=registrationNumber),
                 timeout=timeout,
