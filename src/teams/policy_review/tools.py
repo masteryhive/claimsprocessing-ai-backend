@@ -4,6 +4,7 @@ from langchain_core.tools import tool
 from src.rag.context_stuffing import process_query
 from src.teams.policy_review.helper import check_claim_notification_period
 from src.utilities.helpers import _new_get_datetime
+from datetime import datetime
 
 from pathlib import Path
 
@@ -240,15 +241,15 @@ def check_if_this_claim_is_within_insurance_period(
                 "properties": {
                     "StartDate": {
                         "type": "string",
-                        "description": "The start date of the insurance period, interpret DDMMYYY and return in this format November 16, 2024.",
+                        "description": "The start date of the insurance period.",
                     },
                     "EndDate": {
                         "type": "string",
-                        "description": "The end date of the insurance period, interpret DDMMYYY and return in this format November 16, 2024.",
+                        "description": "The end date of the insurance period.",
                     },
                     "IsActive": {
                         "type": "boolean",
-                        "description": "Indicates if the insurance policy is currently active by verifying that the current date is not after the end date.",
+                        "description": "Indicates if the insurance policy is currently active.",
                     },
                 },
                 "required": ["StartDate", "EndDate", "IsActive"],
@@ -257,13 +258,25 @@ def check_if_this_claim_is_within_insurance_period(
         "required": ["InsurancePeriod"],
     }
 
-    query = "Please, confirm that the insured period is still active.\nThe current date(YYYY-MM-DD) is {current_date}."
+    # Ensure the current date is correctly formatted and retrieved
+    current_date = datetime.now().date()  # Get the current date
+    query = f"Please, confirm that the insured period is still active.\nThe current date(YYYY-MM-DD) is {current_date}."
+    
     resp = process_query(
         prompt=query,
-        pdf_path=f"{rag_path}/{policyNumber.replace("/", "-")}.pdf",
+        pdf_path=f"{rag_path}/{policyNumber.replace('/', '-')}.pdf",
         response_schema=response_schema,
     )
-    return resp
+    
+    # Load the response and check the active status
+    insurance_period_data = json.loads(resp)["InsurancePeriod"]
+    start_date = datetime.strptime(insurance_period_data["StartDate"], "%Y-%m-%d").date()
+    end_date = datetime.strptime(insurance_period_data["EndDate"], "%Y-%m-%d").date()
+
+    # Check if the current date falls within the policy period
+    is_active = start_date <= current_date <= end_date
+
+    return {"IsActive": is_active}
 
 
 @tool

@@ -4,6 +4,9 @@ def check_claim_notification_period(claim_report_date_str, notification_period):
     # Parse the claim report date
     claim_report_date = datetime.strptime(claim_report_date_str, "%B %d %Y")
     
+    # Calculate notification deadline based on claim report date
+    notification_deadline = claim_report_date + timedelta(days=notification_period)
+    
     # Use current date as reference
     current_date = datetime.now()
     
@@ -11,7 +14,7 @@ def check_claim_notification_period(claim_report_date_str, notification_period):
     notification_deadline = current_date - timedelta(days=notification_period)
     
     # Check if claim was reported within notification period
-    is_within_period = claim_report_date >= notification_deadline
+    is_within_period = current_date <= notification_deadline
     
     return {
         'is_within_notification_period': is_within_period,
