@@ -71,5 +71,5 @@ prompt=("You are an intelligent AI whose core strenght is in paying keen observa
 "- If you have make/brand with bodytype as car tag, then this should have a false."
 "- if you have a make/brand and no model as car tag, then this should be false."
 "answer:")
-prompt.format(car_tag="honda accord suv")
+prompt= prompt.format(car_tag="tucson  suv")
 print(run_llm(response_schema,prompt))
