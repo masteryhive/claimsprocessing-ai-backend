@@ -1,3 +1,4 @@
+import json
 from src.config.appconfig import env_config
 from vertexai.preview.generative_models import (
     GenerationResponse,
@@ -41,35 +42,6 @@ def run_llm(response_schema:dict,prompt:str,
             },
             stream=stream,
         )
-        return response.candidates[0].content.parts[0].text
+        final_result = json.loads(response.candidates[0].content.parts[0].text)
+        return final_result
 
-response_schema = {
-    "type": "object",
-            "properties": {
-                "vehicleMake": {
-                    "type": "string",
-                    "description": "the make/brand of the vehicle e.g Toyota, Honda, Tesla",
-                },
-                  "vehicleModel": {
-                    "type": "string",
-                    "description": "the model of the vehicle e.g Corolla, Accord",
-                },
-                                  "status": {
-                    "type": "boolean",
-                    "description": "the result of the operation. True, if the car tag contains both make/brand and model and can be splitted. False if it contains only make/brand.",
-                }
-            },
-        }
-prompt=("You are an intelligent AI whose core strenght is in paying keen observation to details in the automobile domain."
-"Your task is to review the car tag provided and determine if it is a word containing the car make/brand and model. If it contain both make/brand and model, you will split them in your response. otherwise you do nothing and return the status."
-"#CAR TAG"
-"{car_tag}"
-""
-"Important:"
-"- the focus of this task is on model and make."
-"- suv or sedan is a body type not a make or model."
-"- If you have make/brand with bodytype as car tag, then this should have a false."
-"- if you have a make/brand and no model as car tag, then this should be false."
-"answer:")
-prompt= prompt.format(car_tag="tucson  suv")
-print(run_llm(response_schema,prompt))
