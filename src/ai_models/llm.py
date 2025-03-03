@@ -1,6 +1,9 @@
 """Initiate the LLM on Vertex AI"""
 from langchain_google_vertexai import ChatVertexAI
 from src.config.appconfig import env_config
+from google.cloud import aiplatform
+
+aiplatform.init(project=env_config.project_id)
 
 llm = ChatVertexAI(
     project_id = env_config.project_id,
