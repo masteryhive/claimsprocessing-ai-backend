@@ -91,6 +91,7 @@ def start_process_manager(id: int):
             # Fetch claim data with error handling
             try:
                 claim_data = get_claim_from_database(task.claim_id)
+
                 if not claim_data:
                     raise ClaimProcessingError(f"No claim found for ID: {task.claim_id}")
                 
@@ -98,87 +99,87 @@ def start_process_manager(id: int):
             except Exception as e:
                 system_logger.error(f"Error fetching claim data: {str(e)}")
                 raise ClaimProcessingError(f"Failed to fetch claim data: {str(e)}")
+            print("claim_data >>> ",claim_data)
+            # # Process URLs if present
+            # if claim_data.get("resourceUrls"):
+            #     loop = asyncio.new_event_loop()
+            #     asyncio.set_event_loop(loop)
+            #     try:
+            #         result = loop.run_until_complete(classify_supporting_documents(claim_data))
+            #         claim_data = result
+            #     finally:
+            #         loop.close()
+            # claim_id = claim_data["id"]
+            # # Type-specific claim data processing with validation
+            # try:
+            #     claim_type = claim_data["claimType"].lower()
+            #     if claim_type == "accident":
+            #         claim_data = AccidentClaimData(**claim_data)
+            #     elif claim_type == "theft":
+            #         claim_data = TheftClaimData(**claim_data)
+            #     else:
+            #         raise ClaimProcessingError(f"Unsupported claim type: {claim_type}")
+            # except Exception as e:
+            #     system_logger.error(f"Error processing claim type: {str(e)}")
+            #     raise ClaimProcessingError(f"Failed to process claim type: {str(e)}")
 
-            # Process URLs if present
-            if claim_data.get("resourceUrls"):
-                loop = asyncio.new_event_loop()
-                asyncio.set_event_loop(loop)
-                try:
-                    result = loop.run_until_complete(classify_supporting_documents(claim_data))
-                    claim_data = result
-                finally:
-                    loop.close()
-            claim_id = claim_data["id"]
-            # Type-specific claim data processing with validation
-            try:
-                claim_type = claim_data["claimType"].lower()
-                if claim_type == "accident":
-                    claim_data = AccidentClaimData(**claim_data)
-                elif claim_type == "theft":
-                    claim_data = TheftClaimData(**claim_data)
-                else:
-                    raise ClaimProcessingError(f"Unsupported claim type: {claim_type}")
-            except Exception as e:
-                system_logger.error(f"Error processing claim type: {str(e)}")
-                raise ClaimProcessingError(f"Failed to process claim type: {str(e)}")
+            # # Update statuses with error handling
+            # try:
+            #     update_claim_status_database(claim_id, status=TaskStatus.PENDING)
+            #     task.status = TaskStatus.RUNNING
+            #     db.commit()
+            #     db.refresh(task)
+            #     # update_claim_status_database(claim_id, status=TaskStatus.RUNNING)
+            # except Exception as e:
+            #     system_logger.error(f"Status update failed: {str(e)}")
+            #     raise ClaimProcessingError(f"Failed to update status: {str(e)}")
+            # try:
+            #     # Process claim workflow
+            #     team_summaries: UpdateClaimsReportModel = UpdateClaimsReportModel()
+            #     endworkflow:bool  = False
+            #     for s in super_graph.stream(
+            #         {
+            #             "messages": [
+            #                 HumanMessage(
+            #                     content=(
+            #                         "Important information:"
+            #                         "\nThis service is currently run in Nigeria, this means:"
+            #                         "\n1. The currency is \u20a6"
+            #                         f"\n\nBegin this claim processing using this claim form JSON data:\n {claim_data.model_dump()}"
+            #                         "\n\nYOU MUST USE THE SUMMARY TEAM TO PRESENT THE RESULT OF THIS TASK."
+            #                     )
+            #                 )
+            #             ],
+            #             "claim_form_json":[HumanMessage(
+            #                     content=json.dumps(claim_data.model_dump()))]
+            #         },
+            #         # interrupt_after=call_summary_team
+            #     ):
+            #         if "__end__" not in s:
+            #             team_summaries,endworkflow = control_workflow(
+            #                 db,
+            #                 claim_data.model_dump(),
+            #                 claim_id,
+            #                 claim_request,
+            #                 task,
+            #                 s,
+            #                 team_summaries,
+            #                 endworkflow
+            #             )
 
-            # Update statuses with error handling
-            try:
-                update_claim_status_database(claim_id, status=TaskStatus.PENDING)
-                task.status = TaskStatus.RUNNING
-                db.commit()
-                db.refresh(task)
-                # update_claim_status_database(claim_id, status=TaskStatus.RUNNING)
-            except Exception as e:
-                system_logger.error(f"Status update failed: {str(e)}")
-                raise ClaimProcessingError(f"Failed to update status: {str(e)}")
-            try:
-                # Process claim workflow
-                team_summaries: UpdateClaimsReportModel = UpdateClaimsReportModel()
-                endworkflow:bool  = False
-                for s in super_graph.stream(
-                    {
-                        "messages": [
-                            HumanMessage(
-                                content=(
-                                    "Important information:"
-                                    "\nThis service is currently run in Nigeria, this means:"
-                                    "\n1. The currency is \u20a6"
-                                    f"\n\nBegin this claim processing using this claim form JSON data:\n {claim_data.model_dump()}"
-                                    "\n\nYOU MUST USE THE SUMMARY TEAM TO PRESENT THE RESULT OF THIS TASK."
-                                )
-                            )
-                        ],
-                        "claim_form_json":[HumanMessage(
-                                content=json.dumps(claim_data.model_dump()))]
-                    },
-                    # interrupt_after=call_summary_team
-                ):
-                    if "__end__" not in s:
-                        team_summaries,endworkflow = control_workflow(
-                            db,
-                            claim_data.model_dump(),
-                            claim_id,
-                            claim_request,
-                            task,
-                            s,
-                            team_summaries,
-                            endworkflow
-                        )
+            #             if endworkflow:
+            #                 system_logger.info(message="Summary team has completed processing.")
+            #                 break
 
-                        if endworkflow:
-                            system_logger.info(message="Summary team has completed processing.")
-                            break
-
-            except Exception as e:
-                system_logger.error(f"Workflow processing failed: {str(e)}")
-                raise ClaimProcessingError(f"Failed to process workflow: {str(e)}")
+            # except Exception as e:
+            #     system_logger.error(f"Workflow processing failed: {str(e)}")
+            #     raise ClaimProcessingError(f"Failed to process workflow: {str(e)}")
         
-            # Cleanup
-            try:
-                delete_pdf(claim_data.model_dump()['policyNumber'],rag_path)
-            except Exception as e:
-                system_logger.error(f"PDF cleanup failed: {str(e)}")
+            # # Cleanup
+            # try:
+            #     delete_pdf(claim_data.model_dump()['policyNumber'],rag_path)
+            # except Exception as e:
+            #     system_logger.error(f"PDF cleanup failed: {str(e)}")
     except ClaimProcessingError as e:
             system_logger.error(f"Claim processing error: {str(e)}")
             # Update status to failed if possible
