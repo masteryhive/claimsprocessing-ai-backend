@@ -171,7 +171,7 @@ DAMAGE_COST_FRAUD_INVESTIGATOR_AGENT_SYSTEM_PROMPT: |
               - All other parts (including doors) should use their full specific names
               - Example format: "{{vehicle_name}} {{model}} {{vehicle_body_type}} {{year_of_manufacture}} side mirror" or "{{vehicle_name}} {{model}} {{vehicle_body_type}} {{year_of_manufacture}} door"
               - Your final search input must be a group of all the search terms(a nested list).
-              - Example format: "[['Hyundai sonata sedan', 2015 'side mirror',23000],['Hyundai sonata sedan', 2015, 'door panel',23000]]"
+              - Example format: "[['Hyundai sonata sedan', 2015, 'side mirror',23000],['Hyundai sonata sedan', 2015, 'door panel',23000]]"
               - Batch similar parts together (e.g., multiple scratches on same panel)
               - Format examples:
                 - Single part: "Toyota Camry sedan 2020 front bumper"
