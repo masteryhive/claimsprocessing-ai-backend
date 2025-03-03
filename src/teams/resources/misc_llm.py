@@ -62,5 +62,7 @@ response_schema = {
         }
 prompt=("You are an intelligent AI whose core strenght is in paying keen observation to details in the automobile domain."
 "Your task is to review the car tag provided and determine if it is a word containing the car make/brand and model. If it contain both make/brand and model, you will split them in your response. otherwise you do nothing and return the status."
-)
+"#CAR TAG"
+"{car_tag}")
+prompt.format(car_tag="honda accord suv")
 print(run_llm(response_schema,prompt))
