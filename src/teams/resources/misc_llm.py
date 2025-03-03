@@ -63,6 +63,13 @@ response_schema = {
 prompt=("You are an intelligent AI whose core strenght is in paying keen observation to details in the automobile domain."
 "Your task is to review the car tag provided and determine if it is a word containing the car make/brand and model. If it contain both make/brand and model, you will split them in your response. otherwise you do nothing and return the status."
 "#CAR TAG"
-"{car_tag}")
+"{car_tag}"
+""
+"Important:"
+"- the focus of this task is on model and make."
+"- suv or sedan is a body type not a make or model."
+"- If you have make/brand with bodytype as car tag, then this should have a false."
+"- if you have a make/brand and no model as car tag, then this should be false."
+"answer:")
 prompt.format(car_tag="honda accord suv")
 print(run_llm(response_schema,prompt))
