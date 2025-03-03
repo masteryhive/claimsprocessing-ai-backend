@@ -1,6 +1,7 @@
 from src.config.appconfig import env_config
 import vertexai
-
+from google.cloud import aiplatform
+aiplatform.init(project=env_config.project_id)
 def init_vertexai():
     vertexai.init(
         project=env_config.project_id,

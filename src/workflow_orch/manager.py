@@ -112,6 +112,7 @@ def start_process_manager(id: int):
             # Type-specific claim data processing with validation
             try:
                 claim_type = claim_data["claimType"].lower()
+                
                 if claim_type == "accident":
                     claim_data = AccidentClaimData(**claim_data)
                 elif claim_type == "theft":
