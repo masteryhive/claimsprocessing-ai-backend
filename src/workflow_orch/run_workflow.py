@@ -85,7 +85,7 @@ def handle_agent_response(agent: str, messages: list, claim:dict, team_summaries
             return team_summaries
         print(f"{Fore.CYAN}{'─' * HEADER_WIDTH}{Style.RESET_ALL}\n")
     except Exception as e:
-        system_logger.error(error=e)
+        system_logger.error(error=f"[Tenant: {x_tenant_id}] Error in handle_agent_response: {str(e)}")
 
 
 def control_workflow(
@@ -96,7 +96,8 @@ def control_workflow(
     task: Task,
     process_call: Dict[str, Any],
     team_summaries: UpdateClaimsReportModel,
-    endworkflow:bool
+    endworkflow:bool,
+    x_tenant_id: str = None
 ) -> UpdateClaimsReportModel:
     """Main function to handle workflow."""
     if "__end__" in process_call:
@@ -106,7 +107,7 @@ def control_workflow(
     agent = list(process_call.keys())[0]
 
     if agent == "summary_team":
-        team_summaries = handle_summary_team(process_call, claim_id, team_summaries, db, task)
+        team_summaries = handle_summary_team(process_call, claim_id, team_summaries, db, task, x_tenant_id)
         endworkflow = True
     elif agent == "supervisor":
         next_agent = process_call["supervisor"]["next"]
@@ -114,7 +115,7 @@ def control_workflow(
         print(f"   Assigning task to: {Fore.WHITE}{next_agent}{Style.RESET_ALL}\n")
     else:
         messages = process_call[agent]["messages"]
-        team_summaries = handle_agent_response(agent, messages,claim, team_summaries, claim_id, db)
+        team_summaries = handle_agent_response(agent, messages, claim, team_summaries, claim_id, db, x_tenant_id)
 
     return team_summaries, endworkflow
 
@@ -145,4 +146,4 @@ def handle_summary_team(
         
         return team_summaries
     except Exception as e:
-        system_logger.error(error=e)
+        system_logger.error(error=f"[Tenant: {x_tenant_id}] Error in handle_summary_team: {str(e)}")

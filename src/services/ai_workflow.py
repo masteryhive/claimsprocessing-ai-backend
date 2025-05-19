@@ -52,12 +52,10 @@ class ClaimsProcessingBaseService(ClaimsProcessingServicer):
                 claim_id, x_tenant_id = self.processing_queue.get()
                 system_logger.info(f"Processing claim ID: {claim_id}")
                 
-                # Submit the actual processing to thread pool
+                # Submit to thread pool
                 self.thread_pool.submit(self._process_single_claim, claim_id, x_tenant_id)
                 
-            except Exception as e:
-                system_logger.error(f"Error in queue processing: {str(e)}")
-            finally:
+                # Mark task as done
                 self.processing_queue.task_done()
 
     def _process_single_claim(self, claim_id, x_tenant_id):

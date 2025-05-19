@@ -6,7 +6,7 @@ from datetime import datetime
 class ProcessClaimTask(BaseModel):
     claim_id: int
     task_id: str
-    tenant_id: Optional[str] = None
+    x_tenant_id: Optional[str] = None
 
     class Config:
         json_schema_extra = {
