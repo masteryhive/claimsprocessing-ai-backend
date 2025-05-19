@@ -73,15 +73,18 @@ def create_or_get_task(db: sessionmaker, claim_request: ProcessClaimTask) -> Tas
         system_logger.error(f"Task creation/retrieval failed: {str(e)}")
         raise ClaimProcessingError(f"Failed to create/get task: {str(e)}")
     
-def start_process_manager(id: int):
+def start_process_manager(id: int, x_tenant_id: str = None):
     """
     Robust message processing with comprehensive error handling.
 
     Args:
         id (int): Claim ID to process
+        x_tenant_id (str, optional): Tenant identifier for multi-tenancy support
     """
     claim_request = ProcessClaimTask(
-        claim_id=id, task_id=f"task_{str(uuid.uuid4())}"
+        claim_id=id,
+        task_id=f"task_{str(uuid.uuid4())}",
+        tenant_id=x_tenant_id
     )
 
     try:
@@ -91,7 +94,7 @@ def start_process_manager(id: int):
             
             # Fetch claim data with error handling
             try:
-                claim_data = get_claim_from_database(task.claim_id)
+                claim_data = get_claim_from_database(task.claim_id, x_tenant_id)
                 if not claim_data:
                     raise ClaimProcessingError(f"No claim found for ID: {task.claim_id}")
                 
@@ -158,11 +161,10 @@ def start_process_manager(id: int):
 
             # Update statuses with error handling
             try:
-                update_claim_status_database(claim_id, status=TaskStatus.PENDING)
+                update_claim_status_database(claim_id, status=TaskStatus.PENDING, x_tenant_id=x_tenant_id)
                 task.status = TaskStatus.RUNNING
                 db.commit()
                 db.refresh(task)
-                # update_claim_status_database(claim_id, status=TaskStatus.RUNNING)
             except Exception as e:
                 system_logger.error(f"Status update failed: {str(e)}")
                 raise ClaimProcessingError(f"Failed to update status: {str(e)}")
@@ -186,7 +188,6 @@ def start_process_manager(id: int):
                         "claim_form_json":[HumanMessage(
                                 content=json.dumps(claim_data.model_dump()))]
                     },
-                    # interrupt_after=call_summary_team
                 ):
                     if "__end__" not in s:
                         team_summaries,endworkflow = control_workflow(
@@ -197,7 +198,8 @@ def start_process_manager(id: int):
                             task,
                             s,
                             team_summaries,
-                            endworkflow
+                            endworkflow,
+                            x_tenant_id
                         )
 
                         if endworkflow:
@@ -218,7 +220,7 @@ def start_process_manager(id: int):
             # Update status to failed if possible
             try:
                 with database_session() as db:
-                    update_claim_status_database(id, status=TaskStatus.FAILED)
+                    update_claim_status_database(id, status=TaskStatus.FAILED, x_tenant_id=x_tenant_id)
                     task = db.query(Task).filter_by(claim_id=id).first()
                     if task:
                         task.status = TaskStatus.FAILED

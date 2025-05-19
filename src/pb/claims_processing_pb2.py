@@ -25,7 +25,7 @@ _sym_db = _symbol_database.Default()
 from google.protobuf import empty_pb2 as google_dot_protobuf_dot_empty__pb2
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x17\x63laims_processing.proto\x12\x11\x63laims_processing\x1a\x1bgoogle/protobuf/empty.proto\" \n\rClaimsRequest\x12\x0f\n\x07\x63laimId\x18\x01 \x01(\t\"\x14\n\x12HealthCheckRequest\"%\n\x13HealthCheckResponse\x12\x0e\n\x06status\x18\x01 \x01(\t\"!\n\x0eLogViewRequest\x12\x0f\n\x07logType\x18\x01 \x01(\t\"#\n\x0fLogViewResponse\x12\x10\n\x08log_text\x18\x01 \x01(\t2\x93\x02\n\x10\x43laimsProcessing\x12J\n\x0cProcessClaim\x12 .claims_processing.ClaimsRequest\x1a\x16.google.protobuf.Empty\"\x00\x12^\n\x0bHealthCheck\x12%.claims_processing.HealthCheckRequest\x1a&.claims_processing.HealthCheckResponse\"\x00\x12S\n\x08ViewLogs\x12!.claims_processing.LogViewRequest\x1a\".claims_processing.LogViewResponse\"\x00\x62\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x17\x63laims_processing.proto\x12\x11\x63laims_processing\x1a\x1bgoogle/protobuf/empty.proto\"5\n\rClaimsRequest\x12\x0f\n\x07\x63laimId\x18\x01 \x01(\t\x12\x13\n\x0bx_tenant_id\x18\x02 \x01(\t\"\x14\n\x12HealthCheckRequest\"%\n\x13HealthCheckResponse\x12\x0e\n\x06status\x18\x01 \x01(\t\"!\n\x0eLogViewRequest\x12\x0f\n\x07logType\x18\x01 \x01(\t\"#\n\x0fLogViewResponse\x12\x10\n\x08log_text\x18\x01 \x01(\t2\x93\x02\n\x10\x43laimsProcessing\x12J\n\x0cProcessClaim\x12 .claims_processing.ClaimsRequest\x1a\x16.google.protobuf.Empty\"\x00\x12^\n\x0bHealthCheck\x12%.claims_processing.HealthCheckRequest\x1a&.claims_processing.HealthCheckResponse\"\x00\x12S\n\x08ViewLogs\x12!.claims_processing.LogViewRequest\x1a\".claims_processing.LogViewResponse\"\x00\x62\x06proto3')
 
 _globals = globals()
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, _globals)
@@ -33,15 +33,15 @@ _builder.BuildTopDescriptorsAndMessages(DESCRIPTOR, 'claims_processing_pb2', _gl
 if not _descriptor._USE_C_DESCRIPTORS:
   DESCRIPTOR._loaded_options = None
   _globals['_CLAIMSREQUEST']._serialized_start=75
-  _globals['_CLAIMSREQUEST']._serialized_end=107
-  _globals['_HEALTHCHECKREQUEST']._serialized_start=109
-  _globals['_HEALTHCHECKREQUEST']._serialized_end=129
-  _globals['_HEALTHCHECKRESPONSE']._serialized_start=131
-  _globals['_HEALTHCHECKRESPONSE']._serialized_end=168
-  _globals['_LOGVIEWREQUEST']._serialized_start=170
-  _globals['_LOGVIEWREQUEST']._serialized_end=203
-  _globals['_LOGVIEWRESPONSE']._serialized_start=205
-  _globals['_LOGVIEWRESPONSE']._serialized_end=240
-  _globals['_CLAIMSPROCESSING']._serialized_start=243
-  _globals['_CLAIMSPROCESSING']._serialized_end=518
+  _globals['_CLAIMSREQUEST']._serialized_end=128
+  _globals['_HEALTHCHECKREQUEST']._serialized_start=130
+  _globals['_HEALTHCHECKREQUEST']._serialized_end=150
+  _globals['_HEALTHCHECKRESPONSE']._serialized_start=152
+  _globals['_HEALTHCHECKRESPONSE']._serialized_end=189
+  _globals['_LOGVIEWREQUEST']._serialized_start=191
+  _globals['_LOGVIEWREQUEST']._serialized_end=224
+  _globals['_LOGVIEWRESPONSE']._serialized_start=226
+  _globals['_LOGVIEWRESPONSE']._serialized_end=261
+  _globals['_CLAIMSPROCESSING']._serialized_start=264
+  _globals['_CLAIMSPROCESSING']._serialized_end=539
 # @@protoc_insertion_point(module_scope)

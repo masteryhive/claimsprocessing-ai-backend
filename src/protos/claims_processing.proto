@@ -6,6 +6,7 @@ import "google/protobuf/empty.proto";
 
 message ClaimsRequest {
   string claimId = 1;
+  string x_tenant_id = 2; // New field added
 }
 
 message HealthCheckRequest {}
