@@ -57,6 +57,8 @@ class ClaimsProcessingBaseService(ClaimsProcessingServicer):
                 
                 # Mark task as done
                 self.processing_queue.task_done()
+            except Exception as e:
+                system_logger.error(f"Error processing queue item: {str(e)}")
 
     def _process_single_claim(self, claim_id, x_tenant_id):
         """Process a single claim with error handling"""
