@@ -6,12 +6,14 @@ from datetime import datetime
 class ProcessClaimTask(BaseModel):
     claim_id: int
     task_id: str
+    x_tenant_id: Optional[str] = None
 
     class Config:
         json_schema_extra = {
             "example": {
                 "claim_id": 56,
-                "task_id": "TASK123_12:08:34"
+                "task_id": "TASK123_12:08:34",
+                "tenant_id": "tenant_123"
             }
         }
 

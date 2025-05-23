@@ -8,10 +8,11 @@ from sqlalchemy.orm import Session
 
 
 
-def get_claim_from_database(claim_id:str) -> dict:
+def get_claim_from_database(claim_id:str, x_tenant_id: str = None) -> dict:
         try:
             # Send a POST request to the endpoint
-            response = requests.get(env_config.backend_api+f"/claims/{claim_id}")
+            headers = {"x_tenant_id": x_tenant_id} if x_tenant_id else {}
+            response = requests.get(env_config.backend_api+f"/claims/{claim_id}", headers=headers)
 
             # Check if the request was successful
             if response.status_code == 200:
@@ -22,19 +23,21 @@ def get_claim_from_database(claim_id:str) -> dict:
         except Exception as e:
             system_logger.error(error=f"An error occurred while fetching claim details: {str(e)}")
 
-def update_claim_status_database(claim_id: int, status:str) -> Union[str,bool]:
+def update_claim_status_database(claim_id: int, status:str, x_tenant_id: str = None) -> Union[str,bool]:
     """
     This function updates the status of a claim in the database by sending a PATCH request to the backend API.
 
     Parameters:
     - claim_id: integer representing the unique identifier of the claim
     - status: string representing the new status to be set for the claim
+    - x_tenant_id: string representing the tenant identifier
     Returns:
     - A string message indicating the success or failure of the operation.
     """
     try:
         # Send a POST request to the endpoint
-        response = requests.patch(env_config.backend_api+f"/claims/{claim_id}", json={"status":status})
+        headers = {"x_tenant_id": x_tenant_id} if x_tenant_id else {}
+        response = requests.patch(env_config.backend_api+f"/claims/{claim_id}", json={"status":status}, headers=headers)
         # Check if the request was successful
         if response.status_code == 200:
             return True
@@ -46,12 +49,13 @@ def update_claim_status_database(claim_id: int, status:str) -> Union[str,bool]:
 
 
 
-def save_claim_report_database(claim_report: dict) -> bool:
+def save_claim_report_database(claim_report: dict, x_tenant_id: str = None) -> bool:
     """
     This function saves claims report information to the database by sending a POST request to the backend API.
     
     Parameters:
     - claim_report: dictionary
+    - x_tenant_id: string representing the tenant identifier
     Returns:
     - A boolean indicating whether the operation was successful.
     """
@@ -63,7 +67,8 @@ def save_claim_report_database(claim_report: dict) -> bool:
         model_result = model_instance.model_dump()  # or json.dumps(model_instance) if it's a dict-like object
         print(json.dumps(model_result))
         # Send a POST request to the endpoint
-        response = requests.post(env_config.backend_api + "/claim-report", json=model_result)
+        headers = {"x_tenant_id": x_tenant_id} if x_tenant_id else {}
+        response = requests.post(env_config.backend_api + "/claim-report", json=model_result, headers=headers)
         
         # Check if the request was successful
         if response.status_code == 201:
@@ -75,23 +80,24 @@ def save_claim_report_database(claim_report: dict) -> bool:
         system_logger.error(error=f"Error occurred while saving claim report to database: {e}")
         return False
 
-def update_claim_report_database(claim_id:int,claim_report: UpdateClaimsReportModel) -> bool:
+def update_claim_report_database(claim_id:int, claim_report: UpdateClaimsReportModel, x_tenant_id: str = None) -> bool:
     """
     This function saves claims report information to the database by sending a POST request to the backend API.
     
     Parameters:
     - claim_report: dictionary
+    - x_tenant_id: string representing the tenant identifier
     Returns:
     - A boolean indicating whether the operation was successful.
     """
     try:
- 
         # Convert model instance to a dictionary or JSON-serializable format
         model_result = claim_report.model_dump()
         print(json.dumps(model_result))
         # Send a PATCH request to the endpoint using httpx
+        headers = {"x_tenant_id": x_tenant_id} if x_tenant_id else {}
         with httpx.Client() as client:
-            response = client.patch(env_config.backend_api + f"/claim-report/by-claim/{claim_id}", json=model_result)
+            response = client.patch(env_config.backend_api + f"/claim-report/by-claim/{claim_id}", json=model_result, headers=headers)
         
         # Check if the request was successful
         if response.status_code == 200:

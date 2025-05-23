@@ -23,10 +23,11 @@ class ClaimsProcessingBaseService(ClaimsProcessingServicer):
     def ProcessClaim(self, request, context):
         try:
             claim_id = int(request.claimId)
+            x_tenant_id = request.x_tenant_id
             system_logger.info(f"Received claim processing request for ID: {claim_id}")
             
-            # Submit the task to the queue
-            self.processing_queue.put(claim_id)
+            # Submit the task to the queue with tenant ID
+            self.processing_queue.put((claim_id, x_tenant_id))
             
             system_logger.info(f"Successfully queued claim ID: {claim_id} for processing")
             return Empty()
@@ -48,21 +49,21 @@ class ClaimsProcessingBaseService(ClaimsProcessingServicer):
         """Background worker that processes claims from the queue"""
         while True:
             try:
-                claim_id = self.processing_queue.get()
+                claim_id, x_tenant_id = self.processing_queue.get()
                 system_logger.info(f"Processing claim ID: {claim_id}")
                 
-                # Submit the actual processing to thread pool
-                self.thread_pool.submit(self._process_single_claim, claim_id)
+                # Submit to thread pool
+                self.thread_pool.submit(self._process_single_claim, claim_id, x_tenant_id)
                 
+                # Mark task as done
+                self.processing_queue.task_done()
             except Exception as e:
                 system_logger.error(f"Error in queue processing: {str(e)}")
-            finally:
-                self.processing_queue.task_done()
 
-    def _process_single_claim(self, claim_id):
+    def _process_single_claim(self, claim_id, x_tenant_id):
         """Process a single claim with error handling"""
         try:
-            start_process_manager(claim_id)
+            start_process_manager(claim_id, x_tenant_id)
             system_logger.info(f"Successfully processed claim ID: {claim_id}")
         except Exception as e:
             system_logger.error(f"Error processing claim ID {claim_id}: {str(e)}")
