@@ -8,22 +8,21 @@ from sqlalchemy.orm import Session
 
 
 
-def get_claim_from_database(claim_id:str, x_tenant_id: str = None) -> dict:
-        try:
-            # Send a POST request to the endpoint
-            headers = {"x_tenant_id": x_tenant_id} if x_tenant_id else {}
-            response = requests.get(env_config.backend_api+f"/claims/{claim_id}", headers=headers)
+def get_claim_from_database(claim_id:str, x_tenant_id: str) -> dict:
+    try:
+        headers = {"x_tenant_id": x_tenant_id} if x_tenant_id else {}
+        response = requests.get(env_config.backend_api+f"/claims/{claim_id}", headers=headers)
 
-            # Check if the request was successful
-            if response.status_code == 200:
-                resp_data = response.json()
-                return resp_data
-            else:
-                return f"Failed to get claim details: {response.status_code} - {response.text}"
-        except Exception as e:
-            system_logger.error(error=f"An error occurred while fetching claim details: {str(e)}")
+        # Check if the request was successful
+        if response.status_code == 200:
+            resp_data = response.json()
+            return resp_data
+        else:
+            return f"Failed to get claim details: {response.status_code} - {response.text}"
+    except Exception as e:
+        system_logger.error(error=f"An error occurred while fetching claim details: {str(e)}")
 
-def update_claim_status_database(claim_id: int, status:str, x_tenant_id: str = None) -> Union[str,bool]:
+def update_claim_status_database(claim_id: int, status:str, x_tenant_id: str) -> Union[str,bool]:
     """
     This function updates the status of a claim in the database by sending a PATCH request to the backend API.
 
@@ -49,7 +48,7 @@ def update_claim_status_database(claim_id: int, status:str, x_tenant_id: str = N
 
 
 
-def save_claim_report_database(claim_report: dict, x_tenant_id: str = None) -> bool:
+def save_claim_report_database(claim_report: dict, x_tenant_id: str) -> bool:
     """
     This function saves claims report information to the database by sending a POST request to the backend API.
     
@@ -80,7 +79,7 @@ def save_claim_report_database(claim_report: dict, x_tenant_id: str = None) -> b
         system_logger.error(error=f"Error occurred while saving claim report to database: {e}")
         return False
 
-def update_claim_report_database(claim_id:int, claim_report: UpdateClaimsReportModel, x_tenant_id: str = None) -> bool:
+def update_claim_report_database(claim_id:int, claim_report: UpdateClaimsReportModel, x_tenant_id: str) -> bool:
     """
     This function saves claims report information to the database by sending a POST request to the backend API.
     

@@ -42,7 +42,7 @@ def print_section(title: str, content: str, indent: int = 2) -> None:
         print(f"{wrapped_content}\n")
 
 
-def handle_agent_response(agent: str, messages: list, claim:dict, team_summaries: UpdateClaimsReportModel, claim_id: int, db: Session, x_tenant_id: str = None) -> UpdateClaimsReportModel:
+def handle_agent_response(agent: str, messages: list, claim:dict, team_summaries: UpdateClaimsReportModel, claim_id: int, db: Session, x_tenant_id: str) -> UpdateClaimsReportModel:
     """Process and handle responses from agents."""
     try:
         content = [m.content for m in messages if isinstance(m, HumanMessage)]
@@ -97,7 +97,7 @@ def control_workflow(
     process_call: Dict[str, Any],
     team_summaries: UpdateClaimsReportModel,
     endworkflow:bool,
-    x_tenant_id: str = None
+    x_tenant_id: str
 ) -> UpdateClaimsReportModel:
     """Main function to handle workflow."""
     if "__end__" in process_call:
