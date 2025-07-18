@@ -1,9 +1,9 @@
 from grpc import StatusCode
 from grpc_interceptor.exceptions import NotFound, GrpcException
 from google.protobuf.empty_pb2 import Empty
-from src.pb.claims_processing_pb2 import HealthCheckResponse,LogViewResponse
-from src.workflow_orch.manager import start_process_manager
-from src.pb.claims_processing_pb2_grpc import ClaimsProcessingServicer
+from src.application.pb.claims_processing_pb2 import HealthCheckResponse,LogViewResponse
+from src.application.workflow_orch.manager import start_process_manager
+from src.application.pb.claims_processing_pb2_grpc import ClaimsProcessingServicer
 import threading,logging
 from concurrent.futures import ThreadPoolExecutor
 from queue import Queue

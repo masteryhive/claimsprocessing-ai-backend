@@ -1,28 +1,28 @@
 from pathlib import Path
 import json, asyncio, uuid
-from src.teams.resources.misc_llm import run_llm
+from src.domain.teams.resources.misc_llm import run_llm
 from src.utilities.pdf_handlers import delete_pdf
 from src.utilities.helpers import _new_get_datetime
 from src.error_trace.errorlogger import system_logger
-from src.database.schemas import Task, TaskStatus
+from src.infrastructure.schemas import Task, TaskStatus
 from src.config.db_setup import SessionLocal
 from sqlalchemy.orm import sessionmaker
-from src.models.claim_processing import (
+from src.domain.models.claim_processing import (
     AccidentClaimData,
     ProcessClaimTask,
     TheftClaimData,
 )
-from src.database.db_ops import (
+from src.infrastructure.db_ops import (
     get_claim_from_database,
     update_claim_status_database,
 )
-from src.models.claim_processing import UpdateClaimsReportModel
+from src.domain.models.claim_processing import UpdateClaimsReportModel
 from tenacity import retry, stop_after_attempt, wait_exponential
 from langchain_core.messages import HumanMessage
-from src.teams.resources.document_understanding import classify_supporting_documents
-from src.workflow_orch.run_workflow import control_workflow
+from src.domain.teams.resources.document_understanding import classify_supporting_documents
+from src.application.workflow_orch.run_workflow import control_workflow
 from contextlib import contextmanager
-from src.teams.stirring_agent import super_graph
+from src.domain.teams.stirring_agent import super_graph
 from sqlalchemy.exc import SQLAlchemyError
 
 rag_path = Path(__file__).parent / "teams/policy_doc/"
